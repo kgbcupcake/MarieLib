@@ -1,1 +1,0 @@
-dev.marie.MariesLib.compat.kubejs.MarieKubeJSPlugin marieslib

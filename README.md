@@ -13,7 +13,7 @@ with memory and decay, datapack tooling with validation, so consuming mods can f
 
 ## Community
 
-Discord: [https://discord.gg/EZnFJsfQup](https://discord.gg/EZnFJsfQup)
+[Discord-Channel](https://discord.gg/EZnFJsfQup)
 
 Questions, suggestions, and development discussion are welcome.
 

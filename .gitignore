@@ -1,11 +1,20 @@
+# Gradle
 .gradle/
-bin/
 build/
-run/
 out/
+
+# IDE
 .idea/
 .eclipse/
-*.class
+.vscode/
 *.iml
+
+# Compiled output
+bin/
+*.class
+
+# NeoForge run directory
+run/
+
+# Local IDE metadata
 src/main/java/dev/marie/MariesLib/MariesLib.xml
-MariesLib_Banner.png
