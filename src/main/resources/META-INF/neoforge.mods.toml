@@ -9,7 +9,7 @@ displayName = "${mod_name}"
 description = '''${mod_description}'''
 authors = "${mod_authors}"
 displayURL = "https://modrinth.com/mod/marieslib"
-logoFile = "marieslib.png"
+logoFile = "MariesLib_icon.png"
 
 [[mixins]]
 config = "marieslib.mixins.json"

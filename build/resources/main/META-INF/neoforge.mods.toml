@@ -9,7 +9,7 @@ displayName = "MariesLib"
 description = '''A shared library for Marie's Minecraft mods.'''
 authors = "Marie"
 displayURL = "https://modrinth.com/mod/marieslib"
-logoFile = "marieslib.png"
+logoFile = "MariesLib_icon.png"
 
 [[mixins]]
 config = "marieslib.mixins.json"
