@@ -1,110 +1,227 @@
-# MariesLib
+![MariesLib Banner](Assets/MariesLib_Banner.png)
 
-A shared infrastructure library for Marie's Minecraft mods. Ships embedded via JarJar — no separate download required.
+I kept rebuilding the same plumbing in every Marie mod — registries, compat discovery, source
+classification, caching, JSON helpers. It worked, but it was duplicated everywhere and painful
+to maintain, so I pulled it out into one library.
 
----
-
-## What is this?
-
-MariesLib is the backbone powering all Marie mods. It provides the shared infrastructure that would otherwise be duplicated across every mod: the registry lifecycle system, classification pipeline, compat discovery framework, caching, and utilities.It is designed to be lightweight and easy to use. It is not a feature-rich mod, but a foundation for building mods that need to reason about items, classify content at runtime, or integrate cleanly with other mods.
-
-If you're a player, you don't need to think about this. It ships inside each mod that uses it.
-
-If you're a mod developer, MariesLib gives you a production-ready foundation for building mods that need to reason about items, classify content at runtime, or integrate cleanly with other mods. It is designed to be easy to use and understand, with a focus on simplicity and readability.
+**MariesLib** is the shared backbone behind mods like [Nourished](https://modrinth.com/mod/nourished).
+It is not a gameplay mod. It is the foundation other Marie mods build on.
 
 ---
 
-## What's inside
+## Community
 
-| Package    | What it provides                                                                                                                                                           |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `cache`    | `BoundedLRU`, `RunningAverage`: lightweight caching utilities                                                                                                              |
-| `registry` | `AbstractRegistry`, `RegistryLifecycleManager`, `RegistrySnapshot`, `ListRegistry`: lifecycle-aware registry infrastructure                                                |
-| `compat`   | `CompatRegistry`, `CompatEntry`, `JsonCompatEntry`, `CompatDefinition`, `ConflictBehavior`, `ConflictLevel`, `SemVer`: mod compatibility discovery and conflict resolution |
-| `scan`     | Runtime classification pipeline _(in progress)_                                                                                                                            |
-| `util`     | `MarieJsonUtils`, `MarieValidation`: JSON and validation helpers                                                                                                           |
-| `network`  | Network sync infrastructure _(planned)_                                                                                                                                    |
-| `config`   | Config snapshot and reload pattern _(planned)_                                                                                                                             |
+Discord: [https://discord.gg/EZnFJsfQup]
+
+Questions, suggestions, and development discussion are welcome.
+
+---
+
+## Do you need to install this?
+
+**Yes — if you use a Marie mod that depends on it.**
+
+Every Marie mod requires MariesLib as a **separate install**. [Nourished](https://modrinth.com/mod/nourished),
+for example, needs **MariesLib 1.0.0+** alongside it.
+
+Install both:
+
+- The Marie mod you want (e.g. Nourished)
+- MariesLib 1.0.0 or newer
+
+Most launchers resolve that dependency automatically. If a Marie mod fails to load, check that
+MariesLib is installed and up to date.
+
+MariesLib is infrastructure, not a gameplay mod on its own. It powers the mods that depend on it.
+
+---
+
+## What MariesLib provides
+
+MariesLib handles the shared infrastructure so Marie mods can focus on gameplay:
+
+| System              | What it does                                                              |
+| ------------------- | ------------------------------------------------------------------------- |
+| Classification      | Runtime source resolution, scanner tooling, and classification traces     |
+| Compat discovery    | Three-tier compatibility registry with modpack overrides                  |
+| Registry lifecycle  | Lifecycle-aware registries with snapshots and reload support                |
+| Tracking & values     | Player value tracking, memory windows, decay, and effect hooks            |
+| Diagnostics         | Datapack validation, unknown-item logging, and debug commands               |
+| Config tooling      | Presets, import/export, share codes, and module locks                       |
+| Utilities           | JSON helpers, bounded LRU cache, running averages, validation             |
+
+It is designed to stay lightweight and readable — a foundation, not a feature dump.
+
+---
+
+## The classification pipeline
+
+This is the core of MariesLib.
+
+When a consuming mod needs to reason about a source it has never seen before, MariesLib resolves
+it through staged runtime logic:
+
+- **Runtime resolution** with caching and cascade fallbacks
+- **Token normalization** for domain-specific source vocabulary
+- **Recipe inheritance** and multi-value blending where configured
+- **Override registries** via `config/<modid>/source_overrides.json`
+- **Classification traces** so developers can inspect why a source resolved the way it did
+
+There is also a **developer-facing scanner** for bulk analysis of unclassified sources. In current
+Marie mods, that means items with `FoodProperties` — such as Nourished's food classification
+workflow. It is not a player-facing gameplay feature.
+
+---
+
+## Modularity
+
+Marie mods built on MariesLib can toggle major features independently — source application,
+decay, effects, HUD, toasts, and more. Modpack authors can lock modules server-side through
+datapack module locks.
+
+---
+
+## 🔧 Configurable to your server
+
+Everything ships with sensible defaults. Consuming mods expose the rest:
+
+- Toggle individual modules on or off
+- Adjust decay rates and thresholds per value
+- Override sources via `config/<modid>/source_overrides.json`
+- Override compat via `config/<modid>/compat_overrides.json`
+- Drive definitions through datapacks where loaders are available
+- Save and share full config snapshots with a single share code
+
+---
+
+## 🤝 Broad Mod Compatibility
+
+MariesLib uses a **three-tier compat system** so mod authors, addon authors, and modpack creators
+can declare and override compatibility without recompiling:
+
+| Tier | Source                                                          | Notes                      |
+| ---- | --------------------------------------------------------------- | -------------------------- |
+| 1    | `data/<modid>/compat/compat_registry.json` in the consuming mod | Base registry              |
+| 2    | `data/<other_modid>/marie_compat.json` from loaded mods         | Mod-provided declarations  |
+| 3    | `config/<modid>/compat_overrides.json`                          | Modpack overrides          |
+
+Later tiers merge into earlier entries rather than replacing them wholesale.
+
+| Integration            | Status                        |
+| ---------------------- | ----------------------------- |
+| KubeJS                 | ✅ Scripting support           |
+| Cloth Config           | ✅ Preset and import/export UI |
+| JEI / REI / EMI        | ✅ Tooltips in recipe viewers  |
+| Any Marie mod          | ✅ Required separate install   |
 
 ---
 
 ## Mods built on MariesLib
 
-| Mod                                             | Description                                                     |
-| ----------------------------------------------- | --------------------------------------------------------------- |
-| [Nourished](https://modrinth.com/mod/nourished) | Nutrition framework for NeoForge 1.21.1                         |
+All Marie mods require MariesLib as a separate install.
+
+| Mod                                             | Description                                     |
+| ----------------------------------------------- | ----------------------------------------------- |
+| [Nourished](https://modrinth.com/mod/nourished) | Nutrition framework for NeoForge 1.21.1         |
 | MariePerfTools                                  | Block entity culling and performance tooling _(in development)_ |
 
 ---
 
-## For mod developers
+## 🌐 For mod developers
 
-MariesLib ships embedded in each consuming mod via NeoForge JarJar. You do not publish it as a standalone dependency — include it in your own mod's jar.
+MariesLib exposes a stable public API if you want to integrate with it:
 
-Add to your `settings.gradle`:
-
-```groovy
-includeBuild('../MariesLib')
+```java
+float level = MarieAPI.getValueLevel(player, "proteins");
+MarieAPI.registerValue(definition);
+MarieAPI.registerCompatEntry(definition);
+MarieAPI.registerCustomEffect(thresholdEffect);
 ```
 
-Add to your `build.gradle` dependencies:
+API elements are marked `@Stable`, `@Experimental`, or `@Internal` so you know exactly what
+you can rely on.
 
-```groovy
-compileOnly "dev.marie.MariesLib:marieslib:${marie_lib_version}"
-jarJar(implementation("dev.marie.MariesLib:marieslib:${marie_lib_version}")) {
-    version {
-        strictly "[${marie_lib_version},)"
-        prefer marie_lib_version
+Every Marie mod requires MariesLib as a **separate mod** on the classpath. There is no JarJar
+bundling. Declare `marieslib` as a required dependency and wire your runtime through
+`MarieLibContext` at bootstrap.
+
+Addons can register custom values, source classifications, effects, compat entries, and events
+through Java or KubeJS. Consuming mods can also ship datapack-only integrations without writing
+Java code.
+
+`CompatDefinition` previously lived at `dev.maire.nourished.api.CompatDefinition` and has moved
+to `dev.marie.MariesLib.compat.CompatDefinition`.
+
+---
+
+## 📦 Datapack Support
+
+Consuming mods can drive MariesLib through datapacks with zero Java code where loaders are available:
+
+**Working now:**
+
+- Source classification — assign items to value keys under `data/<namespace>/<modid>/source_classifications/`
+- Compat entries — declare mod compatibility under `data/<namespace>/<modid>/compat/`
+- Source families — group related sources under `data/<namespace>/<modid>/source_families/`
+- Module locks — lock features server-side under `data/<namespace>/<modid>/module_locks/`
+
+**Schema defined, loaders still in progress:**
+
+- `values/`, `effects/`, `synergies/`, `source_synergies/`, `milestones/`, `tracking_profiles/`
+
+The built-in scanner can auto-classify unknown sources and write tag recommendations and reports
+for high-confidence hits.
+
+---
+
+## 🟨 KubeJS Support
+
+KubeJS scripting support for value registration, source classifications, synergies, milestones,
+and event hooks — no Java required.
+
+```js
+MarieAPI.registerValue({
+    id: 'custom_value',
+    displayName: 'Custom Value',
+    decayRate: 0.02
+})
+
+MarieEvents.onValueChanged(event => {
+    if (event.valueKey === 'custom_value' && event.level < 0.25) {
+        event.player.tell('Your custom value is low!')
     }
-}
-additionalRuntimeClasspath "dev.marie.MariesLib:marieslib:${marie_lib_version}"
-```
-
-Add to your `gradle.properties`:
-
-```
-marie_lib_version=1.0.0
+})
 ```
 
 ---
 
-## Migration notes
+## 🚧 Current Focus
 
-### CompatDefinition (pre-1.0.0)
-
-- This is a breaking change.
-  `CompatDefinition` previously lived at `dev.maire.nourished.api.CompatDefinition`.
-  It has moved to `dev.marie.MariesLib.compat.CompatDefinition`.
-
-If you are an addon developer depending on Nourished's API, update your import:
-
-```java
-// Before
-import dev.maire.nourished.api.CompatDefinition;
-
-// After
-import dev.marie.MariesLib.compat.CompatDefinition;
-```
-
-This break occurred during the beta period. Future breaking changes will be accompanied by a deprecation shim and changelog notice.
+- Completing remaining datapack loaders
+- Expanding network sync infrastructure
+- More diagnostic and validation tooling
+- Broader third-party integration support
 
 ---
 
 ## Requirements
 
-- Minecraft 1.21.1
-- NeoForge 21.1.x
-- Java 21
+| | |
+| --- | --- |
+| **Minecraft** | **1.21.1** |
+| **NeoForge** | **21.1.x** |
+| **Java** | **21** |
 
 ---
 
 ## License
 
-[LGPL-3.0-only](LICENSE) — you may depend on MariesLib in any mod regardless of your mod's license. Modifications to MariesLib itself must be published under LGPL.
+LGPL-3.0-only
 
 ---
 
 ## Links
 
+- [Modrinth](https://modrinth.com/mod/marieslib)
 - [Nourished on Modrinth](https://modrinth.com/mod/nourished)
 - [GitHub](https://github.com/kgbcupcake)

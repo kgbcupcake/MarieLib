@@ -1,12 +1,11 @@
 package dev.marie.MariesLib.scanner;
 
 import dev.marie.MariesLib.api.ApiStatus;
+import dev.marie.MariesLib.core.MarieLibContext;
 import dev.marie.MariesLib.core.MariesLib;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -25,118 +24,26 @@ public final class TokenStemmer {
 
     private static final boolean DEBUG = Boolean.getBoolean("marielib.stemmer.debug");
 
-    // Phase 1 — Irregular Forms
-    // Checked before any suffix stripping. Covers plurals/forms that suffix rules would mangle.
-    private static final Map<String, String> IRREGULAR_FORMS = Map.ofEntries(
-        Map.entry("fries",   "fry"),
-        Map.entry("chips",   "chip"),
-        Map.entry("geese",   "goose"),
-        Map.entry("teeth",   "tooth"),
-        Map.entry("mice",    "mouse"),
-        Map.entry("oxen",    "ox"),
-        Map.entry("cacti",   "cactus"),
-        Map.entry("fungi",   "fungus"),
-        Map.entry("alumni",  "alum"),
-        Map.entry("larvae",  "larva"),
-        Map.entry("beef",    "beef"),
-        Map.entry("venison", "venison"),
-        Map.entry("mutton",  "mutton"),
-        Map.entry("poultry", "poultry"),
-        Map.entry("pork",    "pork"),
-        Map.entry("rice",    "rice"),
-        Map.entry("wheat",   "wheat"),
-        Map.entry("oats",    "oat"),
-        Map.entry("peas",    "pea"),
-        Map.entry("seas",    "sea")
-    );
-
-    // Phase 2 — Compound Splits
-    // Source compound words that carry two classification signals.
-    private static final Map<String, String[]> COMPOUND_SPLITS = Map.of(
-        "breadcrumb",  new String[]{"bread", "crumb"},
-        "cheesecake",  new String[]{"cheese", "cake"},
-        "beefsteak",   new String[]{"beef", "steak"},
-        "meatloaf",    new String[]{"meat", "loaf"},
-        "cornbread",   new String[]{"corn", "bread"},
-        "sourdough",   new String[]{"sour", "dough"},
-        "buttermilk",  new String[]{"butter", "milk"},
-        "shortcake",   new String[]{"short", "cake"},
-        "gingerbread", new String[]{"ginger", "bread"},
-        "hotdog",      new String[]{"hot", "dog"}
-    );
-
-    // Phase 4 — Stop Words
-    // Tokens that carry zero classification signal and should never be spec-matched.
-    private static final Set<String> STOP_WORDS = Set.of(
-        "with", "and", "of", "the", "in", "on", "a", "an",
-        "raw", "fresh", "dried", "wild", "organic", "natural",
-        "small", "large", "big", "mini", "mega", "super",
-        "hot", "cold", "warm", "cool", "frozen",
-        "old", "new", "young", "aged",
-        "light", "dark", "deep", "extra",
-        "plain", "simple", "basic", "classic"
-    );
-
     private static final Pattern CAMEL_BOUNDARY_LOWER_UPPER = Pattern.compile("(?<=[a-z])(?=[A-Z])");
     private static final Pattern CAMEL_BOUNDARY_ACRONYM = Pattern.compile("(?<=[A-Z])(?=[A-Z][a-z])");
-
-    /** Longest-first greedy dictionary for ungluing lowercase run-on segments ({@code honeyglazedham}). */
-    private static final String[] SOURCE_DICT_LONGEST_FIRST;
 
     /** Resource-noise suffix built from chars to avoid literal grep hits. */
     private static final String RESOURCE_NOISE_SUFFIX = new String(new char[]{'f', 'o', 'o', 'd'});
 
-    static {
-        Set<String> words = new HashSet<>();
-        for (var e : IRREGULAR_FORMS.entrySet()) {
-            if (e.getKey().length() >= 3) words.add(e.getKey());
-            if (e.getValue().length() >= 3) words.add(e.getValue());
-        }
-        for (var e : COMPOUND_SPLITS.entrySet()) {
-            if (e.getKey().length() >= 3) words.add(e.getKey());
-            for (String p : e.getValue()) {
-                if (p.length() >= 3) words.add(p);
-            }
-        }
-        String[] extra = {
-            "almond", "apple", "apricot", "avocado", "bacon", "bake", "baked", "banana", "barley",
-            "basil", "bbq", "bean", "beef", "beet", "berry", "biscuit", "blackberry", "blueberry",
-            "boil", "boiled", "bowl", "bread", "breast", "brownie", "burger", "burrito", "butter",
-            "cabbage", "cake", "candied", "caramel", "carrot", "cashew", "cauliflower", "celery",
-            "cheese", "cherry", "chicken", "chili", "chocolate", "chop", "chunk", "chunks",
-            "cilantro", "cinnamon", "clam", "cod", "cookie", "coriander", "corn", "crab",
-            "cranberry", "cream", "crisp", "croissant", "cucumber", "cumin", "curry", "cupcake",
-            "donut", "dough", "dried", "drumstick", "duck", "dumpling", "egg", "enchilada",
-            "fajita", "fillet", "fish", "flour", "fries", "fry", "fried", "fudge", "garlic",
-            "ginger", "glaze", "glazed", "goose", "grape", "gratin", "gravy", "grill", "grilled",
-            "ground", "guacamole", "halibut", "ham", "hamburger", "hash", "hazelnut", "herb",
-            "honey", "icing", "jalapeno", "jam", "julienne", "kebab", "ketchup", "lamb", "lasagna",
-            "leek", "lemon", "lentil", "lime", "lingon", "lobster", "lox", "macaroni",
-            "mango", "marinade", "marinated", "mashed", "mayo", "mead", "meat", "meatball",
-            "melon",    "milk",     "mint",     "muffin",   "mushroom", "mussel", "mustard",
-            "mutton",   "noodle",   "nut",      "oat",      "omelet",   "onion",  "orange",
-            "oregano",  "oyster",   "paella",   "pancake",  "paprika",  "parmesan", "parsley", "pasta", "pastry", "pea", "peach",
-            "peanut", "pear", "pepper", "perch", "pickle", "pickled", "pie", "pilaf", "pineapple",
-            "pistachio", "pizza", "plum", "poach", "poached", "polenta", "popcorn", "poppy",
-            "popsicle", "pork", "porridge", "potato", "poutine", "praline", "prawn", "pretzel",
-            "prosciutto", "pudding", "pumpkin", "quinoa", "radish", "raisin", "ramen", "raspberry",
-            "ravioli", "rhubarb", "rib", "ribs", "rice", "ricotta", "roast", "roasted", "roll",
-            "romaine", "rose", "saffron", "salad", "salami", "salmon", "salsa", "salt", "sandwich",
-            "sardine", "sauce", "sausage", "scallop", "scone", "scramble", "scrambled", "seabass",
-            "seed", "sesame", "shallot", "shell", "shrimp", "slice", "sliced", "smoke", "smoked",
-            "smoothie", "snack", "soup", "sour", "soy", "spaghetti", "spinach", "steak", "steam",
-            "steamed", "stew", "stir", "strawberry", "sugar", "sushi", "sweet", "syrup", "taco",
-            "tart", "tempeh", "teriyaki", "thigh", "toast", "toffee", "tofu", "tomato", "tortilla",
-            "trail", "truffle", "tuna", "turkey", "turnip", "vanilla", "veal", "venison", "vinegar",
-            "waffle", "walnut", "wasabi", "watermelon", "wheat", "whip", "whiskey", "wing", "wings",
-            "wrap", "yam", "yeast", "yogurt", "zest", "zucchini",
-        };
-        for (String x : extra) {
-            if (x.length() >= 3) words.add(x);
-        }
-        List<String> list = new ArrayList<>(words);
-        list.sort(Comparator.comparingInt(String::length).reversed().thenComparing(a -> a));
-        SOURCE_DICT_LONGEST_FIRST = list.toArray(String[]::new);
+    private static String[] dictionary() {
+        return MarieLibContext.get().stemmerDictionary();
+    }
+
+    private static Map<String, String[]> compoundSplits() {
+        return MarieLibContext.get().stemmerCompoundSplits();
+    }
+
+    private static Map<String, String> irregularForms() {
+        return MarieLibContext.get().stemmerIrregularForms();
+    }
+
+    private static Set<String> stopWords() {
+        return MarieLibContext.get().stemmerStopWords();
     }
 
     private TokenStemmer() {}
@@ -165,20 +72,20 @@ public final class TokenStemmer {
         }
 
         // Phase 4 — Stop words checked early to short-circuit
-        if (STOP_WORDS.contains(t)) {
+        if (stopWords().contains(t)) {
             debugLog(token, t, "stop-word-discarded");
             return List.of();
         }
 
         // Phase 1 — Irregular forms (must precede suffix stripping)
-        String irregular = IRREGULAR_FORMS.get(t);
+        String irregular = irregularForms().get(t);
         if (irregular != null) {
             debugLog(token, irregular, "irregular-form");
             return List.of(irregular);
         }
 
         // Phase 2 — Compound splits
-        String[] parts = COMPOUND_SPLITS.get(t);
+        String[] parts = compoundSplits().get(t);
         if (parts != null) {
             debugLog(token, String.join(", ", parts), "compound-split");
             return List.of(parts);
@@ -188,7 +95,7 @@ public final class TokenStemmer {
         String stripped = stripSuffixes(t, token);
 
         // Phase 4 — Stop word re-check after stripping
-        if (STOP_WORDS.contains(stripped)) {
+        if (stopWords().contains(stripped)) {
             debugLog(token, stripped, "stop-word-discarded");
             return List.of();
         }
@@ -219,7 +126,7 @@ public final class TokenStemmer {
         if (token == null) return false;
         String t = token.toLowerCase(Locale.ROOT);
         if (t.endsWith("item") && t.length() > 4) t = t.substring(0, t.length() - 4);
-        return STOP_WORDS.contains(t);
+        return stopWords().contains(t);
     }
 
     /**
@@ -323,19 +230,23 @@ public final class TokenStemmer {
 
     private static boolean startsWithDictWordAt(String segment, int i) {
         int n = segment.length();
-        for (String w : SOURCE_DICT_LONGEST_FIRST) {
+        for (String w : dictionary()) {
             if (n - i >= w.length() && segment.startsWith(w, i)) return true;
         }
         return false;
     }
 
+    /**
+     * Greedy longest-match split using {@link #dictionary()}. The dictionary array must be
+     * pre-sorted longest-first by the caller so the first match is the longest prefix.
+     */
     private static List<String> greedyDictionarySplit(String segment) {
         List<String> parts = new ArrayList<>();
         int i = 0;
         int n = segment.length();
         while (i < n) {
             String matched = null;
-            for (String w : SOURCE_DICT_LONGEST_FIRST) {
+            for (String w : dictionary()) {
                 if (n - i >= w.length() && segment.startsWith(w, i)) {
                     matched = w;
                     break;
