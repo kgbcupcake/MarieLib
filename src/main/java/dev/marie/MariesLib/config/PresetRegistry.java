@@ -101,7 +101,7 @@ public final class PresetRegistry {
      * Writes default Casual / Survival / Hardcore JSON files when they are absent.
      */
     public static void ensureBuiltInFilesOnDisk() {
-        throw new UnsupportedOperationException("Implement via consuming mod");
+        MarieLibContext.get().ensureBuiltInPresetsOnDisk();
     }
 
     public static void reload() {
@@ -188,7 +188,7 @@ public final class PresetRegistry {
     }
 
     public static void applyPresetValues(PresetValues v) {
-        throw new UnsupportedOperationException("Implement via consuming mod");
+        MarieLibContext.get().applyPresetValues(v);
     }
 
     public static void applyPreset(ParsedPreset preset) {
@@ -199,7 +199,7 @@ public final class PresetRegistry {
     }
 
     private static void enableAllEffects() {
-        throw new UnsupportedOperationException("Implement via consuming mod");
+        MarieLibContext.get().enableAllEffectsForPresets();
     }
 
     public static void deletePreset(ParsedPreset preset) throws IOException {

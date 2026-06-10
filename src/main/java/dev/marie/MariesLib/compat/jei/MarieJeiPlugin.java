@@ -1,7 +1,6 @@
 package dev.marie.MariesLib.compat.jei;
 
 import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.core.MarieLibContext;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
 import net.minecraft.resources.ResourceLocation;
@@ -16,6 +15,6 @@ public final class MarieJeiPlugin implements IModPlugin {
 
     @Override
     public ResourceLocation getPluginUid() {
-        return ResourceLocation.fromNamespaceAndPath(MarieLibContext.get().modId(), "jei_plugin");
+        return ResourceLocation.fromNamespaceAndPath("marieslib", "jei_plugin");
     }
 }

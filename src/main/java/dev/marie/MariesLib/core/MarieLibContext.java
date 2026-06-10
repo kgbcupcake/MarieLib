@@ -60,6 +60,9 @@ public final class MarieLibContext {
     private final Supplier<JsonObject> configExporter;
     private final Consumer<JsonObject> configImporter;
     private final Supplier<PresetRegistry.PresetValues> currentConfigPresetValues;
+    private final Runnable ensureBuiltInPresetsOnDisk;
+    private final Consumer<PresetRegistry.PresetValues> applyPresetValues;
+    private final Runnable enableAllEffectsForPresets;
     private final Function<String, String> valueIconProvider;
     private final BiFunction<ItemStack, Player, Map<String, Float>> tooltipValueResolver;
     private final Supplier<TrackingData> clientTrackingDataProvider;
@@ -101,6 +104,9 @@ public final class MarieLibContext {
         this.configExporter = builder.configExporter;
         this.configImporter = builder.configImporter;
         this.currentConfigPresetValues = builder.currentConfigPresetValues;
+        this.ensureBuiltInPresetsOnDisk = builder.ensureBuiltInPresetsOnDisk;
+        this.applyPresetValues = builder.applyPresetValues;
+        this.enableAllEffectsForPresets = builder.enableAllEffectsForPresets;
         this.valueIconProvider = builder.valueIconProvider;
         this.tooltipValueResolver = builder.tooltipValueResolver;
         this.clientTrackingDataProvider = builder.clientTrackingDataProvider;
@@ -156,6 +162,9 @@ public final class MarieLibContext {
     public JsonObject configExporter() { return configExporter.get(); }
     public void configImporter(JsonObject json) { configImporter.accept(json); }
     public PresetRegistry.PresetValues currentConfigPresetValues() { return currentConfigPresetValues.get(); }
+    public void ensureBuiltInPresetsOnDisk() { ensureBuiltInPresetsOnDisk.run(); }
+    public void applyPresetValues(PresetRegistry.PresetValues values) { applyPresetValues.accept(values); }
+    public void enableAllEffectsForPresets() { enableAllEffectsForPresets.run(); }
     public String valueIcon(String key) { return valueIconProvider.apply(key); }
     public BiFunction<ItemStack, Player, Map<String, Float>> tooltipValueResolver() { return tooltipValueResolver; }
     public Supplier<TrackingData> clientTrackingDataProvider() { return clientTrackingDataProvider; }
@@ -200,6 +209,9 @@ public final class MarieLibContext {
         private Supplier<JsonObject> configExporter = JsonObject::new;
         private Consumer<JsonObject> configImporter = json -> {};
         private Supplier<PresetRegistry.PresetValues> currentConfigPresetValues = PresetRegistry.PresetValues::empty;
+        private Runnable ensureBuiltInPresetsOnDisk = () -> {};
+        private Consumer<PresetRegistry.PresetValues> applyPresetValues = values -> {};
+        private Runnable enableAllEffectsForPresets = () -> {};
         private Function<String, String> valueIconProvider = key -> "minecraft:apple";
         private BiFunction<ItemStack, Player, Map<String, Float>> tooltipValueResolver = (stack, player) -> Map.of();
         private Supplier<TrackingData> clientTrackingDataProvider = () -> new TrackingData();
@@ -241,6 +253,9 @@ public final class MarieLibContext {
         public Builder configExporter(Supplier<JsonObject> s) { this.configExporter = s; return this; }
         public Builder configImporter(Consumer<JsonObject> c) { this.configImporter = c; return this; }
         public Builder currentConfigPresetValues(Supplier<PresetRegistry.PresetValues> s) { this.currentConfigPresetValues = s; return this; }
+        public Builder ensureBuiltInPresetsOnDisk(Runnable r) { this.ensureBuiltInPresetsOnDisk = r; return this; }
+        public Builder applyPresetValues(Consumer<PresetRegistry.PresetValues> c) { this.applyPresetValues = c; return this; }
+        public Builder enableAllEffectsForPresets(Runnable r) { this.enableAllEffectsForPresets = r; return this; }
         public Builder valueIconProvider(Function<String, String> f) { this.valueIconProvider = f; return this; }
         public Builder tooltipValueResolver(BiFunction<ItemStack, Player, Map<String, Float>> f) { this.tooltipValueResolver = f; return this; }
         public Builder clientTrackingDataProvider(Supplier<TrackingData> s) { this.clientTrackingDataProvider = s; return this; }

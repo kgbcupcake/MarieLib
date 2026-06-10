@@ -7,3 +7,4 @@ out/
 .eclipse/
 *.class
 *.iml
+src/main/java/dev/marie/MariesLib/MariesLib.xml
