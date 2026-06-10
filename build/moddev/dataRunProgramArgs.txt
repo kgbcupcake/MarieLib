@@ -1,0 +1,29 @@
+# Main Class
+cpw.mods.bootstraplauncher.BootstrapLauncher
+
+# NeoForge Run-Type Program Arguments
+--launchTarget
+forgedatadev
+--assetIndex
+17
+--assetsDir
+/home/only/.gradle/caches/neoformruntime/assets
+--gameDir
+.
+--fml.fmlVersion
+4.0.42
+--fml.mcVersion
+1.21.1
+--fml.neoForgeVersion
+21.1.229
+--fml.neoFormVersion
+20240808.144430
+
+# User Supplied Program Arguments
+--mod
+marieslib
+--all
+--output
+/home/only/RiderProjects/MarieLib/src/generated/resources
+--existing
+/home/only/RiderProjects/MarieLib/src/main/resources

@@ -1,0 +1,477 @@
+package dev.marie.MariesLib.data;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import dev.marie.MariesLib.compat.CompatDefinition;
+import dev.marie.MariesLib.api.MarieAPIState;
+import dev.marie.MariesLib.core.MariesLib;
+import dev.marie.MariesLib.util.MarieRegistryUtils;
+import net.minecraft.core.Holder;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.SimpleJsonResourceReloadListener;
+import net.minecraft.tags.ItemTags;
+import net.minecraft.tags.TagKey;
+import net.minecraft.util.profiling.ProfilerFiller;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+
+/**
+ * Loads MarieLib datapack definitions from {@code data/<namespace>/<modid>/**}.
+ */
+public final class MarieDataLoader extends SimpleJsonResourceReloadListener {
+
+    /** Callbacks for delegating registration to the consuming mod. */
+    public interface Callbacks {
+        default void onApplyBegin() {}
+        default void onApplyEnd() {}
+        default void registerValue(Object def) {}
+        default void registerSourceClassification(ResourceLocation itemId, String valueKey, float amount) {}
+        default void registerCustomEffect(Object def) {}
+        default void registerValueSynergy(Object def) {}
+        default void registerSourcePairSynergy(Object def) {}
+        default void registerMilestone(Object def) {}
+        default void registerTrackingProfile(Object def) {}
+        default void registerCompatEntry(CompatDefinition def) {}
+        default void replaceSourceFamilies(Map<String, List<String>> families) {}
+        default void replaceModuleLocks(Set<String> locked, Set<String> serverOnly) {}
+
+        Callbacks NOOP = new Callbacks() {};
+    }
+
+    private static final Gson GSON = new GsonBuilder().create();
+
+    private Callbacks callbacks = Callbacks.NOOP;
+
+    private volatile Set<ResourceLocation> loadedValues = Set.of();
+    private volatile Set<ResourceLocation> loadedSourceClassifications = Set.of();
+    private volatile Set<ResourceLocation> loadedEffects = Set.of();
+    private volatile Set<ResourceLocation> loadedSynergies = Set.of();
+    private volatile Set<ResourceLocation> loadedSourcePairSynergies = Set.of();
+    private volatile Set<ResourceLocation> loadedMilestones = Set.of();
+    private volatile Set<ResourceLocation> loadedProfiles = Set.of();
+    private volatile Set<ResourceLocation> loadedCompatEntries = Set.of();
+
+    public MarieDataLoader() {
+        super(GSON, DatapackSchema.root());
+    }
+
+    public void setCallbacks(Callbacks callbacks) {
+        this.callbacks = callbacks != null ? callbacks : Callbacks.NOOP;
+    }
+
+    @Override
+    protected void apply(Map<ResourceLocation, JsonElement> allJson, net.minecraft.server.packs.resources.ResourceManager resourceManager, ProfilerFiller profiler) {
+        try (MarieAPIState.DatapackReloadScope scope = MarieAPIState.openForDatapackReload()) {
+            DatapackDiagnostics diagnostics = DatapackDiagnostics.getInstance();
+            diagnostics.clear();
+
+            callbacks.onApplyBegin();
+
+            Set<ResourceLocation> nextValues = new LinkedHashSet<>();
+            Set<ResourceLocation> nextSourceClassifications = new LinkedHashSet<>();
+            Set<ResourceLocation> nextEffects = new LinkedHashSet<>();
+            Set<ResourceLocation> nextSynergies = new LinkedHashSet<>();
+            Set<ResourceLocation> nextSourcePairSynergies = new LinkedHashSet<>();
+            Set<ResourceLocation> nextMilestones = new LinkedHashSet<>();
+            Set<ResourceLocation> nextProfiles = new LinkedHashSet<>();
+            Set<ResourceLocation> nextCompatEntries = new LinkedHashSet<>();
+
+            Map<ResourceLocation, JsonObject> values = filterDirectory(allJson, DatapackSchema.VALUES_DIR);
+            Map<ResourceLocation, JsonObject> sourceClassifications = filterDirectory(allJson, DatapackSchema.SOURCE_CLASSIFICATIONS_DIR);
+            Map<ResourceLocation, JsonObject> effects = filterDirectory(allJson, DatapackSchema.EFFECTS_DIR);
+            Map<ResourceLocation, JsonObject> synergies = filterDirectory(allJson, DatapackSchema.SYNERGIES_DIR);
+            Map<ResourceLocation, JsonObject> sourcePairSynergies = filterDirectory(allJson, DatapackSchema.SOURCE_SYNERGIES_DIR);
+            Map<ResourceLocation, JsonObject> milestones = filterDirectory(allJson, DatapackSchema.MILESTONES_DIR);
+            Map<ResourceLocation, JsonObject> profiles = filterDirectory(allJson, DatapackSchema.TRACKING_PROFILES_DIR);
+            Map<ResourceLocation, JsonObject> compat = filterDirectory(allJson, DatapackSchema.COMPAT_DIR);
+            Map<ResourceLocation, JsonObject> sourceFamilies = filterDirectory(allJson, DatapackSchema.SOURCE_FAMILIES_DIR);
+            Map<ResourceLocation, JsonObject> moduleLocks = filterDirectory(allJson, DatapackSchema.MODULE_LOCKS_DIR);
+
+        for (Map.Entry<ResourceLocation, JsonObject> entry : values.entrySet()) {
+            ResourceLocation fileId = entry.getKey();
+            JsonObject json = entry.getValue();
+            String filePath = datapackFilePath(DatapackSchema.VALUES_DIR, fileId);
+            if (!isValidForRegistration(json, SchemaDefinition.forValue(), filePath, diagnostics)) {
+                continue;
+            }
+            try {
+                Object def = parseValue(fileId, json);
+                callbacks.registerValue(def);
+                nextValues.add(fileId);
+            } catch (Exception ex) {
+                warnMalformed(fileId, ex);
+            }
+        }
+
+        for (Map.Entry<ResourceLocation, JsonObject> entry : sourceClassifications.entrySet()) {
+            ResourceLocation fileId = entry.getKey();
+            JsonObject json = entry.getValue();
+            String filePath = datapackFilePath(DatapackSchema.SOURCE_CLASSIFICATIONS_DIR, fileId);
+            if (!isValidForRegistration(json, SchemaDefinition.forSourceClassification(), filePath, diagnostics)) {
+                continue;
+            }
+            try {
+                registerSourceClassification(fileId, json);
+                nextSourceClassifications.add(fileId);
+            } catch (Exception ex) {
+                warnMalformed(fileId, ex);
+            }
+        }
+
+        for (Map.Entry<ResourceLocation, JsonObject> entry : effects.entrySet()) {
+            ResourceLocation fileId = entry.getKey();
+            JsonObject json = entry.getValue();
+            String filePath = datapackFilePath(DatapackSchema.EFFECTS_DIR, fileId);
+            if (!isValidForRegistration(json, SchemaDefinition.forEffect(), filePath, diagnostics)) {
+                continue;
+            }
+            try {
+                Object def = parseEffect(fileId, json);
+                callbacks.registerCustomEffect(def);
+                nextEffects.add(fileId);
+            } catch (Exception ex) {
+                warnMalformed(fileId, ex);
+            }
+        }
+
+        for (Map.Entry<ResourceLocation, JsonObject> entry : synergies.entrySet()) {
+            ResourceLocation fileId = entry.getKey();
+            JsonObject json = entry.getValue();
+            String filePath = datapackFilePath(DatapackSchema.SYNERGIES_DIR, fileId);
+            if (!isValidForRegistration(json, SchemaDefinition.forSynergy(), filePath, diagnostics)) {
+                continue;
+            }
+            try {
+                Object def = parseSynergy(fileId, json);
+                callbacks.registerValueSynergy(def);
+                nextSynergies.add(fileId);
+            } catch (Exception ex) {
+                warnMalformed(fileId, ex);
+            }
+        }
+
+        for (Map.Entry<ResourceLocation, JsonObject> entry : sourcePairSynergies.entrySet()) {
+            ResourceLocation fileId = entry.getKey();
+            JsonObject json = entry.getValue();
+            String filePath = datapackFilePath(DatapackSchema.SOURCE_SYNERGIES_DIR, fileId);
+            if (!isValidForRegistration(json, SchemaDefinition.forSourcePairSynergy(), filePath, diagnostics)) {
+                continue;
+            }
+            try {
+                Object def = parseSourcePairSynergy(fileId, json);
+                callbacks.registerSourcePairSynergy(def);
+                nextSourcePairSynergies.add(fileId);
+            } catch (Exception ex) {
+                warnMalformed(fileId, ex);
+            }
+        }
+
+        for (Map.Entry<ResourceLocation, JsonObject> entry : milestones.entrySet()) {
+            ResourceLocation fileId = entry.getKey();
+            JsonObject json = entry.getValue();
+            String filePath = datapackFilePath(DatapackSchema.MILESTONES_DIR, fileId);
+            if (!isValidForRegistration(json, SchemaDefinition.forMilestone(), filePath, diagnostics)) {
+                continue;
+            }
+            try {
+                Object def = parseMilestone(fileId, json);
+                callbacks.registerMilestone(def);
+                nextMilestones.add(fileId);
+            } catch (Exception ex) {
+                warnMalformed(fileId, ex);
+            }
+        }
+
+        for (Map.Entry<ResourceLocation, JsonObject> entry : profiles.entrySet()) {
+            ResourceLocation fileId = entry.getKey();
+            JsonObject json = entry.getValue();
+            String filePath = datapackFilePath(DatapackSchema.TRACKING_PROFILES_DIR, fileId);
+            if (!isValidForRegistration(json, SchemaDefinition.forTrackingProfile(), filePath, diagnostics)) {
+                continue;
+            }
+            try {
+                Object def = parseTrackingProfile(fileId, json);
+                callbacks.registerTrackingProfile(def);
+                nextProfiles.add(fileId);
+            } catch (Exception ex) {
+                warnMalformed(fileId, ex);
+            }
+        }
+
+        for (Map.Entry<ResourceLocation, JsonObject> entry : compat.entrySet()) {
+            ResourceLocation fileId = entry.getKey();
+            JsonObject json = entry.getValue();
+            String filePath = datapackFilePath(DatapackSchema.COMPAT_DIR, fileId);
+            if (!isValidForRegistration(json, SchemaDefinition.forCompat(), filePath, diagnostics)) {
+                continue;
+            }
+            try {
+                CompatDefinition def = parseCompat(fileId, json);
+                callbacks.registerCompatEntry(def);
+                nextCompatEntries.add(fileId);
+            } catch (Exception ex) {
+                warnMalformed(fileId, ex);
+            }
+        }
+
+        for (Map.Entry<ResourceLocation, JsonObject> entry : sourceFamilies.entrySet()) {
+            ResourceLocation fileId = entry.getKey();
+            JsonObject json = entry.getValue();
+            String filePath = datapackFilePath(DatapackSchema.SOURCE_FAMILIES_DIR, fileId);
+            if (!isValidForRegistration(json, SchemaDefinition.forSourceFamilies(), filePath, diagnostics)) {
+                continue;
+            }
+            try {
+                applySourceFamilies(json);
+            } catch (Exception ex) {
+                warnMalformed(fileId, ex);
+            }
+        }
+
+        for (Map.Entry<ResourceLocation, JsonObject> entry : moduleLocks.entrySet()) {
+            ResourceLocation fileId = entry.getKey();
+            JsonObject json = entry.getValue();
+            String filePath = datapackFilePath(DatapackSchema.MODULE_LOCKS_DIR, fileId);
+            if (!isValidForRegistration(json, SchemaDefinition.forModuleLocks(), filePath, diagnostics)) {
+                continue;
+            }
+            try {
+                applyModuleLocks(json);
+            } catch (Exception ex) {
+                warnMalformed(fileId, ex);
+            }
+        }
+
+            callbacks.onApplyEnd();
+
+            loadedValues = Collections.unmodifiableSet(nextValues);
+            loadedSourceClassifications = Collections.unmodifiableSet(nextSourceClassifications);
+            loadedEffects = Collections.unmodifiableSet(nextEffects);
+            loadedSynergies = Collections.unmodifiableSet(nextSynergies);
+            loadedSourcePairSynergies = Collections.unmodifiableSet(nextSourcePairSynergies);
+            loadedMilestones = Collections.unmodifiableSet(nextMilestones);
+            loadedProfiles = Collections.unmodifiableSet(nextProfiles);
+            loadedCompatEntries = Collections.unmodifiableSet(nextCompatEntries);
+        }
+    }
+
+    private static boolean isValidForRegistration(JsonObject json, SchemaDefinition schema, String filePath, DatapackDiagnostics diagnostics) {
+        List<DatapackDiagnostic> fileDiagnostics = DatapackValidator.validate(json, schema, filePath);
+        boolean hasErrors = false;
+        for (DatapackDiagnostic diagnostic : fileDiagnostics) {
+            diagnostics.record(diagnostic);
+            if (diagnostic.severity() == DatapackDiagnostic.Severity.ERROR) {
+                hasErrors = true;
+            }
+        }
+        return !hasErrors;
+    }
+
+    private static String datapackFilePath(String directory, ResourceLocation fileId) {
+        return "data/" + fileId.getNamespace() + "/" + DatapackSchema.root() + "/" + directory + "/" + fileId.getPath() + ".json";
+    }
+
+    public Set<ResourceLocation> getLoadedValues() {
+        return loadedValues;
+    }
+
+    public Set<ResourceLocation> getLoadedSourceClassifications() {
+        return loadedSourceClassifications;
+    }
+
+    public Set<ResourceLocation> getLoadedEffects() {
+        return loadedEffects;
+    }
+
+    public Set<ResourceLocation> getLoadedSynergies() {
+        return loadedSynergies;
+    }
+
+    public Set<ResourceLocation> getLoadedSourcePairSynergies() {
+        return loadedSourcePairSynergies;
+    }
+
+    public Set<ResourceLocation> getLoadedMilestones() {
+        return loadedMilestones;
+    }
+
+    public Set<ResourceLocation> getLoadedProfiles() {
+        return loadedProfiles;
+    }
+
+    public Set<ResourceLocation> getLoadedCompatEntries() {
+        return loadedCompatEntries;
+    }
+
+    private static Map<ResourceLocation, JsonObject> filterDirectory(Map<ResourceLocation, JsonElement> allJson, String directory) {
+        String prefix = directory + "/";
+        Map<ResourceLocation, JsonObject> result = new LinkedHashMap<>();
+        for (Map.Entry<ResourceLocation, JsonElement> entry : allJson.entrySet()) {
+            if (!entry.getKey().getPath().startsWith(prefix)) {
+                continue;
+            }
+            if (!entry.getValue().isJsonObject()) {
+                throw new IllegalArgumentException("Expected JSON object");
+            }
+            String withoutPrefix = entry.getKey().getPath().substring(prefix.length());
+            ResourceLocation id = ResourceLocation.fromNamespaceAndPath(entry.getKey().getNamespace(), withoutPrefix);
+            result.put(id, entry.getValue().getAsJsonObject());
+        }
+        return result;
+    }
+
+    private static Object parseValue(ResourceLocation fileId, JsonObject json) {
+        // TODO: implement when ValueDefinition is moved to MarieLib
+        return null;
+    }
+
+    private void registerSourceClassification(ResourceLocation fileId, JsonObject json) {
+        String valueKey = getRequiredString(json, DatapackSchema.KEY_VALUE_KEY);
+        float amount = getRequiredFloat(json, DatapackSchema.KEY_AMOUNT);
+
+        if (json.has(DatapackSchema.KEY_ITEM)) {
+            ResourceLocation itemId = ResourceLocation.parse(getRequiredString(json, DatapackSchema.KEY_ITEM));
+            callbacks.registerSourceClassification(itemId, valueKey, amount);
+            return;
+        }
+
+        if (json.has(DatapackSchema.KEY_TAG)) {
+            String rawTag = getRequiredString(json, DatapackSchema.KEY_TAG);
+            String normalized = rawTag.startsWith("#") ? rawTag.substring(1) : rawTag;
+            ResourceLocation tagId = ResourceLocation.parse(normalized);
+            TagKey<net.minecraft.world.item.Item> key = ItemTags.create(tagId);
+            Iterable<Holder<net.minecraft.world.item.Item>> tagged = BuiltInRegistries.ITEM.getTagOrEmpty(key);
+            int matched = 0;
+            for (Holder<net.minecraft.world.item.Item> holder : tagged) {
+                ResourceLocation itemId = MarieRegistryUtils.itemKey(holder.value());
+                if (itemId != null) {
+                    callbacks.registerSourceClassification(itemId, valueKey, amount);
+                    matched++;
+                }
+            }
+            if (matched == 0) {
+                throw new IllegalArgumentException("Tag has no registered items: " + rawTag);
+            }
+            return;
+        }
+
+        throw new IllegalArgumentException("Entry must include either 'item' or 'tag'");
+    }
+
+    private static Object parseEffect(ResourceLocation fileId, JsonObject json) {
+        // TODO: implement when EffectDefinition is moved to MarieLib
+        return null;
+    }
+
+    private static Object parseSynergy(ResourceLocation fileId, JsonObject json) {
+        // TODO: implement when ValueSynergyDefinition is moved to MarieLib
+        return null;
+    }
+
+    private static Object parseSourcePairSynergy(ResourceLocation fileId, JsonObject json) {
+        // TODO: implement when SourcePairSynergy datapack parsing is moved to MarieLib
+        return null;
+    }
+
+    private static Object parseMilestone(ResourceLocation fileId, JsonObject json) {
+        // TODO: implement when ValueMilestoneDefinition is moved to MarieLib
+        return null;
+    }
+
+    private static Object parseTrackingProfile(ResourceLocation fileId, JsonObject json) {
+        // TODO: implement when TrackingProfileDefinition is moved to MarieLib
+        return null;
+    }
+
+    private static CompatDefinition parseCompat(ResourceLocation fileId, JsonObject json) throws Exception {
+        String modId = json.has(DatapackSchema.KEY_MOD_ID) ? json.get(DatapackSchema.KEY_MOD_ID).getAsString() : fileId.getPath();
+        String categoryRaw = json.has(DatapackSchema.KEY_CATEGORY) ? json.get(DatapackSchema.KEY_CATEGORY).getAsString() : "SOURCE_MOD";
+        CompatDefinition.CompatCategory category = CompatDefinition.CompatCategory.valueOf(categoryRaw.toUpperCase(Locale.ROOT));
+        Map<ResourceLocation, String> mappings = new LinkedHashMap<>();
+        if (json.has(DatapackSchema.KEY_MAPPINGS) && json.get(DatapackSchema.KEY_MAPPINGS).isJsonObject()) {
+            for (Map.Entry<String, JsonElement> e : json.getAsJsonObject(DatapackSchema.KEY_MAPPINGS).entrySet()) {
+                mappings.put(ResourceLocation.parse(e.getKey()), e.getValue().getAsString());
+            }
+        }
+        return CompatDefinition.builder(modId)
+                .category(category)
+                .addAllSourceMappings(mappings)
+                .build();
+    }
+
+    private void applySourceFamilies(JsonObject json) {
+        Map<String, List<String>> configured = new LinkedHashMap<>();
+        JsonObject families = json.getAsJsonObject(DatapackSchema.KEY_FAMILIES);
+        for (Map.Entry<String, JsonElement> entry : families.entrySet()) {
+            if (!entry.getValue().isJsonArray()) {
+                continue;
+            }
+            List<String> keywords = new ArrayList<>();
+            for (JsonElement keyword : entry.getValue().getAsJsonArray()) {
+                keywords.add(keyword.getAsString());
+            }
+            configured.put(entry.getKey(), keywords);
+        }
+        callbacks.replaceSourceFamilies(configured);
+    }
+
+    private void applyModuleLocks(JsonObject json) {
+        Set<String> locked = new LinkedHashSet<>();
+        Set<String> serverOnly = new LinkedHashSet<>();
+        if (json.has(DatapackSchema.KEY_LOCKED) && json.get(DatapackSchema.KEY_LOCKED).isJsonArray()) {
+            for (JsonElement element : json.getAsJsonArray(DatapackSchema.KEY_LOCKED)) {
+                locked.add(element.getAsString());
+            }
+        }
+        if (json.has(DatapackSchema.KEY_SERVER_ONLY) && json.get(DatapackSchema.KEY_SERVER_ONLY).isJsonArray()) {
+            for (JsonElement element : json.getAsJsonArray(DatapackSchema.KEY_SERVER_ONLY)) {
+                serverOnly.add(element.getAsString());
+            }
+        }
+        callbacks.replaceModuleLocks(locked, serverOnly);
+    }
+
+    private static String getRequiredString(JsonObject json, String key) {
+        if (!json.has(key)) {
+            throw new IllegalArgumentException("Missing required field: " + key);
+        }
+        return json.get(key).getAsString();
+    }
+
+    private static float getRequiredFloat(JsonObject json, String key) {
+        if (!json.has(key)) {
+            throw new IllegalArgumentException("Missing required field: " + key);
+        }
+        return json.get(key).getAsFloat();
+    }
+
+    private static int getOptionalInt(JsonObject json, String key, int fallback) {
+        return json.has(key) ? json.get(key).getAsInt() : fallback;
+    }
+
+    private static boolean getOptionalBoolean(JsonObject json, String key, boolean fallback) {
+        return json.has(key) ? json.get(key).getAsBoolean() : fallback;
+    }
+
+    private static void warnMalformed(ResourceLocation fileId, Exception ex) {
+        String path = "data/" + fileId.getNamespace() + "/" + DatapackSchema.root() + "/" + fileId.getPath() + ".json";
+        String message = ex.getMessage();
+        if (message != null && message.startsWith("Value already registered: ")) {
+            String key = message.substring("Value already registered: ".length());
+            MariesLib.LOGGER.debug("[MarieLib] Value '{}' already registered (loaded from config); ignoring datapack duplicate at {}", key, path);
+            return;
+        }
+        MariesLib.LOGGER.warn("[MarieLib] Skipping malformed datapack entry at {}: {}", path, message);
+    }
+}

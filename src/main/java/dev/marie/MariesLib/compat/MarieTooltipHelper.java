@@ -1,0 +1,215 @@
+package dev.marie.MariesLib.compat;
+
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+
+import dev.marie.MariesLib.api.ApiStatus;
+import dev.marie.MariesLib.api.SourcePairSynergy;
+import dev.marie.MariesLib.api.MilestoneDefinition;
+import dev.marie.MariesLib.api.registry.MilestoneRegistry;
+import dev.marie.MariesLib.api.registry.SynergyRegistry;
+import dev.marie.MariesLib.config.ModuleCache;
+import dev.marie.MariesLib.core.MarieLibContext;
+import dev.marie.MariesLib.tracking.TrackingData;
+import dev.marie.MariesLib.util.MarieItemTags;
+import dev.marie.MariesLib.util.MarieRegistryUtils;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Style;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.food.FoodProperties;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+
+/**
+ * Shared source tooltip formatter used by JEI/REI/EMI integrations.
+ */
+@ApiStatus.Internal
+public final class MarieTooltipHelper {
+
+    private MarieTooltipHelper() {}
+
+    public static List<Component> getTooltipLines(ItemStack stack) {
+        List<Component> lines = new ArrayList<>();
+        if (stack == null || stack.isEmpty()) {
+            return lines;
+        }
+
+        Minecraft mc = Minecraft.getInstance();
+        if (!ModuleCache.enableSourceTooltips) {
+            return lines;
+        }
+
+        Player player = mc.player;
+        Map<String, Float> valueBars = MarieLibContext.get().tooltipValueResolver().apply(stack, player);
+        FoodProperties sourceProperties = stack.getItem().getFoodProperties(stack, player);
+        if (sourceProperties == null && valueBars.isEmpty()) {
+            return lines;
+        }
+
+        String modId = MarieLibContext.get().modId();
+        String itemId = MarieRegistryUtils.itemKey(stack).toString();
+        String dominantCategory = valueBars.isEmpty()
+                ? null
+                : valueBars.entrySet().stream()
+                        .max(Map.Entry.comparingByValue())
+                        .map(Map.Entry::getKey)
+                        .orElse(null);
+        String familyKey = MarieLibContext.get().sourceFamilyResolver().apply(MarieRegistryUtils.itemKey(stack));
+        TrackingData tracking = MarieLibContext.get().clientTrackingDataProvider().get();
+        long gameTimeMs = tracking.lastTickTime > 0 ? tracking.lastTickTime : 0L;
+        float multiplier = player != null ? tracking.peekMultiplier(itemId, dominantCategory, familyKey, gameTimeMs) : 1.0f;
+
+        lines.add(Component.literal("✦ " + modId).withStyle(ChatFormatting.GOLD));
+
+        if (valueBars.isEmpty()) {
+            lines.add(Component.translatable(modId + ".tooltip.unclassified").withStyle(ChatFormatting.GRAY));
+        }
+
+        if (multiplier < 1.0f && player != null) {
+            String pct = (int) (multiplier * 100) + "%";
+            lines.add(Component.translatable(modId + ".tooltip.diminished", pct).withStyle(ChatFormatting.YELLOW));
+        } else if (player != null) {
+            lines.add(Component.translatable(modId + ".tooltip.fresh").withStyle(ChatFormatting.GREEN));
+        }
+
+        final float minLine = 0.02f;
+        String fmt = multiplier < 1.0f ? "%.2f" : "%.1f";
+        String highestKey = null;
+        float highestValue = Float.NEGATIVE_INFINITY;
+        if (!valueBars.isEmpty()) {
+            for (String key : MarieLibContext.get().valueKeys()) {
+                float v = valueBars.getOrDefault(key, 0f);
+                if (v > highestValue) {
+                    highestValue = v;
+                    highestKey = key;
+                }
+            }
+        }
+
+        boolean renderedAny = false;
+        for (String key : MarieLibContext.get().valueKeys()) {
+            float base = valueBars.getOrDefault(key, 0f);
+            if (base < minLine) {
+                continue;
+            }
+            float display = base * multiplier;
+            renderedAny = true;
+            String label = MarieRegistryUtils.capitalizeFirst(key);
+            String gain = String.format(Locale.ROOT, fmt, display);
+            int color = computeTooltipColor(key, tracking, display);
+            MutableComponent line = Component.literal("  " + label + "  +" + gain)
+                    .withStyle(Style.EMPTY.withColor(color));
+            lines.add(line);
+        }
+
+        if (!renderedAny && highestKey != null && highestValue > 0f) {
+            float base = Math.max(0f, valueBars.getOrDefault(highestKey, 0f));
+            float display = base * multiplier;
+            String label = MarieRegistryUtils.capitalizeFirst(highestKey);
+            String gain = String.format(Locale.ROOT, fmt, display);
+            int color = computeTooltipColor(highestKey, tracking, display);
+            lines.add(Component.literal("  " + label + "  +" + gain).withStyle(Style.EMPTY.withColor(color)));
+        }
+
+        if (ModuleCache.enableDebugLogging && player != null) {
+            var breakdown = tracking.getMultiplierBreakdown(itemId, dominantCategory, familyKey, gameTimeMs);
+            float fin = breakdown.finalMultiplier();
+            lines.add(Component.empty());
+            lines.add(Component.literal(
+                    "  → " + (int) (fin * 100) + "% value gain (memory blend)")
+                    .withStyle(fin < 1.0f ? ChatFormatting.GOLD : ChatFormatting.GREEN));
+        } else if (MarieLibContext.get().debugMemoryLogging() && player != null) {
+            var breakdown = tracking.getMultiplierBreakdown(itemId, dominantCategory, familyKey, gameTimeMs);
+            lines.add(Component.empty());
+            lines.add(Component.literal("  → " + (int) (breakdown.finalMultiplier() * 100) + "% value gain")
+                    .withStyle(breakdown.finalMultiplier() < 1.0f ? ChatFormatting.GOLD : ChatFormatting.GREEN));
+        }
+
+        if (ModuleCache.enableDecay && ModuleCache.enableSourceApplication && sourceProperties != null) {
+            boolean bypassEligible =
+                    (sourceProperties.nutrition() <= 2 || stack.is(MarieItemTags.lightSource())) && !stack.is(MarieItemTags.heavySource());
+            if (bypassEligible) {
+                lines.add(Component.translatable(modId + ".tooltip.light_source").withStyle(ChatFormatting.GRAY));
+            }
+        }
+
+        ResourceLocation thisItem = MarieRegistryUtils.itemKey(stack);
+        if (ModuleCache.enableSynergies) {
+            addSourceSynergyLine(lines, thisItem);
+        }
+        if (ModuleCache.enableMilestones && !valueBars.isEmpty()) {
+            addMilestoneLine(lines, valueBars.keySet());
+        }
+        return lines;
+    }
+
+    private static void addSourceSynergyLine(List<Component> lines, ResourceLocation sourceId) {
+        List<SourcePairSynergy> sourceSynergies = SynergyRegistry.getSourcePairSynergies();
+        if (!ModuleCache.enableSynergies || sourceSynergies.isEmpty()) {
+            return;
+        }
+        for (SourcePairSynergy def : sourceSynergies) {
+            ResourceLocation partner = null;
+            if (sourceId.equals(def.getSourceA())) {
+                partner = def.getSourceB();
+            } else if (sourceId.equals(def.getSourceB())) {
+                partner = def.getSourceA();
+            }
+            if (partner == null) {
+                continue;
+            }
+
+            Item partnerItem = BuiltInRegistries.ITEM.get(partner);
+            Component partnerName = new ItemStack(partnerItem).getHoverName();
+            lines.add(Component.literal("✦ Pairs with: ").withStyle(ChatFormatting.AQUA).append(partnerName.copy().withStyle(ChatFormatting.AQUA)));
+            return;
+        }
+    }
+
+    private static void addMilestoneLine(List<Component> lines, Set<String> valuesInTooltip) {
+        if (!ModuleCache.enableMilestones || MilestoneRegistry.getAll().isEmpty()) {
+            return;
+        }
+        Set<String> valueSet = new LinkedHashSet<>(valuesInTooltip);
+        for (String valueKey : valueSet) {
+            List<MilestoneDefinition> milestones = MilestoneRegistry.getForValue(valueKey);
+            if (!milestones.isEmpty()) {
+                MilestoneDefinition milestone = milestones.getFirst();
+                String name = milestone.getId().replace('_', ' ');
+                lines.add(Component.literal("✦ Counts toward: " + name).withStyle(ChatFormatting.YELLOW));
+                return;
+            }
+        }
+    }
+
+    private static final int COL_CRITICAL = 0xFFFF5555;
+    private static final int COL_WARNING = 0xFFFFAA00;
+    private static final int COL_GOOD = 0xFF55FF55;
+
+    private static int computeTooltipColor(String key, TrackingData tracking, float gain) {
+        boolean beneficial = MarieLibContext.get().isValueBeneficial().test(key);
+        float current = tracking.values.getOrDefault(key, 0f);
+        float projected = current + gain;
+
+        if (beneficial) {
+            return MarieLibContext.get().valueColorProvider().apply(key);
+        }
+        float excess = MarieLibContext.get().excessThreshold();
+        float low = MarieLibContext.get().lowThreshold();
+        if (projected > excess) {
+            return COL_CRITICAL;
+        } else if (projected > low) {
+            return COL_WARNING;
+        }
+        return COL_GOOD;
+    }
+}
