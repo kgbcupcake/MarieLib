@@ -157,7 +157,7 @@ This is a **whole player progression system** in one library. Consuming mods wir
 
 ## Modularity
 
-Marie mods built on MariesLib can toggle major features independently — source application,
+Marie mods built on MariesLib can toggle major features independently, like source application,
 decay, effects, HUD, toasts, and more. Modpack authors can lock modules server-side through
 datapack module locks.
 
