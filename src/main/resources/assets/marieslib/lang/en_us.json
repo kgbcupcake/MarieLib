@@ -59,7 +59,7 @@
   "config.marieslib.client.showJoinMessage": "Show Join Message",
   "config.marieslib.debug.enableDebugLogging": "Enable Debug Logging",
   "config.marieslib.presets.listLabel": "Gameplay Presets",
-  "config.marieslib.presets.listLabel.desc": "Load built-in or custom presets. Built-in presets cannot be deleted.",
+  "config.marieslib.presets.listLabel.desc": "Load or save MariesLib setting snapshots from config/marieslib/presets/. Locked presets cannot be deleted.",
   "config.marieslib.presets.saveCurrent": "Save Current Settings…",
   "config.marieslib.presets.load": "Load",
   "config.marieslib.presets.delete": "Delete",

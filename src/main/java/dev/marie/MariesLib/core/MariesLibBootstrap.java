@@ -1,15 +1,7 @@
 package dev.marie.MariesLib.core;
 
-import java.io.IOException;
-import java.io.Writer;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.function.Function;
 import java.util.function.Supplier;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonObject;
 
 import dev.marie.MariesLib.color.ColorRegistry;
 import dev.marie.MariesLib.command.MarieCommand;
@@ -40,12 +32,10 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.common.NeoForge;
 
 /**
- * Bootstraps MariesLib-owned config, context, registries, and handlers when no consuming mod
- * has registered {@link MarieLibContext} first.
+ * Bootstraps MariesLib-owned context, registries, and handlers when no Marie mod has
+ * registered {@link MarieLibContext} first. Library config always lives in {@code config/marieslib.cfg}.
  */
 public final class MariesLibBootstrap {
-
-    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
     private static volatile Supplier<Screen> configScreenFactory = () -> null;
     private static volatile Function<Screen, Screen> exportScreenFactory = parent -> null;
@@ -68,7 +58,6 @@ public final class MariesLibBootstrap {
     public static void bootstrap(IEventBus modEventBus) {
         MarieLibContext.register(buildContext());
         registerRegistries();
-        MariesLibConfigIO.load();
         ModuleCache.refresh();
         registerHandlers(modEventBus);
         RegistryLifecycleManager.loadAll();
@@ -108,12 +97,10 @@ public final class MariesLibBootstrap {
                 .configExporter(MariesLibConfigBridge::buildExportRoot)
                 .configImporter(MariesLibConfigBridge::applyImport)
                 .currentConfigPresetValues(() -> MariesLibConfigHolder.get().toPresetValues())
-                .ensureBuiltInPresetsOnDisk(MariesLibBootstrap::ensureBuiltInPresetsOnDisk)
                 .applyPresetValues(v -> {
                     MariesLibConfigHolder.get().applyPresetValues(v);
                     MariesLibConfigIO.save();
                 })
-                .enableAllEffectsForPresets(() -> MariesLibConfigHolder.get().enableEffects = true)
                 .build();
     }
 
@@ -151,44 +138,5 @@ public final class MariesLibBootstrap {
         }
         MarieAttributes.register(modEventBus);
         TrackingAttachment.register(modEventBus);
-    }
-
-    private static void ensureBuiltInPresetsOnDisk() {
-        Path dir = PresetRegistry.presetsDirectory();
-        try {
-            Files.createDirectories(dir);
-            writeBuiltinIfAbsent(dir, "casual", "Casual", "Relaxed decay and forgiving thresholds.",
-                    presetValues(0.05, 0.20, 0.35, 0.95, 200));
-            writeBuiltinIfAbsent(dir, "survival", "Survival", "Balanced default gameplay.",
-                    presetValues(0.10, 0.25, 0.40, 0.90, 140));
-            writeBuiltinIfAbsent(dir, "hardcore", "Hardcore", "Fast decay and tight thresholds.",
-                    presetValues(0.20, 0.30, 0.50, 0.85, 100));
-        } catch (IOException e) {
-            MariesLib.LOGGER.error("[MariesLib] Failed to write built-in presets", e);
-        }
-    }
-
-    private static PresetRegistry.PresetValues presetValues(
-            double decay, double crit, double low, double excess, int effectTicks) {
-        return new PresetRegistry.PresetValues(decay, crit, low, excess, effectTicks, true, true);
-    }
-
-    private static void writeBuiltinIfAbsent(
-            Path dir, String stem, String name, String description, PresetRegistry.PresetValues values)
-            throws IOException {
-        Path file = dir.resolve(stem + ".json");
-        if (Files.exists(file)) {
-            return;
-        }
-        JsonObject root = new JsonObject();
-        root.addProperty("name", name);
-        root.addProperty("description", description);
-        root.addProperty("author", "MariesLib");
-        root.addProperty("locked", true);
-        root.add("values", values.toJsonObject());
-        try (Writer w = Files.newBufferedWriter(file)) {
-            GSON.toJson(root, w);
-        }
-        MariesLib.LOGGER.info("[MariesLib] Wrote built-in preset {}", file);
     }
 }

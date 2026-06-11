@@ -6,7 +6,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
-import dev.marie.MariesLib.core.MarieLibContext;
 import dev.marie.MariesLib.core.MariesLib;
 import dev.marie.MariesLib.data.DatapackSchema;
 import dev.marie.MariesLib.registry.AbstractRegistry;
@@ -22,7 +21,7 @@ import java.nio.file.Path;
 import java.util.Set;
 
 /**
- * Loads config setting locks from config/&lt;modid&gt;/locks.json.
+ * Loads library config locks from {@code config/marieslib/locks.json}.
  * <p>
  * <b>Priority / Override Stack (lowest to highest):</b>
  * <ol>
@@ -94,7 +93,7 @@ public class LockRegistry {
     }
 
     public static void load() {
-        Path configDir = FMLPaths.CONFIGDIR.get().resolve(MarieLibContext.get().modId());
+        Path configDir = FMLPaths.CONFIGDIR.get().resolve(MariesLib.MOD_ID);
         Path file = configDir.resolve("locks.json");
 
         try {

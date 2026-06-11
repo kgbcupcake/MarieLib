@@ -1,7 +1,8 @@
 package dev.marie.MariesLib.client;
 
+import dev.marie.MariesLib.client.config.MariesLibClothConfig;
+import dev.marie.MariesLib.config.MariesLibConfigHolder;
 import dev.marie.MariesLib.config.PresetRegistry;
-import dev.marie.MariesLib.core.MarieLibContext;
 import dev.marie.MariesLib.core.MariesLib;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -29,7 +30,7 @@ public final class SavePresetScreen extends Screen {
     }
 
     private static String configKey(String suffix) {
-        return "config." + MarieLibContext.get().modId() + "." + suffix;
+        return "config." + MariesLib.MOD_ID + "." + suffix;
     }
 
     @Override
@@ -67,15 +68,12 @@ public final class SavePresetScreen extends Screen {
         String author = mc.player != null ? mc.player.getGameProfile().getName() : "";
         String desc = descriptionBox.getValue().trim();
         try {
-            PresetRegistry.saveUserPreset(name, desc, author, MarieLibContext.get().currentConfigPresetValues());
+            PresetRegistry.saveUserPreset(name, desc, author, MariesLibConfigHolder.get().toPresetValues());
         } catch (Exception e) {
             MariesLib.LOGGER.warn("[SavePresetScreen] Failed to save preset", e);
             return;
         }
-        Screen configScreen = MarieLibContext.get().configScreenFactory();
-        if (configScreen != null) {
-            mc.setScreen(configScreen);
-        }
+        mc.setScreen(MariesLibClothConfig.create(reopenParent));
     }
 
     @Override

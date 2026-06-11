@@ -15,5 +15,7 @@ final class ClothCategoryDebug {
 
         ClothConfigHelper.addBool(cat, entryBuilder, MariesLibConfigKeys.ENABLE_DEBUG_LOGGING,
                 "debug.enableDebugLogging", h.enableDebugLogging, false, v -> h.enableDebugLogging = v);
+        ClothConfigHelper.addBool(cat, entryBuilder, MariesLibConfigKeys.DEBUG_MEMORY_LOGGING,
+                "memory.debugMemoryLogging", h.debugMemoryLogging, false, v -> h.debugMemoryLogging = v);
     }
 }

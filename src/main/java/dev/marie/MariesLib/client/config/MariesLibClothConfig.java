@@ -8,7 +8,8 @@ import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
 import net.minecraft.client.gui.screens.Screen;
 
 /**
- * Builds the MariesLib Cloth Config screen.
+ * Builds the MariesLib config screen. All entries read and write {@code config/marieslib.cfg}
+ * (and related paths under {@code config/marieslib/}).
  */
 public final class MariesLibClothConfig {
 

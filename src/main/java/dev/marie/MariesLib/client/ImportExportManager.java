@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 
 import dev.marie.MariesLib.core.MarieLibContext;
+import dev.marie.MariesLib.core.MariesLib;
 import net.neoforged.fml.loading.FMLPaths;
 
 import java.io.ByteArrayInputStream;
@@ -70,16 +71,16 @@ public final class ImportExportManager {
     private ImportExportManager() {}
 
     public static String sharePrefix() {
-        return MarieLibContext.get().modId().toUpperCase(Locale.ROOT) + "CF1:";
+        return MariesLib.MOD_ID.toUpperCase(Locale.ROOT) + "CF1:";
     }
 
     public static Path exportsDirectory() {
-        return FMLPaths.CONFIGDIR.get().resolve(MarieLibContext.get().modId()).resolve("exports");
+        return FMLPaths.CONFIGDIR.get().resolve(MariesLib.MOD_ID).resolve("exports");
     }
 
     public static Path writeExportFile(JsonObject root) throws IOException {
         Files.createDirectories(exportsDirectory());
-        String stem = MarieLibContext.get().modId() + "-config-" + LocalDateTime.now().format(FILE_TS);
+        String stem = MariesLib.MOD_ID + "-config-" + LocalDateTime.now().format(FILE_TS);
         Path file = exportsDirectory().resolve(stem + ".json");
         try (Writer w = Files.newBufferedWriter(file)) {
             GSON_PRETTY.toJson(root, w);

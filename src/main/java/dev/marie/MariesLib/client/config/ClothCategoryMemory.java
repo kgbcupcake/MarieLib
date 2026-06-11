@@ -5,11 +5,12 @@ import dev.marie.MariesLib.config.MariesLibConfigKeys;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
 
-final class ClothCategoryMemory {
+/** Memory / diminishing-returns Cloth entries for Marie mods that own gameplay balance config. */
+public final class ClothCategoryMemory {
 
     private ClothCategoryMemory() {}
 
-    static void build(ConfigBuilder builder, ConfigEntryBuilder entryBuilder) {
+    public static void build(ConfigBuilder builder, ConfigEntryBuilder entryBuilder) {
         MariesLibConfigHolder h = ClothConfigHelper.holder();
         var cat = ClothConfigHelper.category(builder, "memory");
 
@@ -40,7 +41,5 @@ final class ClothCategoryMemory {
                 "memory.diminishingFloor", h.diminishingFloor, 0.2, 0.0, 1.0, v -> h.diminishingFloor = v);
         ClothConfigHelper.addDouble(cat, entryBuilder, MariesLibConfigKeys.STARTING_VALUE_FILL,
                 "memory.startingValueFill", h.startingValueFill, 0.5, 0.0, 1.0, v -> h.startingValueFill = v);
-        ClothConfigHelper.addBool(cat, entryBuilder, MariesLibConfigKeys.DEBUG_MEMORY_LOGGING,
-                "memory.debugMemoryLogging", h.debugMemoryLogging, false, v -> h.debugMemoryLogging = v);
     }
 }

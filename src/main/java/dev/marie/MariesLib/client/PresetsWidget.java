@@ -1,8 +1,8 @@
 package dev.marie.MariesLib.client;
 
+import dev.marie.MariesLib.client.config.MariesLibClothConfig;
 import dev.marie.MariesLib.config.PresetRegistry;
 import dev.marie.MariesLib.config.PresetRegistry.ParsedPreset;
-import dev.marie.MariesLib.core.MarieLibContext;
 import dev.marie.MariesLib.core.MariesLib;
 import me.shedaniel.clothconfig2.gui.ClothConfigScreen;
 import me.shedaniel.clothconfig2.gui.entries.TooltipListEntry;
@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Cloth Config entry: preset cards with load/delete, save-current dialog, and built-in/lock rules.
+ * Cloth Config entry: preset cards with load/delete, save-current dialog, and lock rules.
  */
 public final class PresetsWidget extends TooltipListEntry<Object> {
 
@@ -55,7 +55,7 @@ public final class PresetsWidget extends TooltipListEntry<Object> {
     }
 
     private static String configKey(String suffix) {
-        return "config." + MarieLibContext.get().modId() + "." + suffix;
+        return "config." + MariesLib.MOD_ID + "." + suffix;
     }
 
     void openDeleteConfirm(ParsedPreset preset) {
@@ -68,12 +68,7 @@ public final class PresetsWidget extends TooltipListEntry<Object> {
                 } catch (Exception e) {
                     MariesLib.LOGGER.warn("[PresetsWidget] Failed to delete preset {}", preset.path(), e);
                 }
-                Screen configScreen = MarieLibContext.get().configScreenFactory();
-                if (configScreen != null) {
-                    mc.setScreen(configScreen);
-                } else {
-                    mc.setScreen(returnTo);
-                }
+                mc.setScreen(MariesLibClothConfig.create(reopenParent));
             } else {
                 mc.setScreen(returnTo);
             }
@@ -88,10 +83,7 @@ public final class PresetsWidget extends TooltipListEntry<Object> {
         PresetRegistry.applyPreset(preset);
         Minecraft mc = Minecraft.getInstance();
         mc.getToasts().addToast(new PresetLoadedToast(preset.name()));
-        Screen configScreen = MarieLibContext.get().configScreenFactory();
-        if (configScreen != null) {
-            mc.setScreen(configScreen);
-        }
+        mc.setScreen(MariesLibClothConfig.create(reopenParent));
     }
 
     @Override
