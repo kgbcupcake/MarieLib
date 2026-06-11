@@ -1,6 +1,6 @@
 package dev.marie.MariesLib.client;
 
-import dev.marie.MariesLib.core.MarieLibContext;
+import dev.marie.MariesLib.core.IMarieLibConfig;
 import dev.marie.MariesLib.tracking.TrackingData;
 import dev.marie.MariesLib.tracking.TrackingMemoryConfig;
 import net.minecraft.util.Mth;
@@ -63,10 +63,7 @@ public class MarieClientCache {
     private static boolean firstClientSync = true;
 
     private static TrackingMemoryConfig injectClientMemoryConfig() {
-        if (!MarieLibContext.isRegistered()) {
-            return new TrackingMemoryConfig(60L, 1.2, 3.0, 0.2, 0.5);
-        }
-        return MarieLibContext.get().clientMemoryConfigProvider();
+        return IMarieLibConfig.get().trackingMemoryConfig();
     }
 
     /** Resets client-side snapshot diagnostics, e.g. on disconnect. */

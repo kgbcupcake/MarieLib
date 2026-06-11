@@ -105,7 +105,9 @@ public final class PresetRegistry {
         } catch (IOException e) {
             MariesLib.LOGGER.error("[MarieLib] Failed to create presets directory", e);
         }
-        MarieLibContext.get().ensureBuiltInPresetsOnDisk();
+        if (MarieLibContext.isRegistered()) {
+            MarieLibContext.get().ensureBuiltInPresetsOnDisk();
+        }
     }
 
     public static void reload() {

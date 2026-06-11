@@ -3,13 +3,19 @@ package dev.marie.MariesLib.scanner;
 // High-level orchestrator — the correct entry point for scanning all loaded items.
 
 import dev.marie.MariesLib.api.ApiStatus;
+import dev.marie.MariesLib.api.ValueDefinition;
+import dev.marie.MariesLib.api.registry.ValueRegistry;
 import dev.marie.MariesLib.core.MariesLib;
+import dev.marie.MariesLib.core.IMarieLibConfig;
 import dev.marie.MariesLib.core.MarieLibContext;
+import dev.marie.MariesLib.runtime.SourceRegistry;
 import dev.marie.MariesLib.util.MarieRegistryUtils;
 import dev.marie.MariesLib.classification.ClassificationTraceStep;
 import dev.marie.MariesLib.scanner.analysis.MultiValueAnalysisPipeline;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeManager;
@@ -88,8 +94,8 @@ public final class ItemScanner {
             boolean recipeInheritance = DEFAULT_ENABLE_RECIPE_INHERITANCE;
             float spreadThreshold = DEFAULT_SPREAD_THRESHOLD;
             try {
-                recipeInheritance = MarieLibContext.get().scannerEnableRecipeInheritance();
-                spreadThreshold = (float) MarieLibContext.get().scannerConfidenceSpreadThreshold();
+                recipeInheritance = IMarieLibConfig.get().scannerEnableRecipeInheritance();
+                spreadThreshold = IMarieLibConfig.get().scannerConfidenceSpreadThreshold();
             } catch (IllegalStateException ignored) {
                 // Config not initialized yet; keep safe zero-default behavior.
             }
@@ -176,10 +182,30 @@ public final class ItemScanner {
     }
 
     /**
-     * Check if an item stack has any value tag.
+     * Check if an item stack has an authoritative datapack value tag or classification.
      */
     public static boolean hasValueTag(ItemStack stack) {
-        return MarieLibContext.get().valueTagChecker().test(stack);
+        if (stack.isEmpty()) {
+            return false;
+        }
+        ResourceLocation itemId = MarieRegistryUtils.itemKey(stack);
+        if (itemId == null) {
+            return false;
+        }
+        if (SourceRegistry.hasAuthoritativeClassification(itemId)) {
+            return true;
+        }
+        String modId = IMarieLibConfig.get().modId();
+        for (ValueDefinition valueDef : ValueRegistry.getAll()) {
+            String valueKey = valueDef.getId();
+            TagKey<Item> tag = TagKey.create(
+                    Registries.ITEM,
+                    ResourceLocation.fromNamespaceAndPath(modId, "values/" + valueKey));
+            if (stack.is(tag)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     // ─────────────────────────────────────────────────────────────────────────────
@@ -195,7 +221,7 @@ public final class ItemScanner {
 
     /**
      * Runs a full scan off-thread, then applies only confident classifications via
-     * {@link MarieLibContext#applyScannerResults}.
+     * {@link SourceRegistry#applyFromScanner(Map)}.
      */
     public static void scanAndApply(RecipeManager recipeManager) {
         ScanOptions options = ScanOptions.defaults()
@@ -236,7 +262,7 @@ public final class ItemScanner {
                 Map<String, Float> toApply;
                 if (isComposite(r) && r.values() != null && !r.values().isEmpty()) {
                     float top = r.values().values().stream().max(Float::compare).orElse(0f);
-                    float threshold = top * MarieLibContext.get().compositeRatioThreshold();
+                    float threshold = top * IMarieLibConfig.get().compositeRatioThreshold();
                     Map<String, Float> composite = new HashMap<>();
                     for (Map.Entry<String, Float> e : r.values().entrySet()) {
                         if (e.getValue() >= threshold) {
@@ -254,7 +280,7 @@ public final class ItemScanner {
                 valueMap.put(r.itemId(), toApply);
             }
         }
-        MarieLibContext.get().applyScannerResults(valueMap);
+        SourceRegistry.applyFromScanner(valueMap);
         MariesLib.LOGGER.info(
                 "[ItemScanner] scanAndApply complete: {} confident, {} uncertain",
                 confident,
@@ -283,7 +309,7 @@ public final class ItemScanner {
 
         return top > 0f
                 && second > 0f
-                && second / top >= MarieLibContext.get().compositeRatioThreshold();
+                && second / top >= IMarieLibConfig.get().compositeRatioThreshold();
     }
 
     /**
@@ -298,7 +324,7 @@ public final class ItemScanner {
 
         progress.accept("Starting source scan...");
 
-        List<String> valueKeys = MarieLibContext.get().valueKeys();
+        List<String> valueKeys = ValueRegistry.getAll().stream().map(ValueDefinition::getId).toList();
         String fallbackKey = valueKeys.isEmpty() ? "" : valueKeys.get(0);
 
         RecipeInheritanceResolver recipeResolver = null;
@@ -320,7 +346,7 @@ public final class ItemScanner {
 
         for (Item item : BuiltInRegistries.ITEM) {
             ItemStack stack = new ItemStack(item);
-            if (!MarieLibContext.get().sourceItemFilter().test(stack)) {
+            if (!passesSourceFilter(stack)) {
                 continue;
             }
 
@@ -470,5 +496,12 @@ public final class ItemScanner {
             cache = new ScanCache();
             initialized = true;
         }
+    }
+
+    private static boolean passesSourceFilter(ItemStack stack) {
+        if (MarieLibContext.isRegistered()) {
+            return MarieLibContext.get().sourceItemFilter().test(stack);
+        }
+        return true;
     }
 }

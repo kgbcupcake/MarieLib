@@ -1,8 +1,11 @@
 package dev.marie.MariesLib.command;
 
 import dev.marie.MariesLib.api.ReportProvider;
+import dev.marie.MariesLib.api.ValueDefinition;
 import dev.marie.MariesLib.api.registry.ReportProviderRegistry;
-import dev.marie.MariesLib.core.MarieLibContext;
+import dev.marie.MariesLib.api.registry.ValueRegistry;
+import dev.marie.MariesLib.config.MariesLibConfigHolder;
+import dev.marie.MariesLib.core.IMarieLibConfig;
 import dev.marie.MariesLib.tracking.TrackingData;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
@@ -38,9 +41,9 @@ public final class MarieCommandSource {
     }
 
     public static ValueStatus statusFor(float value, String key) {
-        float critical = MarieLibContext.get().criticalThresholdFor(key);
-        float low = MarieLibContext.get().lowThreshold();
-        float excess = MarieLibContext.get().excessThreshold();
+        float critical = IMarieLibConfig.get().criticalThresholdFor(key);
+        float low = IMarieLibConfig.get().lowThreshold();
+        float excess = IMarieLibConfig.get().excessThreshold();
         if (value < critical) return ValueStatus.CRITICAL;
         if (value < low) return ValueStatus.LOW;
         if (value > excess) return ValueStatus.EXCESS;
@@ -59,7 +62,7 @@ public final class MarieCommandSource {
     public static List<Component> buildReportLines(
             ServerPlayer target, TrackingData data, String activeProfile) {
         return buildReportLines(target, data, activeProfile,
-                key -> MarieLibContext.get().valueDecayRateProvider().apply(key),
+                MarieCommandSource::decayRateFor,
                 (value, key) -> statusFor(value, key));
     }
 
@@ -70,7 +73,7 @@ public final class MarieCommandSource {
             java.util.function.Function<String, Float> decayRateFor,
             java.util.function.BiFunction<Float, String, ValueStatus> statusFor) {
         List<Component> lines = new ArrayList<>();
-        lines.add(Component.literal("=== " + MarieLibContext.get().modId() + " Report ===").withStyle(ChatFormatting.GOLD));
+        lines.add(Component.literal("=== " + IMarieLibConfig.get().modId() + " Report ===").withStyle(ChatFormatting.GOLD));
         lines.add(Component.literal("Player: ").withStyle(ChatFormatting.GRAY)
                 .append(target.getName().copy().withStyle(ChatFormatting.WHITE)));
         lines.add(Component.literal("Active Profile: ").withStyle(ChatFormatting.GRAY)
@@ -102,6 +105,11 @@ public final class MarieCommandSource {
         }
 
         return lines;
+    }
+
+    private static float decayRateFor(String key) {
+        ValueDefinition def = ValueRegistry.get(key);
+        return def != null ? def.getDefaultDecayRate() : MariesLibConfigHolder.get().defaultDecayRate;
     }
 
     private static Component chip(String text, ChatFormatting color) {

@@ -2,7 +2,7 @@ package dev.marie.MariesLib.tracking;
 
 import dev.marie.MariesLib.api.ApiStatus;
 import dev.marie.MariesLib.api.MemoryView;
-import dev.marie.MariesLib.core.MarieLibContext;
+import dev.marie.MariesLib.core.IMarieLibConfig;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.Comparator;
@@ -23,7 +23,7 @@ public final class TrackingDataMemoryView implements MemoryView {
 
     @Override
     public List<ResourceLocation> getRecentSources() {
-        long halfLifeMs = MarieLibContext.get().memoryWindowMinutes() * 60_000L;
+        long halfLifeMs = IMarieLibConfig.get().memoryWindowMinutes() * 60_000L;
         long gameTimeMs = trackingData.lastTickTime > 0 ? trackingData.lastTickTime : System.currentTimeMillis();
 
         return trackingData.sourceMemory.entrySet().stream()
@@ -40,7 +40,7 @@ public final class TrackingDataMemoryView implements MemoryView {
         SourceMemoryEntry entry = trackingData.sourceMemory.get(key);
         if (entry == null) return false;
 
-        long halfLifeMs = MarieLibContext.get().memoryWindowMinutes() * 60_000L;
+        long halfLifeMs = IMarieLibConfig.get().memoryWindowMinutes() * 60_000L;
         long gameTimeMs = trackingData.lastTickTime > 0 ? trackingData.lastTickTime : System.currentTimeMillis();
         return !entry.isEffectivelyExpired(halfLifeMs, gameTimeMs, 0.1f);
     }

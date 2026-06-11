@@ -1,10 +1,12 @@
 package dev.marie.MariesLib.handler;
 
 import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.core.MarieLibContext;
+import dev.marie.MariesLib.config.ModuleCache;
 import dev.marie.MariesLib.diagnostics.MarieUnknownItemLogger;
 import dev.marie.MariesLib.registry.RegistryLifecycleManager;
+import dev.marie.MariesLib.runtime.RuntimeResolver;
 import dev.marie.MariesLib.runtime.SourceTriggerRegistry;
+import dev.marie.MariesLib.scanner.ItemScanner;
 
 @ApiStatus.Internal
 public final class ReloadPipeline {
@@ -14,7 +16,9 @@ public final class ReloadPipeline {
     public static void reloadAll() {
         RegistryLifecycleManager.reloadAll();
         SourceTriggerRegistry.clear();
-        MarieLibContext.get().onCacheInvalidated();
+        ModuleCache.refresh();
+        ItemScanner.invalidateCache();
+        RuntimeResolver.getInstance().invalidateCache();
         MarieUnknownItemLogger.onReload();
     }
 }

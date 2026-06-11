@@ -7,10 +7,13 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.mojang.logging.LogUtils;
 import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.core.MarieLibContext;
+import dev.marie.MariesLib.api.ValueDefinition;
+import dev.marie.MariesLib.api.registry.ValueRegistry;
+import dev.marie.MariesLib.core.IMarieLibConfig;
 import dev.marie.MariesLib.data.DatapackSchema;
 import dev.marie.MariesLib.registry.AbstractRegistry;
 import dev.marie.MariesLib.util.MarieResourceLoader;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.neoforged.fml.loading.FMLPaths;
 import org.slf4j.Logger;
@@ -55,7 +58,7 @@ public class SourceValueRegistry {
     public static Map<String, Float> getValuesForCategory(String categoryKey, float totalPoints) {
         SourceValueDef def = INSTANCE.get(categoryKey);
         if (def == null) {
-            List<String> keys = MarieLibContext.get().valueKeys();
+            List<String> keys = ValueRegistry.getAll().stream().map(ValueDefinition::getId).toList();
             if (keys.isEmpty()) {
                 return Map.of();
             }
@@ -85,8 +88,24 @@ public class SourceValueRegistry {
         return INSTANCE.keys();
     }
 
+    /**
+     * Returns the registered classification score for an item/value pair, or 0 if none.
+     */
+    public static float getScore(String itemId, String valueKey) {
+        ResourceLocation loc = ResourceLocation.tryParse(itemId);
+        if (loc == null) {
+            return 0f;
+        }
+        Map<String, Float> classification = SourceRegistry.getExternalClassification(loc);
+        if (classification == null) {
+            return 0f;
+        }
+        Float score = classification.get(valueKey);
+        return score != null ? score : 0f;
+    }
+
     public static void load() {
-        Path configDir = FMLPaths.CONFIGDIR.get().resolve(MarieLibContext.get().modId());
+        Path configDir = FMLPaths.CONFIGDIR.get().resolve(IMarieLibConfig.get().modId());
         Path file = configDir.resolve("source_values.json");
 
         try {
@@ -166,7 +185,7 @@ public class SourceValueRegistry {
     }
 
     public static void save() {
-        Path configDir = FMLPaths.CONFIGDIR.get().resolve(MarieLibContext.get().modId());
+        Path configDir = FMLPaths.CONFIGDIR.get().resolve(IMarieLibConfig.get().modId());
         Path file = configDir.resolve("source_values.json");
         try {
             writeRegistry(file);

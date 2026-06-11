@@ -60,7 +60,7 @@ public final class PresetsWidget extends TooltipListEntry<Object> {
 
     void openDeleteConfirm(ParsedPreset preset) {
         Minecraft mc = Minecraft.getInstance();
-        Screen returnTo = getConfigScreen();
+        Screen returnTo = ClientScreenFactories.getConfigScreen();
         var callback = (it.unimi.dsi.fastutil.booleans.BooleanConsumer) yes -> {
             if (yes) {
                 try {

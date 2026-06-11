@@ -15,9 +15,9 @@ import dev.marie.MariesLib.api.registry.SourcePropertySignalRegistry;
 import dev.marie.MariesLib.api.registry.SynergyRegistry;
 import dev.marie.MariesLib.api.registry.ValueRegistry;
 import dev.marie.MariesLib.config.ModuleCache;
+import dev.marie.MariesLib.core.IMarieLibConfig;
 import dev.marie.MariesLib.core.MarieLibContext;
-import dev.marie.MariesLib.core.MariesLib;
-import dev.marie.MariesLib.core.MarieLibPlayerDataProvider;
+import dev.marie.MariesLib.core.MarieLibDataProvider;
 import dev.marie.MariesLib.core.MarieLibRegistrationDelegate;
 import dev.marie.MariesLib.handler.SourceApplicationPipeline;
 import dev.marie.MariesLib.runtime.SourceTriggerRegistry;
@@ -48,7 +48,7 @@ import java.util.Map;
 public final class MarieAPI {
 
     private static ResourceLocation apiModifierSource() {
-        String modId = MarieLibContext.isRegistered() ? MarieLibContext.get().modId() : MariesLib.MOD_ID;
+        String modId = IMarieLibConfig.get().modId();
         return ResourceLocation.fromNamespaceAndPath(modId, "api");
     }
 
@@ -70,7 +70,7 @@ public final class MarieAPI {
         if (player == null) {
             return 0f;
         }
-        MarieLibPlayerDataProvider provider = MarieLibContext.get().playerDataProvider();
+        MarieLibDataProvider provider = MarieLibContext.get().dataProvider();
         if (provider == null) {
             return 0f;
         }
@@ -89,7 +89,7 @@ public final class MarieAPI {
         if (player == null) {
             return -1.0f;
         }
-        MarieLibPlayerDataProvider provider = MarieLibContext.get().playerDataProvider();
+        MarieLibDataProvider provider = MarieLibContext.get().dataProvider();
         if (provider == null) {
             return -1.0f;
         }
@@ -108,7 +108,7 @@ public final class MarieAPI {
         if (player == null) {
             return EmptyMemoryView.INSTANCE;
         }
-        MarieLibPlayerDataProvider provider = MarieLibContext.get().playerDataProvider();
+        MarieLibDataProvider provider = MarieLibContext.get().dataProvider();
         if (provider == null) {
             return EmptyMemoryView.INSTANCE;
         }
@@ -158,7 +158,7 @@ public final class MarieAPI {
      */
     @ApiStatus.Stable
     public static void modifyValue(Player player, String valueKey, float delta) {
-        MarieLibPlayerDataProvider provider = MarieLibContext.get().playerDataProvider();
+        MarieLibDataProvider provider = MarieLibContext.get().dataProvider();
         if (provider == null) {
             return;
         }

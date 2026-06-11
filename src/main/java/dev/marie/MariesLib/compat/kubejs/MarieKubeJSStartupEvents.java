@@ -4,8 +4,8 @@ import dev.latvian.mods.kubejs.event.EventGroup;
 import dev.latvian.mods.kubejs.event.EventGroupRegistry;
 import dev.latvian.mods.kubejs.event.KubeEvent;
 import dev.marie.MariesLib.api.ApiStatus;
+import dev.marie.MariesLib.core.IMarieLibConfig;
 import dev.marie.MariesLib.core.MarieLibContext;
-import dev.marie.MariesLib.core.MariesLib;
 
 /**
  * Startup event hook holder for MarieLib KubeJS registration flows.
@@ -31,7 +31,7 @@ public final class MarieKubeJSStartupEvents {
     }
 
     private static String modId() {
-        return MarieLibContext.isRegistered() ? MarieLibContext.get().modId() : MariesLib.MOD_ID;
+        return IMarieLibConfig.get().modId();
     }
 
     public static void register(EventGroupRegistry registry) {

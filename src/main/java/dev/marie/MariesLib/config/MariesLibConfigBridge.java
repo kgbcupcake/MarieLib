@@ -2,8 +2,8 @@ package dev.marie.MariesLib.config;
 
 import com.google.gson.JsonObject;
 
+import dev.marie.MariesLib.api.registry.ValueRegistry;
 import dev.marie.MariesLib.color.ColorRegistry;
-import dev.marie.MariesLib.core.MarieLibContext;
 
 /**
  * Builds import/export JSON sections from {@link MariesLibConfigHolder}.
@@ -36,7 +36,7 @@ public final class MariesLibConfigBridge {
         root.add("effects", effects);
 
         JsonObject valueColors = new JsonObject();
-        for (String key : MarieLibContext.get().valueKeys()) {
+        for (String key : ValueRegistry.getAll().stream().map(v -> v.getId()).toList()) {
             ColorRegistry.getArgb(key).ifPresent(argb ->
                     valueColors.addProperty(key, String.format("0x%08X", argb)));
         }

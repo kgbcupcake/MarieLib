@@ -3,6 +3,7 @@ package dev.marie.MariesLib.client;
 import dev.marie.MariesLib.client.config.MariesLibClothConfig;
 import dev.marie.MariesLib.core.MariesLib;
 import dev.marie.MariesLib.core.MariesLibBootstrap;
+import net.minecraft.client.gui.screens.Screen;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
@@ -18,7 +19,7 @@ public final class MariesLibClient {
             var mc = net.minecraft.client.Minecraft.getInstance();
             return MariesLibClothConfig.create(mc.screen);
         });
-        MariesLibBootstrap.setExportScreenFactory(MariesLibExportScreen::new);
-        MariesLibBootstrap.setImportScreenFactory(MariesLibImportScreen::new);
+        MariesLibBootstrap.setExportScreenFactory(parent -> new MariesLibExportScreen((Screen) parent));
+        MariesLibBootstrap.setImportScreenFactory(parent -> new MariesLibImportScreen((Screen) parent));
     }
 }

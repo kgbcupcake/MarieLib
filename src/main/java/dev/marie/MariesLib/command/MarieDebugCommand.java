@@ -5,7 +5,8 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import dev.marie.MariesLib.classification.ClassificationTrace;
 import dev.marie.MariesLib.classification.ClassificationTraceFormatter;
-import dev.marie.MariesLib.core.MarieLibContext;
+import dev.marie.MariesLib.classification.ClassificationTraceStep;
+import dev.marie.MariesLib.core.IMarieLibConfig;
 import dev.marie.MariesLib.core.MariesLib;
 import dev.marie.MariesLib.runtime.RuntimeResolver;
 import dev.marie.MariesLib.scan.CacheStats;
@@ -141,9 +142,9 @@ public final class MarieDebugCommand {
         }
 
         RecipeManager recipeManager = source.getServer().getRecipeManager();
-        String traceOutput = MarieLibContext.get().heldItemTraceProvider().apply(stack, recipeManager);
         ClassificationTrace classTrace =
-                MarieLibContext.get().heldItemClassificationTraceProvider().apply(stack, recipeManager);
+                RuntimeResolver.getInstance().resolveWithTrace(stack, recipeManager);
+        String traceOutput = formatTraceSteps(classTrace);
         String inspectorOutput = classTrace != null
                 ? ClassificationTraceFormatter.format(classTrace, stack)
                 : "";
@@ -159,7 +160,7 @@ public final class MarieDebugCommand {
                 + "\n\n---\n\n" + inspectorOutput;
 
         try {
-            Path dir = FMLPaths.CONFIGDIR.get().resolve(MarieLibContext.get().modId()).resolve(DEBUG_SUBDIR);
+            Path dir = FMLPaths.CONFIGDIR.get().resolve(IMarieLibConfig.get().modId()).resolve(DEBUG_SUBDIR);
             Files.createDirectories(dir);
             Path file = dir.resolve("trace_dump.txt");
             Files.writeString(file, fullTrace);
@@ -170,6 +171,17 @@ public final class MarieDebugCommand {
         }
 
         return 1;
+    }
+
+    private static String formatTraceSteps(ClassificationTrace trace) {
+        if (trace == null || trace.steps().isEmpty()) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder();
+        for (ClassificationTraceStep step : trace.steps()) {
+            sb.append(step.id()).append(": ").append(step.message()).append('\n');
+        }
+        return sb.toString();
     }
 
     /** Collapses line breaks so trace dump header stays single-line per field. */
@@ -197,17 +209,5 @@ public final class MarieDebugCommand {
         MutableComponent line = Component.literal(label).withStyle(ChatFormatting.GRAY)
                 .append(Component.literal(value).withStyle(ChatFormatting.WHITE));
         source.sendSuccess(() -> line, false);
-    }
-
-    private static void sendDarkGray(CommandSourceStack source, String text) {
-        source.sendSuccess(() -> Component.literal(text).withStyle(ChatFormatting.DARK_GRAY), false);
-    }
-
-    private static void sendBlank(CommandSourceStack source) {
-        source.sendSuccess(() -> Component.literal(" "), false);
-    }
-
-    private static String fmt(float value) {
-        return String.format(Locale.ROOT, "%.2f", value);
     }
 }

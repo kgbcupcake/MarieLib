@@ -88,6 +88,10 @@ public class SourceRegistry {
         return SCANNER_CLASSIFICATIONS.get(sourceId);
     }
 
+    public static boolean hasAuthoritativeClassification(ResourceLocation sourceId) {
+        return EXTERNAL_CLASSIFICATIONS.containsKey(sourceId);
+    }
+
     static boolean hasApiClassification(ResourceLocation sourceId) {
         return EXTERNAL_CLASSIFICATIONS.containsKey(sourceId);
     }

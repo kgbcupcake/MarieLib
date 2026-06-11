@@ -1,7 +1,6 @@
 package dev.marie.MariesLib.scanner;
 
 import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.core.MarieLibContext;
 import dev.marie.MariesLib.core.MariesLib;
 
 import java.util.ArrayList;
@@ -28,25 +27,23 @@ public final class TokenStemmer {
     private static final Pattern CAMEL_BOUNDARY_ACRONYM = Pattern.compile("(?<=[A-Z])(?=[A-Z][a-z])");
 
     private static String[] dictionary() {
-        return MarieLibContext.isRegistered() ? MarieLibContext.get().stemmerDictionary() : new String[0];
+        return ScannerSpecRegistry.stemmerDictionary();
     }
 
     private static Map<String, String[]> compoundSplits() {
-        return MarieLibContext.isRegistered() ? MarieLibContext.get().stemmerCompoundSplits() : Map.of();
+        return ScannerSpecRegistry.stemmerCompoundSplits();
     }
 
     private static Map<String, String> irregularForms() {
-        return MarieLibContext.isRegistered() ? MarieLibContext.get().stemmerIrregularForms() : Map.of();
+        return ScannerSpecRegistry.stemmerIrregularForms();
     }
 
     private static Set<String> stopWords() {
-        return MarieLibContext.isRegistered() ? MarieLibContext.get().stemmerStopWords() : Set.of();
+        return ScannerSpecRegistry.stemmerStopWords();
     }
 
     private static Set<String> noiseSuffixes() {
-        return MarieLibContext.isRegistered()
-                ? MarieLibContext.get().stemmerNoiseSuffixes()
-                : Set.of();
+        return ScannerSpecRegistry.stemmerNoiseSuffixes();
     }
 
     private TokenStemmer() {}
@@ -295,21 +292,15 @@ public final class TokenStemmer {
         return out;
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Suffix Stripping (Phase 3)
-    // ─────────────────────────────────────────────────────────────────────────
-
     private static String stripSuffixes(String t, String original) {
         String result = t;
 
-        // 1. ies → y (berries → berry, pastries → pastry)
         if (result.endsWith("ies") && result.length() > 4) {
             String candidate = result.substring(0, result.length() - 3) + "y";
             debugLog(original, candidate, "ies→y");
             return candidate;
         }
 
-        // 2. ves → f (loaves → loaf, halves → half)
         if (result.endsWith("ves")) {
             String candidate = result.substring(0, result.length() - 3) + "f";
             if (candidate.length() >= 3) {
@@ -318,8 +309,6 @@ public final class TokenStemmer {
             }
         }
 
-        // 3. es → "" (tomatoes → tomato, peaches → peach)
-        // Guard: skip sses, xes, zes, -us endings, -ss roots
         if (result.endsWith("es") && result.length() > 3) {
             String withoutEs = result.substring(0, result.length() - 2);
             boolean skipEs = result.endsWith("sses")
@@ -333,8 +322,6 @@ public final class TokenStemmer {
             }
         }
 
-        // 4. s → "" (carrots → carrot, mushrooms → mushroom)
-        // Guard: skip ss, us, is, as, os endings; minimum root length 3
         if (result.endsWith("s") && result.length() > 3) {
             String root = result.substring(0, result.length() - 1);
             boolean skipS = result.endsWith("ss")
@@ -348,18 +335,14 @@ public final class TokenStemmer {
             }
         }
 
-        // 5. ing → "" (cooking → cook, grilling → grill)
         if (result.endsWith("ing")) {
             String root = result.substring(0, result.length() - 3);
             if (root.length() >= 4) {
-                // Re-apply s/es strip for -ing forms that end in a vowel+consonant doubling
-                // (e.g. slicing → slic — leave as is, not worth guessing the silent e)
                 debugLog(original, root, "ing-strip");
                 return root;
             }
         }
 
-        // 6. ed → "" (roasted → roast, smoked → smoke)
         if (result.endsWith("ed")) {
             String root = result.substring(0, result.length() - 2);
             if (root.length() >= 4) {
@@ -368,7 +351,6 @@ public final class TokenStemmer {
             }
         }
 
-        // 7. er → "" (smoker → smoke, roaster → roast, grinder → grind)
         if (result.endsWith("er")) {
             String root = result.substring(0, result.length() - 2);
             if (root.length() >= 4) {
@@ -379,10 +361,6 @@ public final class TokenStemmer {
 
         return result;
     }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // Helpers
-    // ─────────────────────────────────────────────────────────────────────────
 
     private static Map<String, Float> mergeFloatMaps(Map<String, Float> a, Map<String, Float> b) {
         Map<String, Float> merged = new HashMap<>(a);

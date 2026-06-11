@@ -132,3 +132,111 @@ If upgrading from Nourished (or another Marie mod) before the MarieLib split:
 - Network sync infrastructure is expanding — broader sync work remains on the roadmap
 - First consuming mod: [Nourished](https://modrinth.com/mod/nourished) 0.2.5-beta.5+
 - License: LGPL-3.0-only
+
+## [ MariesLib 0.1.0-beta.1 ] 2026-6-10
+
+First beta. Standalone MariesLib bootstrap, owned library config, source-trigger pipeline, and
+preset/import-export refinements on top of the extracted backbone.
+
+### Added
+
+- **Standalone bootstrap** (`MariesLibBootstrap`) registers context, registries, and handlers when
+  no consuming Marie mod registers `MarieLibContext` first; library config always lives in
+  `config/marieslib.cfg`
+- **Library config I/O** (`MariesLibConfigHolder`, `MariesLibConfigIO`, `MariesLibConfigKeys`,
+  `MariesLibConfigBridge`) for load/save, preset snapshots, and import/export roots
+- **Full Cloth Config screen** (`MariesLibClothConfig`) with categories for modules, thresholds,
+  handlers, memory, scanner, client, and debug (`ClothCategory*` + `ClothConfigHelper`)
+- **Dedicated import/export screens** (`MariesLibExportScreen`, `MariesLibImportScreen`) for file
+  and share-code workflows
+- **Source trigger pipeline** (`SourceApplicationPipeline`, `SourceTriggerRegistry`,
+  `TriggerHandlerRegistry`, `ValueSourceTrigger`, `ISourceTriggerHandler`) for consuming-mod
+  trigger registration separate from eating-only handlers
+- **`SourceTriggerEvent`** in `MarieEvents`, fired when a registered source trigger runs
+- **New registration APIs** (`@Stable`):
+  - `registerSourcePropertySignal(SourcePropertySignal)` for scanner signal hooks owned by consuming mods
+  - `registerSleepBonusEvaluator(SleepBonusEvaluator)` for wake-up bonus evaluators
+  - `registerSourceTriggerHandler(ISourceTriggerHandler)` for NeoForge event subscription during setup
+- **`amountScale` on `ValueDefinition`**, per-value scaling with validation in `MarieValidation`
+- **`GuiValueRenderer`**, client `GuiGraphics` implementation of the `ValueRenderer` API marker
+- **Debug memory logging toggle** (`debugMemoryLogging`) in the Debug Cloth category
+  (`ClothCategoryDebug`)
+- **Audit hardening**: lazy datapack loader init, `isRegistered()` guards on premature context
+  access, idempotent handler/attachment registration, `ModuleCache.isInitialized()` checks, and
+  null-safe client screen factory usage across widgets and commands
+
+### Architecture
+
+- **`ValueRenderer` split**: API marker in `api/`; client rendering contract in `client/GuiValueRenderer`
+- **`MarieTooltipHelper`**: client-only `Minecraft` access gated on `Dist.CLIENT` and
+  `ModuleCache.isInitialized()`
+- **`MarieDataManager`**: lazy loader singleton avoids static init calling `DatapackSchema.root()`
+  before context registration
+- **`DatapackSchema.root()`**: falls back to `MariesLib.MOD_ID` when context is not yet registered
+- **Cloth Config dependency**: `cloth-config-neoforge` is now an `implementation` dependency so
+  the library ships its own config screen without a separate Cloth install
+- **Source item detection**: `MarieCommand`, `ItemScanner`, `ClassificationTraceFormatter`,
+  EMI/REI/JEI plugins, and tooltips use `MarieLibContext.sourceItemFilter()` instead of hard-coded
+  `FoodProperties` checks
+- **Preset storage**: presets live under `config/marieslib/presets/` via `MariesLib.MOD_ID`;
+  locked presets are seeded by the active Marie mod through
+  `MarieLibContext.ensureBuiltInPresetsOnDisk()`, not MariesLib-owned Casual/Survival/Hardcore JSON
+- **`ParsedPreset` model**: removed `builtin` flag; delete/lock UI uses `locked` only; list sorts
+  locked presets first, then alphabetically by name
+- **Preset application**: `PresetRegistry.applyPresetValues()` writes through
+  `MariesLibConfigHolder`, persists with `MariesLibConfigIO.save()`, and refreshes `ModuleCache`;
+  removed hardcore-only `enableAllEffects` side effect
+- **Import/export paths**: `ImportExportManager` share prefix, export directory, and filenames use
+  `MariesLib.MOD_ID` instead of the consuming mod id
+- **Config screen transitions**: `PresetsWidget` and `SavePresetScreen` reopen via
+  `MariesLibClothConfig.create()`; save-current reads `MariesLibConfigHolder.toPresetValues()`
+- **Config load timing**: `MariesLibConfigIO.load()` runs in the `MariesLib` constructor before
+  bootstrap
+- **`MarieDataLoader.Callbacks`**: registration methods use typed API parameters instead of raw
+  `Object`
+- **Hardcoded paths and keys**: datapack relative paths use `DatapackSchema` constants; config keys
+  use `MariesLibConfigKeys`; JEI plugin and config filename use `MariesLib.MOD_ID`
+- **Preset JSON keys**: `enableDecay` / `enableEffects` exposed as `PresetRegistry` constants
+
+### API
+
+- **`MarieAPI` / `MarieAPIState`**: `assertRegistrationAllowed(method)` replaces generic closed
+  registration errors; `registerValue` also registers into `ValueRegistry`; classification amount
+  validation accepts any finite float
+- **`SourcePropertySignal`**, **`SleepBonusEvaluator`**, **`SourceTriggerDefinition`**, and
+  **`ValueSourceTrigger`**, consuming-mod extension points for scanner signals, sleep bonuses, and
+  gameplay triggers
+- **`MarieKubeJSStartupEvents`**: lazy `registerValues()` / `registerProfiles()` /
+  `registerMilestones()` methods replace static fields that called `get()` at class init
+- **`ClothCategoryMemory`** is public so consuming mods can embed memory/diminishing-returns entries
+  in their own config screens
+
+### Integrations
+
+- **Cloth Config**: full library-owned config screen in addition to preset cards (`PresetsWidget`),
+  import/export buttons (`ImportExportButtonsWidget`), and save-preset screen (`SavePresetScreen`)
+- **KubeJS**: startup event id resolution deferred until context is registered
+
+### Breaking Changes
+
+- **`ParsedPreset` record**: `builtin` component removed; use `locked()` for lock/delete rules
+- **`MarieLibContext` preset delegates**: `enableAllEffectsForPresets` removed; preset side effects
+  are owned by the consuming mod's `ensureBuiltInPresetsOnDisk()` implementation
+- **Built-in preset files**: MariesLib no longer writes Casual/Survival/Hardcore JSON on disk;
+  consuming mods must seed their own locked presets
+
+### Important Upgrade Notes
+
+If upgrading to MariesLib 0.1.0-beta.1 from the 1.0.0 extraction baseline:
+
+1. Preset snapshots now load from `config/marieslib/presets/`; only locked presets are
+   non-deletable.
+2. Consuming Marie mods must implement `ensureBuiltInPresetsOnDisk()` to seed their own locked
+   presets; MariesLib no longer writes Casual/Survival/Hardcore files on first run.
+3. Import/export share codes and export files use the `marieslib` mod id prefix and
+   `config/marieslib/exports/` path.
+
+### Notes
+
+- Published artifact version is **0.1.0-beta.1** (`gradle.properties`)
+- Preset list description updated in `en_us.json` for the new presets-folder behavior

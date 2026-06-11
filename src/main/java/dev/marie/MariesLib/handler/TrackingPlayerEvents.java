@@ -2,6 +2,7 @@ package dev.marie.MariesLib.handler;
 
 import dev.marie.MariesLib.api.ApiStatus;
 import dev.marie.MariesLib.config.ModuleCache;
+import dev.marie.MariesLib.core.IMarieLibConfig;
 import dev.marie.MariesLib.core.MarieLibContext;
 import dev.marie.MariesLib.tracking.TrackingAttachment;
 import dev.marie.MariesLib.tracking.TrackingData;
@@ -20,13 +21,15 @@ public class TrackingPlayerEvents {
         tracking.tick();
         TrackingAttachment.setData(player, tracking);
         tracking.setMemoryConfig(HandlerSupport.resolveMemoryConfig());
-        MarieLibContext.get().syncOnJoin().accept(player);
-        if (ModuleCache.enableEffects) {
-            MarieLibContext.get().effectApplier().accept(player, tracking);
-        }
-        if (MarieLibContext.get().showJoinMessage()) {
-            player.sendSystemMessage(MarieLibContext.get().joinMessageLine1());
-            player.sendSystemMessage(MarieLibContext.get().joinMessageLine2());
+        if (MarieLibContext.isRegistered()) {
+            MarieLibContext.get().syncOnJoin().accept(player);
+            if (ModuleCache.enableEffects) {
+                MarieLibContext.get().effectApplier().accept(player, tracking);
+            }
+            if (IMarieLibConfig.get().showJoinMessage()) {
+                player.sendSystemMessage(MarieLibContext.get().joinMessageLine1());
+                player.sendSystemMessage(MarieLibContext.get().joinMessageLine2());
+            }
         }
     }
 
@@ -38,9 +41,11 @@ public class TrackingPlayerEvents {
         tracking.tick();
         TrackingAttachment.setData(player, tracking);
         tracking.setMemoryConfig(HandlerSupport.resolveMemoryConfig());
-        MarieLibContext.get().syncOnJoin().accept(player);
-        if (ModuleCache.enableEffects) {
-            MarieLibContext.get().effectApplier().accept(player, tracking);
+        if (MarieLibContext.isRegistered()) {
+            MarieLibContext.get().syncOnJoin().accept(player);
+            if (ModuleCache.enableEffects) {
+                MarieLibContext.get().effectApplier().accept(player, tracking);
+            }
         }
     }
 
@@ -54,9 +59,11 @@ public class TrackingPlayerEvents {
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
         if (!TrackingAttachment.isRegistered()) return;
         TrackingData tracking = TrackingAttachment.getData(player);
-        MarieLibContext.get().trackingDeltaSyncer().accept(player, tracking);
-        if (ModuleCache.enableEffects) {
-            MarieLibContext.get().effectApplier().accept(player, tracking);
+        if (MarieLibContext.isRegistered()) {
+            MarieLibContext.get().trackingDeltaSyncer().accept(player, tracking);
+            if (ModuleCache.enableEffects) {
+                MarieLibContext.get().effectApplier().accept(player, tracking);
+            }
         }
     }
 }

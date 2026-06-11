@@ -4,7 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 
-import dev.marie.MariesLib.core.MarieLibContext;
+import dev.marie.MariesLib.core.IMarieLibConfig;
 import dev.marie.MariesLib.core.MariesLib;
 import net.neoforged.fml.loading.FMLPaths;
 
@@ -89,7 +89,7 @@ public final class ImportExportManager {
     }
 
     public static JsonObject buildExportRoot(Set<Section> sections) {
-        JsonObject full = MarieLibContext.get().configExporter();
+        JsonObject full = IMarieLibConfig.get().configExporter();
         JsonObject root = new JsonObject();
         root.addProperty("schemaVersion", SCHEMA_VERSION);
         for (Section s : sections) {
@@ -156,7 +156,7 @@ public final class ImportExportManager {
                 filtered.add(s.jsonKey(), root.get(s.jsonKey()));
             }
         }
-        MarieLibContext.get().configImporter(filtered);
+        IMarieLibConfig.get().configImporter(filtered);
         MarieValueColors.clearOverrides();
     }
 

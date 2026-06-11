@@ -1,6 +1,7 @@
 package dev.marie.MariesLib.handler;
 
 import dev.marie.MariesLib.api.ApiStatus;
+import dev.marie.MariesLib.api.registry.EffectRegistry;
 import dev.marie.MariesLib.config.ModuleCache;
 import dev.marie.MariesLib.core.MarieLibContext;
 import dev.marie.MariesLib.tracking.TrackingAttachment;
@@ -22,15 +23,16 @@ public class ValueEffectsHandler {
         if (player.level().getGameTime() % APPLY_INTERVAL_TICKS != 0) return;
         if (ReloadHandler.isReloadInProgress()) return;
         if (!TrackingAttachment.isRegistered()) return;
+        if (!MarieLibContext.isRegistered()) return;
 
         if (ModuleCache.enableEffects) {
             TrackingData data = TrackingAttachment.getData(player);
             MarieLibContext.get().effectApplier().accept(player, data);
-            for (String oldId : MarieLibContext.get().previousEffectIds()) {
+            for (String oldId : EffectRegistry.legacyCleanupEffectIds()) {
                 if (oldId == null || oldId.isBlank()) {
                     continue;
                 }
-                if (!MarieLibContext.get().isEffectDefinitionRegistered(oldId)) {
+                if (!EffectRegistry.isRegistered(oldId)) {
                     ResourceLocation effectId = ResourceLocation.tryParse(oldId);
                     if (effectId == null) {
                         continue;

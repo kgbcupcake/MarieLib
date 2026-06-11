@@ -82,7 +82,7 @@ public final class RuntimeResolver {
         ResourceLocation itemId = MarieRegistryUtils.itemKey(item);
         if (itemId == null) return Map.of();
 
-        if (!MarieLibContext.get().isSourceResolvable(stack)) return Map.of();
+        if (!MarieLibContext.get().sourceItemFilter().test(stack)) return Map.of();
 
         ResolutionResult cached = resolvedCache.get(itemId);
         if (cached != null) {
@@ -104,7 +104,7 @@ public final class RuntimeResolver {
         ResourceLocation itemId = MarieRegistryUtils.itemKey(item);
         if (itemId == null) return null;
 
-        if (!MarieLibContext.get().isSourceResolvable(stack)) return null;
+        if (!MarieLibContext.get().sourceItemFilter().test(stack)) return null;
 
         ResolutionResult cached = resolvedCache.get(itemId);
         if (cached != null) {
@@ -126,7 +126,7 @@ public final class RuntimeResolver {
         ResourceLocation itemId = MarieRegistryUtils.itemKey(item);
         if (itemId == null) return null;
 
-        boolean isResolvable = MarieLibContext.get().isSourceResolvable(stack);
+        boolean isResolvable = MarieLibContext.get().sourceItemFilter().test(stack);
 
         List<ClassificationTraceStep> traceOut = new ArrayList<>();
 

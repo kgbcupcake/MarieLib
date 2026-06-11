@@ -33,7 +33,7 @@ public final class SourceCollector {
 
         for (Item item : BuiltInRegistries.ITEM) {
             ItemStack stack = new ItemStack(item);
-            if (!MarieLibContext.get().isSourceResolvable(stack)) {
+            if (!MarieLibContext.get().sourceItemFilter().test(stack)) {
                 continue;
             }
             ResourceLocation itemId = item.builtInRegistryHolder().key().location();

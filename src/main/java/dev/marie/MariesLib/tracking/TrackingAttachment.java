@@ -3,6 +3,7 @@ package dev.marie.MariesLib.tracking;
 import dev.marie.MariesLib.api.ApiStatus;
 import dev.marie.MariesLib.api.MemoryView;
 import dev.marie.MariesLib.api.impl.EmptyMemoryView;
+import dev.marie.MariesLib.core.IMarieLibConfig;
 import dev.marie.MariesLib.core.MarieLibContext;
 import dev.marie.MariesLib.core.MariesLib;
 import net.neoforged.bus.api.IEventBus;
@@ -32,11 +33,8 @@ public final class TrackingAttachment {
         if (registered) {
             return;
         }
-        if (!MarieLibContext.isRegistered()) {
-            return;
-        }
         registered = true;
-        String modId = MarieLibContext.get().modId();
+        String modId = IMarieLibConfig.get().modId();
         DeferredRegister<AttachmentType<?>> attachmentTypes =
                 DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, modId);
         TRACKING = attachmentTypes.register(ATTACHMENT_ID, () ->
@@ -73,7 +71,7 @@ public final class TrackingAttachment {
     }
 
     private static String trackingAttachmentNbtPrefix() {
-        String modId = MarieLibContext.isRegistered() ? MarieLibContext.get().modId() : MariesLib.MOD_ID;
+        String modId = IMarieLibConfig.get().modId();
         return NBT_ATTACHMENTS_PREFIX + modId + ":" + ATTACHMENT_ID;
     }
 

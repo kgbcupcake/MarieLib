@@ -17,6 +17,7 @@ import dev.marie.MariesLib.api.ValueSourceTrigger;
 import dev.marie.MariesLib.api.registry.AbsorptionModifierRegistry;
 import dev.marie.MariesLib.api.registry.SeasonHookRegistry;
 import dev.marie.MariesLib.config.ModuleCache;
+import dev.marie.MariesLib.core.IMarieLibConfig;
 import dev.marie.MariesLib.core.MarieLibContext;
 import dev.marie.MariesLib.core.MariesLib;
 import dev.marie.MariesLib.debug.MarieDebugLogger;
@@ -73,7 +74,8 @@ public final class SourceApplicationPipeline {
         Map<String, Float> valuesBefore = debugApplyLog ? snapshotValues(tracking) : Map.of();
 
         String sourceKey = trigger.sourceId();
-        SourceOverrideRegistry.SourceOverride override = ctx.sourceOverrideLookup().apply(sourceKey);
+        SourceOverrideRegistry.SourceOverride override =
+                SourceOverrideRegistry.getOverride(sourceKey).orElse(null);
 
         float totalAdded;
         Map<String, Float> valueDeltas;
@@ -87,6 +89,12 @@ public final class SourceApplicationPipeline {
             matchedBars = new HashMap<>(override.values());
             MariesLib.LOGGER.debug("[MarieLib] using override for {} (total={}, values={})",
                     sourceKey, totalAdded, valueDeltas);
+        } else if (stack == null || stack.isEmpty()) {
+            matchedBars = Map.of();
+            MarieLibContext.SourceDelta delta = ctx.sourceDeltaResolver().resolve(
+                    stack, player.level(), trigger.payload(), matchedBars);
+            totalAdded = delta.total();
+            valueDeltas = new HashMap<>(delta.values());
         } else {
             matchedBars = new LinkedHashMap<>(ctx.sourceValueResolver().apply(stack, player.level()));
             MarieLibContext.SourceDelta delta = ctx.sourceDeltaResolver().resolve(
@@ -96,11 +104,6 @@ public final class SourceApplicationPipeline {
         }
 
         Map<String, Float> matchedBarWeights = new LinkedHashMap<>(matchedBars);
-
-        Map<String, Float> externalClassification = ctx.externalClassificationProvider().apply(sourceResourceId);
-        if (externalClassification != null) {
-            externalClassification.forEach((key, value) -> valueDeltas.merge(key, value, Float::sum));
-        }
 
         java.util.List<SourceTriggerRegistry.Entry> triggerEntries =
                 SourceTriggerRegistry.getEntries(trigger.type(), trigger.sourceId());
@@ -206,15 +209,7 @@ public final class SourceApplicationPipeline {
     }
 
     private static TrackingMemoryConfigOrNull resolveMemoryConfig() {
-        var provider = MarieLibContext.get().trackingMemoryConfigProvider();
-        if (provider.get() != null) {
-            return new TrackingMemoryConfigOrNull(provider.get(), false);
-        }
-        if (WARN_ONCE_SOURCE_APPLIED.compareAndSet(false, true)) {
-            MariesLib.LOGGER.warn(
-                    "[MarieLib] SourceApplicationPipeline: trackingMemoryConfigProvider returned null, falling back to context defaults. Will not warn again until server restart.");
-        }
-        return new TrackingMemoryConfigOrNull(HandlerSupport.resolveMemoryConfig(), true);
+        return new TrackingMemoryConfigOrNull(IMarieLibConfig.get().trackingMemoryConfig(), false);
     }
 
     private static Map<String, Float> snapshotValues(TrackingData tracking) {
@@ -260,7 +255,7 @@ public final class SourceApplicationPipeline {
         if (sourceOverride) {
             String tagPath = MarieLibContext.get().resolveTagRole("source_override");
             if (tagPath != null) {
-                tagMatch.add(MarieLibContext.get().modId() + ":" + tagPath);
+                tagMatch.add(IMarieLibConfig.get().modId() + ":" + tagPath);
             }
         } else if (matchedBarWeights.isEmpty()) {
             tagMatch.add("none");
@@ -298,7 +293,7 @@ public final class SourceApplicationPipeline {
             return false;
         }
         TagKey<Item> tag = TagKey.create(Registries.ITEM,
-                ResourceLocation.fromNamespaceAndPath(MarieLibContext.get().modId(), tagPath));
+                ResourceLocation.fromNamespaceAndPath(IMarieLibConfig.get().modId(), tagPath));
         return stack.is(tag);
     }
 
@@ -323,17 +318,12 @@ public final class SourceApplicationPipeline {
     }
 
     private static void checkThresholdCrossings(ServerPlayer player, TrackingData tracking) {
-        float excessThreshold = MarieLibContext.get().excessThreshold();
-        if (MarieLibContext.get().trackingMemoryConfigProvider().get() == null
-                && THRESHOLD_WARN_ONCE.compareAndSet(false, true)) {
-            MariesLib.LOGGER.warn(
-                    "[MarieLib] SourceApplicationPipeline: trackingMemoryConfigProvider null in checkThresholdCrossings, using context excessThreshold. Will not warn again until server restart.");
-        }
+        float excessThreshold = IMarieLibConfig.get().excessThreshold();
         for (String key : MarieLibContext.get().valueKeys()) {
             float current = tracking.values.getOrDefault(key, 0f);
             float previous = tracking.lastValues.getOrDefault(key, 0f);
-            boolean beneficial = MarieLibContext.get().isValueBeneficial().test(key);
-            float criticalThreshold = MarieLibContext.get().criticalThresholdFor(key);
+            boolean beneficial = MarieLibContext.isValueBeneficial(key);
+            float criticalThreshold = IMarieLibConfig.get().criticalThresholdFor(key);
 
             if (beneficial) {
                 if (current <= criticalThreshold && previous > criticalThreshold) {

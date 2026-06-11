@@ -13,6 +13,7 @@ import dev.marie.MariesLib.api.MilestoneDefinition;
 import dev.marie.MariesLib.api.registry.MilestoneRegistry;
 import dev.marie.MariesLib.api.registry.SynergyRegistry;
 import dev.marie.MariesLib.config.ModuleCache;
+import dev.marie.MariesLib.core.IMarieLibConfig;
 import dev.marie.MariesLib.core.MarieLibContext;
 import dev.marie.MariesLib.tracking.TrackingData;
 import dev.marie.MariesLib.util.MarieRegistryUtils;
@@ -134,7 +135,7 @@ public final class MarieTooltipHelper {
             lines.add(Component.literal(
                     "  → " + (int) (fin * 100) + "% value gain (memory blend)")
                     .withStyle(fin < 1.0f ? ChatFormatting.GOLD : ChatFormatting.GREEN));
-        } else if (MarieLibContext.get().debugMemoryLogging() && player != null) {
+        } else if (IMarieLibConfig.get().debugMemoryLogging() && player != null) {
             var breakdown = tracking.getMultiplierBreakdown(itemId, dominantCategory, familyKey, gameTimeMs);
             lines.add(Component.empty());
             lines.add(Component.literal("  → " + (int) (breakdown.finalMultiplier() * 100) + "% value gain")
@@ -203,15 +204,16 @@ public final class MarieTooltipHelper {
     private static final int COL_GOOD = 0xFF55FF55;
 
     private static int computeTooltipColor(String key, TrackingData tracking, float gain) {
-        boolean beneficial = MarieLibContext.get().isValueBeneficial().test(key);
+        boolean beneficial = MarieLibContext.isValueBeneficial(key);
         float current = tracking.values.getOrDefault(key, 0f);
         float projected = current + gain;
 
         if (beneficial) {
-            return MarieLibContext.get().valueColorProvider().apply(key);
+            var def = MarieLibContext.get().valueDefinitionFor(key);
+            return def != null ? def.getColor() : 0xFFFFFFFF;
         }
-        float excess = MarieLibContext.get().excessThreshold();
-        float low = MarieLibContext.get().lowThreshold();
+        float excess = IMarieLibConfig.get().excessThreshold();
+        float low = IMarieLibConfig.get().lowThreshold();
         if (projected > excess) {
             return COL_CRITICAL;
         } else if (projected > low) {

@@ -6,8 +6,10 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
+import dev.marie.MariesLib.api.ValueDefinition;
+import dev.marie.MariesLib.api.registry.ValueRegistry;
+import dev.marie.MariesLib.core.IMarieLibConfig;
 import dev.marie.MariesLib.core.MariesLib;
-import dev.marie.MariesLib.core.MarieLibContext;
 import dev.marie.MariesLib.data.DatapackSchema;
 import dev.marie.MariesLib.registry.AbstractRegistry;
 import dev.marie.MariesLib.util.MarieResourceLoader;
@@ -82,7 +84,7 @@ public final class ColorRegistry {
     }
 
     public static void load() {
-        Path configDir = FMLPaths.CONFIGDIR.get().resolve(MarieLibContext.get().modId());
+        Path configDir = FMLPaths.CONFIGDIR.get().resolve(IMarieLibConfig.get().modId());
         Path file = configDir.resolve("colors.json");
         try {
             Files.createDirectories(configDir);
@@ -105,12 +107,12 @@ public final class ColorRegistry {
     }
 
     public static void save() {
-        Path configDir = FMLPaths.CONFIGDIR.get().resolve(MarieLibContext.get().modId());
+        Path configDir = FMLPaths.CONFIGDIR.get().resolve(IMarieLibConfig.get().modId());
         Path file = configDir.resolve("colors.json");
         try {
             Files.createDirectories(configDir);
             JsonArray arr = new JsonArray();
-            List<String> keys = MarieLibContext.get().valueKeys();
+            List<String> keys = ValueRegistry.getAll().stream().map(ValueDefinition::getId).toList();
             for (String key : keys) {
                 Integer argb = INSTANCE.get(key);
                 if (argb == null) {

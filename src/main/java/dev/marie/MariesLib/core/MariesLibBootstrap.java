@@ -5,9 +5,6 @@ import java.util.function.Supplier;
 
 import dev.marie.MariesLib.color.ColorRegistry;
 import dev.marie.MariesLib.command.MarieCommand;
-import dev.marie.MariesLib.config.MariesLibConfigBridge;
-import dev.marie.MariesLib.config.MariesLibConfigHolder;
-import dev.marie.MariesLib.config.MariesLibConfigIO;
 import dev.marie.MariesLib.config.ModCompatRegistry;
 import dev.marie.MariesLib.config.ModuleCache;
 import dev.marie.MariesLib.config.PresetRegistry;
@@ -26,82 +23,127 @@ import dev.marie.MariesLib.registry.RegistryLifecycleManager;
 import dev.marie.MariesLib.runtime.SourceOverrideRegistry;
 import dev.marie.MariesLib.runtime.SourceValueRegistry;
 import dev.marie.MariesLib.scanner.ScannerSpecRegistry;
+import dev.marie.MariesLib.api.ApiStatus;
 import dev.marie.MariesLib.tracking.TrackingAttachment;
-import net.minecraft.client.gui.screens.Screen;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.neoforged.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.neoforged.neoforge.common.NeoForge;
 
 /**
- * Bootstraps MariesLib-owned context, registries, and handlers when no Marie mod has
- * registered {@link MarieLibContext} first. Library config always lives in {@code config/marieslib.cfg}.
+ * Entry point for consuming mods.
+ *
+ * <h2>Minimal setup (new mod)</h2>
+ * <pre>{@code
+ * // In your @Mod constructor:
+ * MarieLibBootstrap.attach("examplemod", modEventBus);
+ *
+ * // Register values (Java):
+ * MarieAPI.registerValue(ValueDefinition.builder("emc")
+ *     .displayName("EMC")
+ *     .amountScale(1_000_000)
+ *     .build());
+ *
+ * // Or ship datapacks in data/examplemod/marie/values/emc.json
+ *
+ * // In-game: run /marie scan, copy output JSON into your datapack.
+ * }</pre>
+ *
+ * <h2>Advanced setup</h2>
+ * <p>Use {@link MarieLibContext#builder(String)} for custom resolvers,
+ * signal overrides, or advanced compat hooks.</p>
  */
 public final class MariesLibBootstrap {
 
-    private static volatile Supplier<Screen> configScreenFactory = () -> null;
-    private static volatile Function<Screen, Screen> exportScreenFactory = parent -> null;
-    private static volatile Function<Screen, Screen> importScreenFactory = parent -> null;
+    private static volatile Supplier<Object> configScreenFactory = () -> null;
+    private static volatile Function<Object, Object> exportScreenFactory = parent -> null;
+    private static volatile Function<Object, Object> importScreenFactory = parent -> null;
+    private static volatile IEventBus attachedModEventBus;
 
     private MariesLibBootstrap() {}
 
-    public static void setConfigScreenFactory(Supplier<Screen> factory) {
+    /**
+     * Attaches MarieLib to a consuming mod with sensible defaults.
+     * Call this from your mod constructor before registries freeze.
+     *
+     * <p>This registers a MarieLibContext for your mod using all internal
+     * default resolvers. For advanced configuration use
+     * {@link MarieLibContext#builder(String)} directly.</p>
+     *
+     * @param modId       your mod's ID
+     * @param modEventBus your mod's IEventBus (from the mod constructor)
+     */
+    @ApiStatus.Stable
+    public static void attach(String modId, IEventBus modEventBus) {
+        if (modId == null || modId.isBlank()) {
+            throw new IllegalArgumentException("modId cannot be null or blank");
+        }
+        if (modEventBus == null) {
+            throw new IllegalArgumentException("modEventBus cannot be null");
+        }
+
+        MarieLibContext ctx = MarieLibContext.builder(modId).build();
+        MarieLibContext.register(ctx);
+
+        MarieAttributes.register(modEventBus);
+        TrackingAttachment.register(modEventBus);
+
+        attachedModEventBus = modEventBus;
+        modEventBus.addListener(MariesLibBootstrap::onCommonSetup);
+        modEventBus.addListener(MariesLibBootstrap::onLoadComplete);
+
+        MariesLib.LOGGER.info("[MarieLib] Attached to mod: {}", modId);
+    }
+
+    private static void onCommonSetup(FMLCommonSetupEvent event) {
+        event.enqueueWork(() -> {
+            registerRegistries();
+            ModuleCache.refresh();
+            IEventBus bus = attachedModEventBus;
+            if (bus != null) {
+                registerHandlers(bus);
+            }
+            RegistryLifecycleManager.loadAll();
+        });
+    }
+
+    private static void onLoadComplete(FMLLoadCompleteEvent event) {
+        ModCompatRegistry.load();
+    }
+
+    public static void setConfigScreenFactory(Supplier<Object> factory) {
         configScreenFactory = factory != null ? factory : () -> null;
     }
 
-    public static void setExportScreenFactory(Function<Screen, Screen> factory) {
+    public static void setExportScreenFactory(Function<Object, Object> factory) {
         exportScreenFactory = factory != null ? factory : parent -> null;
     }
 
-    public static void setImportScreenFactory(Function<Screen, Screen> factory) {
+    public static void setImportScreenFactory(Function<Object, Object> factory) {
         importScreenFactory = factory != null ? factory : parent -> null;
     }
 
+    public static Supplier<Object> getConfigScreenFactory() {
+        return configScreenFactory;
+    }
+
+    public static Function<Object, Object> getExportScreenFactory() {
+        return exportScreenFactory;
+    }
+
+    public static Function<Object, Object> getImportScreenFactory() {
+        return importScreenFactory;
+    }
+
     public static void bootstrap(IEventBus modEventBus) {
-        MarieLibContext.register(buildContext());
+        MarieAttributes.register(modEventBus);
+        TrackingAttachment.register(modEventBus);
         registerRegistries();
         ModuleCache.refresh();
         registerHandlers(modEventBus);
         RegistryLifecycleManager.loadAll();
         ModCompatRegistry.load();
         MariesLib.LOGGER.info("[MariesLib] Bootstrap complete with owned config");
-    }
-
-    private static MarieLibContext buildContext() {
-        MariesLibConfigHolder h = MariesLibConfigHolder.get();
-        return MarieLibContext.builder(MariesLib.MOD_ID)
-                .scannerConfidenceSpreadThreshold(() -> h.scannerConfidenceSpreadThreshold)
-                .compositeRatioThreshold(() -> h.compositeRatioThreshold)
-                .scannerEnableRecipeInheritance(() -> h.scannerEnableRecipeInheritance)
-                .multiValueInheritanceThreshold(() -> h.multiValueInheritanceThreshold)
-                .enableDebugLogging(() -> h.enableDebugLogging)
-                .memoryWindowMinutes(() -> h.memoryWindowMinutes)
-                .memoryWindowCount(() -> h.memoryWindowCount)
-                .streakWindowMs(() -> h.streakWindowMs)
-                .streakWeight(() -> h.streakWeight)
-                .debtThreshold(() -> h.debtThreshold)
-                .debtDecayRate(() -> h.debtDecayRate)
-                .diminishingSteepness(() -> h.diminishingSteepness)
-                .diminishingMidpoint(() -> h.diminishingMidpoint)
-                .debugMemoryLogging(() -> h.debugMemoryLogging)
-                .excessThreshold(() -> h.excessThreshold)
-                .lowThreshold(() -> h.lowThreshold)
-                .criticalThreshold(() -> h.criticalThreshold)
-                .decayIntervalTicks(() -> h.decayIntervalTicks)
-                .valueDecayRateProvider(key -> h.defaultDecayRate)
-                .criticalThresholdProvider(key -> h.criticalThreshold)
-                .showJoinMessage(() -> h.showJoinMessage)
-                .trackingMemoryConfigProvider(h::toTrackingMemoryConfig)
-                .clientMemoryConfigProvider(h::toTrackingMemoryConfig)
-                .configScreenFactory(() -> configScreenFactory.get())
-                .exportScreenFactory(exportScreenFactory)
-                .importScreenFactory(importScreenFactory)
-                .configExporter(MariesLibConfigBridge::buildExportRoot)
-                .configImporter(MariesLibConfigBridge::applyImport)
-                .currentConfigPresetValues(() -> MariesLibConfigHolder.get().toPresetValues())
-                .applyPresetValues(v -> {
-                    MariesLibConfigHolder.get().applyPresetValues(v);
-                    MariesLibConfigIO.save();
-                })
-                .build();
     }
 
     private static void registerRegistries() {
@@ -136,7 +178,5 @@ public final class MariesLibBootstrap {
         for (ISourceTriggerHandler handler : TriggerHandlerRegistry.getAll()) {
             handler.register(NeoForge.EVENT_BUS);
         }
-        MarieAttributes.register(modEventBus);
-        TrackingAttachment.register(modEventBus);
     }
 }

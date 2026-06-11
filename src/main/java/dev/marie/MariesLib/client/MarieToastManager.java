@@ -57,7 +57,7 @@ public final class MarieToastManager {
             for (String key : keys) {
                 float before = lastValues.getOrDefault(key, 0f);
                 float after = nextValues.getOrDefault(key, 0f);
-                boolean beneficial = ctx.isValueBeneficial().test(key);
+                boolean beneficial = MarieLibContext.isValueBeneficial(key);
 
                 boolean showToast = false;
                 if (beneficial) {

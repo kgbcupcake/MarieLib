@@ -7,7 +7,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.mojang.logging.LogUtils;
 import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.core.MarieLibContext;
+import dev.marie.MariesLib.core.IMarieLibConfig;
 import dev.marie.MariesLib.data.DatapackSchema;
 import dev.marie.MariesLib.registry.AbstractRegistry;
 import dev.marie.MariesLib.util.MarieResourceLoader;
@@ -70,7 +70,7 @@ public class SourceOverrideRegistry {
     }
 
     public static void load() {
-        Path configDir = FMLPaths.CONFIGDIR.get().resolve(MarieLibContext.get().modId());
+        Path configDir = FMLPaths.CONFIGDIR.get().resolve(IMarieLibConfig.get().modId());
         Path file = configDir.resolve("source_overrides.json");
 
         try {
@@ -133,7 +133,7 @@ public class SourceOverrideRegistry {
     }
 
     public static void save() {
-        Path configDir = FMLPaths.CONFIGDIR.get().resolve(MarieLibContext.get().modId());
+        Path configDir = FMLPaths.CONFIGDIR.get().resolve(IMarieLibConfig.get().modId());
         Path file = configDir.resolve("source_overrides.json");
         try {
             writeRegistry(file);

@@ -1,6 +1,6 @@
 package dev.marie.MariesLib.runtime;
 
-import dev.marie.MariesLib.core.MarieLibContext;
+import dev.marie.MariesLib.core.IMarieLibConfig;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -52,8 +52,6 @@ public final class MultiValueInheritance {
     }
 
     public static float threshold() {
-        return MarieLibContext.isRegistered()
-                ? (float) MarieLibContext.get().multiValueInheritanceThreshold()
-                : DEFAULT_THRESHOLD;
+        return (float) IMarieLibConfig.get().multiValueInheritanceThreshold();
     }
 }

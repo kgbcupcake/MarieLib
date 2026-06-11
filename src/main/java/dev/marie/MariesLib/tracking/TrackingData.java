@@ -11,6 +11,7 @@ import com.mojang.serialization.RecordBuilder;
 import dev.marie.MariesLib.api.ApiStatus;
 
 
+import dev.marie.MariesLib.core.IMarieLibConfig;
 import dev.marie.MariesLib.core.MariesLib;
 import dev.marie.MariesLib.core.MarieLibContext;
 import net.minecraft.util.Mth;
@@ -62,39 +63,39 @@ public class TrackingData {
     }
 
     private static boolean isValueBeneficial(String key) {
-        return MarieLibContext.isRegistered() && MarieLibContext.get().isValueBeneficial().test(key);
+        return MarieLibContext.isRegistered() && MarieLibContext.isValueBeneficial(key);
     }
 
     private static int configuredMemoryWindowCount() {
-        return MarieLibContext.isRegistered() ? MarieLibContext.get().memoryWindowCount() : 20;
+        return IMarieLibConfig.get().memoryWindowCount();
     }
 
     private static long configuredStreakWindowMs() {
-        return MarieLibContext.isRegistered() ? MarieLibContext.get().streakWindowMs() : 300_000L;
+        return IMarieLibConfig.get().streakWindowMs();
     }
 
     private static float configuredStreakWeight() {
-        return MarieLibContext.isRegistered() ? MarieLibContext.get().streakWeight() : 1.5f;
+        return IMarieLibConfig.get().streakWeight();
     }
 
     private static boolean configuredDebugMemoryLogging() {
-        return MarieLibContext.isRegistered() && MarieLibContext.get().debugMemoryLogging();
+        return IMarieLibConfig.get().debugMemoryLogging();
     }
 
     private static float configuredDebtThreshold() {
-        return MarieLibContext.isRegistered() ? MarieLibContext.get().debtThreshold() : 5f;
+        return IMarieLibConfig.get().debtThreshold();
     }
 
     private static float configuredDebtDecayRate() {
-        return MarieLibContext.isRegistered() ? MarieLibContext.get().debtDecayRate() : 0.01f;
+        return IMarieLibConfig.get().debtDecayRate();
     }
 
     private static double configuredDiminishingSteepness() {
-        return MarieLibContext.isRegistered() ? MarieLibContext.get().diminishingSteepness() : 1.0;
+        return IMarieLibConfig.get().diminishingSteepness();
     }
 
     private static double configuredDiminishingMidpoint() {
-        return MarieLibContext.isRegistered() ? MarieLibContext.get().diminishingMidpoint() : 3.0;
+        return IMarieLibConfig.get().diminishingMidpoint();
     }
 
     // ── Codec ─────────────────────────────────────────────────────────────────

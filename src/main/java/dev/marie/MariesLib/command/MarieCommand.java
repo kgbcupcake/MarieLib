@@ -13,7 +13,15 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import dev.marie.MariesLib.api.MarieEvents;
+import dev.marie.MariesLib.api.ValueDefinition;
 import dev.marie.MariesLib.api.registry.ProfileRegistry;
+import dev.marie.MariesLib.api.registry.ValueRegistry;
+import dev.marie.MariesLib.config.ModuleCache;
+import dev.marie.MariesLib.config.MariesLibConfigHolder;
+import dev.marie.MariesLib.runtime.RuntimeResolver;
+import dev.marie.MariesLib.runtime.SourceCollector;
+import dev.marie.MariesLib.runtime.SourceRegistry;
+import dev.marie.MariesLib.core.IMarieLibConfig;
 import dev.marie.MariesLib.core.MarieLibContext;
 import dev.marie.MariesLib.core.MariesLib;
 import dev.marie.MariesLib.data.DatapackDiagnostic;
@@ -28,7 +36,6 @@ import dev.marie.MariesLib.scanner.analysis.MultiValueAnalysisPipeline;
 import dev.marie.MariesLib.tracking.TrackingAttachment;
 import dev.marie.MariesLib.tracking.TrackingData;
 import dev.marie.MariesLib.tracking.TrackingMemoryConfig;
-import dev.marie.MariesLib.util.MarieRegistryUtils;
 import dev.marie.MariesLib.util.MarieValidation;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
@@ -71,10 +78,12 @@ public class MarieCommand {
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final int MAX_DIAGNOSTICS_LINES = 100;
+    private static final Component NO_CONSUMER_MESSAGE =
+            Component.literal("No mod has registered with MarieLib.");
     private static final Map<UUID, String> ACTIVE_PROFILES = new ConcurrentHashMap<>();
 
     private static final SuggestionProvider<CommandSourceStack> VALUE_SUGGESTIONS =
-            (ctx, builder) -> SharedSuggestionProvider.suggest(MarieLibContext.get().valueKeys(), builder);
+            (ctx, builder) -> SharedSuggestionProvider.suggest(registeredValueKeys(), builder);
 
     private static final SuggestionProvider<CommandSourceStack> PROFILE_SUGGESTIONS =
             (ctx, builder) -> SharedSuggestionProvider.suggest(
@@ -82,16 +91,21 @@ public class MarieCommand {
                     builder
             );
 
+    private static final List<SchemaDefinition> BUILTIN_SCHEMAS = List.of(
+            SchemaDefinition.forValue(),
+            SchemaDefinition.forSourceClassification(),
+            SchemaDefinition.forEffect(),
+            SchemaDefinition.forSynergy(),
+            SchemaDefinition.forSourcePairSynergy(),
+            SchemaDefinition.forMilestone(),
+            SchemaDefinition.forTrackingProfile(),
+            SchemaDefinition.forCompat()
+    );
+
     private static final SuggestionProvider<CommandSourceStack> SCHEMA_TYPE_SUGGESTIONS =
-            (ctx, builder) -> {
-                List<SchemaDefinition> schemas = MarieLibContext.get().schemaProviders().get();
-                if (schemas == null) {
-                    schemas = List.of();
-                }
-                return SharedSuggestionProvider.suggest(
-                        schemas.stream().map(SchemaDefinition::getTypeName).toList(),
-                        builder);
-            };
+            (ctx, builder) -> SharedSuggestionProvider.suggest(
+                    BUILTIN_SCHEMAS.stream().map(SchemaDefinition::getTypeName).toList(),
+                    builder);
 
     @SubscribeEvent
     public void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
@@ -107,7 +121,7 @@ public class MarieCommand {
 
     @SubscribeEvent
     public void onRegisterCommands(RegisterCommandsEvent event) {
-        String modId = MarieLibContext.get().modId();
+        String modId = IMarieLibConfig.get().modId();
         CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
         dispatcher.register(
                 Commands.literal(modId)
@@ -181,17 +195,19 @@ public class MarieCommand {
 
     private int invalidateCache(CommandContext<CommandSourceStack> ctx) {
         CommandSourceStack source = ctx.getSource();
-        MarieLibContext.get().onCacheInvalidated();
+        ModuleCache.refresh();
+        ItemScanner.invalidateCache();
+        RuntimeResolver.getInstance().invalidateCache();
         ItemScanner.scanAndApply(source.getServer().getRecipeManager());
         source.sendSuccess(() -> Component.literal(
-                "[" + MarieLibContext.get().modId() + "] cache invalidated. Scanner will reapply on next tick."), false);
+                "[" + IMarieLibConfig.get().modId() + "] cache invalidated. Scanner will reapply on next tick."), false);
         return 1;
     }
 
     private int repairGeneratedDatapack(CommandContext<CommandSourceStack> ctx) {
         CommandSourceStack source = ctx.getSource();
         MinecraftServer server = source.getServer();
-        String modId = MarieLibContext.get().modId();
+        String modId = IMarieLibConfig.get().modId();
         Path worldRoot = server.getWorldPath(LevelResource.ROOT).normalize();
         Path packRoot = server.getWorldPath(LevelResource.DATAPACK_DIR).resolve(modId + "-generated").normalize();
         Path tagsDir = packRoot.resolve("data").resolve(modId).resolve("tags").resolve("item").resolve("values");
@@ -217,7 +233,7 @@ public class MarieCommand {
     }
 
     private static RepairSummary repairGeneratedTagDirectory(Path tagsDir) throws IOException {
-        Set<String> activeFiles = MarieLibContext.get().valueKeys().stream()
+        Set<String> activeFiles = registeredValueKeys().stream()
                 .map(key -> key + ".json")
                 .collect(java.util.stream.Collectors.toSet());
         int filesScanned = 0;
@@ -291,10 +307,10 @@ public class MarieCommand {
 
     private int showNbtPaths(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         ServerPlayer player = ctx.getSource().getPlayerOrException();
-        String header = "[" + MarieLibContext.get().modId() + "] NBT paths:";
+        String header = "[" + IMarieLibConfig.get().modId() + "] NBT paths:";
         player.sendSystemMessage(copyableGreenLine(header));
 
-        for (String key : MarieLibContext.get().valueKeys()) {
+        for (String key : registeredValueKeys()) {
             String path = TrackingAttachment.getValueNbtPath(key);
             player.sendSystemMessage(copyableGreenLine(path));
         }
@@ -304,6 +320,9 @@ public class MarieCommand {
     }
 
     private int showUnassignedSources(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        if (!ensureConsumerRegistered(ctx.getSource())) {
+            return 0;
+        }
         ServerPlayer player = ctx.getSource().getPlayerOrException();
         ItemScanner.scanAndApplyNow(ctx.getSource().getServer().getRecipeManager());
         Map<String, List<ResourceLocation>> byNamespace = new TreeMap<>();
@@ -326,7 +345,7 @@ public class MarieCommand {
         }
 
         int totalCount = byNamespace.values().stream().mapToInt(List::size).sum();
-        String modId = MarieLibContext.get().modId();
+        String modId = IMarieLibConfig.get().modId();
         Path outputPath = FMLPaths.CONFIGDIR.get().resolve(modId).resolve("unassigned_sources.txt");
         try {
             Files.createDirectories(outputPath.getParent());
@@ -370,10 +389,11 @@ public class MarieCommand {
     }
 
     private int setValue(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        if (!ensureConsumerRegistered(ctx.getSource())) {
+            return 0;
+        }
         String key = StringArgumentType.getString(ctx, "key");
-        try {
-            MarieRegistryUtils.requireValueKey(key, MarieLibContext.get().modId() + " set value command");
-        } catch (IllegalArgumentException e) {
+        if (!isKnownValueKey(key)) {
             ctx.getSource().sendFailure(Component.literal("Unknown value key: " + key));
             return 0;
         }
@@ -401,9 +421,9 @@ public class MarieCommand {
             return 0;
         }
         TrackingData data = TrackingAttachment.getData(player);
-        TrackingMemoryConfig cfg = MarieLibContext.get().trackingMemoryConfigProvider().get();
+        TrackingMemoryConfig cfg = IMarieLibConfig.get().trackingMemoryConfig();
         float start = cfg != null ? (float) cfg.startingValueFill() : 0.5f;
-        for (String key : MarieLibContext.get().valueKeys()) {
+        for (String key : registeredValueKeys()) {
             float old = data.values.getOrDefault(key, 0f);
             data.values.put(key, start);
             NeoForge.EVENT_BUS.post(new MarieEvents.ValueChangedEvent(player, key, old, start));
@@ -442,7 +462,7 @@ public class MarieCommand {
     private int reloadAll(CommandContext<CommandSourceStack> ctx) {
         CommandSourceStack source = ctx.getSource();
         MinecraftServer server = source.getServer();
-        String modId = MarieLibContext.get().modId();
+        String modId = IMarieLibConfig.get().modId();
         source.sendSuccess(() -> Component.literal("Reloading " + modId + " data..."), true);
         server.reloadResources(server.getPackRepository().getSelectedIds()).thenRun(() -> {
             server.execute(() -> {
@@ -479,12 +499,9 @@ public class MarieCommand {
     }
 
     private int runScanAnalysis(CommandContext<CommandSourceStack> ctx) {
-        List<ClassificationResult> classified = MarieLibContext.get().classifiedSourceProvider().get();
-        if (classified == null) {
-            classified = List.of();
-        }
+        List<ClassificationResult> classified = SourceCollector.collectAllClassifiedSources();
         MultiValueAnalysisPipeline.runFullRegistry(classified, 0.15f, 0.35f, 0.10f);
-        String outputPath = "config/" + MarieLibContext.get().modId() + "/scanner_analysis/";
+        String outputPath = "config/" + IMarieLibConfig.get().modId() + "/scanner_analysis/";
         ctx.getSource().sendSuccess(
                 () -> Component.literal("Multi-value analysis written to " + outputPath)
                         .withStyle(ChatFormatting.GREEN),
@@ -523,10 +540,7 @@ public class MarieCommand {
 
     private int showSchemaTemplate(CommandContext<CommandSourceStack> ctx) {
         String type = StringArgumentType.getString(ctx, "type");
-        List<SchemaDefinition> schemas = MarieLibContext.get().schemaProviders().get();
-        if (schemas == null) {
-            schemas = List.of();
-        }
+        List<SchemaDefinition> schemas = BUILTIN_SCHEMAS;
         SchemaDefinition schema = schemas.stream()
                 .filter(s -> s.getTypeName().equals(type))
                 .findFirst()
@@ -558,9 +572,7 @@ public class MarieCommand {
     }
 
     private int sendValueDetail(CommandSourceStack source, String key, ServerPlayer target) {
-        try {
-            MarieRegistryUtils.requireValueKey(key, MarieLibContext.get().modId() + " value command");
-        } catch (IllegalArgumentException e) {
+        if (!isKnownValueKey(key)) {
             source.sendFailure(Component.literal("Unknown value key: " + key));
             return 0;
         }
@@ -571,10 +583,11 @@ public class MarieCommand {
 
         TrackingData data = TrackingAttachment.getData(target);
         float value = data.values.getOrDefault(key, 0f);
-        float decay = MarieLibContext.get().valueDecayRateProvider().apply(key);
-        float critical = MarieLibContext.get().criticalThresholdFor(key);
-        float low = MarieLibContext.get().lowThreshold();
-        float excess = MarieLibContext.get().excessThreshold();
+        ValueDefinition def = ValueRegistry.get(key);
+        float decay = def != null ? def.getDefaultDecayRate() : MariesLibConfigHolder.get().defaultDecayRate;
+        float critical = IMarieLibConfig.get().criticalThresholdFor(key);
+        float low = IMarieLibConfig.get().lowThreshold();
+        float excess = IMarieLibConfig.get().excessThreshold();
         Component chip = MarieCommandSource.statusChip(MarieCommandSource.statusFor(value, key));
 
         source.sendSuccess(() -> Component.literal("Value: " + key + " (" + target.getName().getString() + ")").withStyle(ChatFormatting.GOLD), false);
@@ -605,15 +618,32 @@ public class MarieCommand {
     }
 
     private static boolean isClassified(ResourceLocation itemId, Holder<Item> holder) {
-        Map<String, Float> external = MarieLibContext.get().externalClassificationProvider().apply(itemId);
-        if (external != null && !external.isEmpty()) return true;
-        ItemStack stack = new ItemStack(holder.value());
-        return MarieLibContext.get().valueTagChecker().test(stack);
+        Map<String, Float> external = SourceRegistry.getExternalClassification(itemId);
+        if (external != null && !external.isEmpty()) {
+            return true;
+        }
+        return ItemScanner.hasValueTag(new ItemStack(holder.value()));
     }
 
     private static Component copyableGreenLine(String text) {
         return Component.literal(text).withStyle(style -> style
                 .withColor(ChatFormatting.GREEN)
                 .withClickEvent(new ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, text)));
+    }
+
+    private static boolean ensureConsumerRegistered(CommandSourceStack source) {
+        if (!MarieLibContext.isRegistered()) {
+            source.sendFailure(NO_CONSUMER_MESSAGE);
+            return false;
+        }
+        return true;
+    }
+
+    private static List<String> registeredValueKeys() {
+        return ValueRegistry.getAll().stream().map(ValueDefinition::getId).toList();
+    }
+
+    private static boolean isKnownValueKey(String key) {
+        return ValueRegistry.get(key) != null;
     }
 }

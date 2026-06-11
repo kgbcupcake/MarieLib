@@ -31,6 +31,10 @@ public final class MarieDataManager {
         event.addListener(loader());
     }
 
+    public static void setCallbacks(MarieDataLoader.Callbacks callbacks) {
+        loader().setCallbacks(callbacks);
+    }
+
     public static Set<ResourceLocation> getLoadedValues() {
         return loader().getLoadedValues();
     }
