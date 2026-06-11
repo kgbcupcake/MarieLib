@@ -1,7 +1,6 @@
 package dev.marie.MariesLib.classification;
 
-import net.minecraft.core.component.DataComponents;
-import net.minecraft.world.food.FoodProperties;
+import dev.marie.MariesLib.core.MarieLibContext;
 import net.minecraft.world.item.ItemStack;
 
 import javax.annotation.Nullable;
@@ -31,7 +30,6 @@ public final class ClassificationTraceFormatter {
         appendLine(sb, "");
 
         appendItemSection(sb, trace, stack);
-        appendSourceStatsSection(sb, stack);
         appendClassificationSummary(sb, trace);
         appendClassificationPath(sb, trace);
         appendInheritanceBreakdown(sb, trace);
@@ -50,21 +48,11 @@ public final class ClassificationTraceFormatter {
         appendLine(sb, SEP_HALF);
         String itemId = trace.itemId();
         String namespace = itemId.contains(":") ? itemId.substring(0, itemId.indexOf(':')) : itemId;
-        FoodProperties sourceProperties = stack.getItem().components().get(DataComponents.FOOD);
-        boolean sourceCapable = sourceProperties != null && sourceProperties.nutrition() > 0;
+        boolean sourceCapable = MarieLibContext.isRegistered()
+                && MarieLibContext.get().sourceItemFilter().test(stack);
         appendKv(sb, "ID", itemId);
         appendKv(sb, "Namespace", namespace);
         appendKv(sb, "Source-capable", sourceCapable ? "YES" : "NO");
-        appendLine(sb, "");
-    }
-
-    private static void appendSourceStatsSection(StringBuilder sb, ItemStack stack) {
-        FoodProperties sourceProperties = stack.getItem().components().get(DataComponents.FOOD);
-        if (sourceProperties == null) return;
-        appendLine(sb, "Source Stats");
-        appendLine(sb, SEP_HALF);
-        appendKv(sb, "Restore points", String.valueOf(sourceProperties.nutrition()));
-        appendKv(sb, "Saturation", String.format(Locale.ROOT, "%.2f", sourceProperties.saturation()));
         appendLine(sb, "");
     }
 

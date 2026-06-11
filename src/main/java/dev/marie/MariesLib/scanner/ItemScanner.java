@@ -1,15 +1,15 @@
 package dev.marie.MariesLib.scanner;
 
+// High-level orchestrator — the correct entry point for scanning all loaded items.
+
 import dev.marie.MariesLib.api.ApiStatus;
 import dev.marie.MariesLib.core.MariesLib;
 import dev.marie.MariesLib.core.MarieLibContext;
 import dev.marie.MariesLib.util.MarieRegistryUtils;
 import dev.marie.MariesLib.classification.ClassificationTraceStep;
 import dev.marie.MariesLib.scanner.analysis.MultiValueAnalysisPipeline;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeManager;
@@ -30,7 +30,7 @@ import java.util.function.Consumer;
  *
  * <p>Pipeline stages:</p>
  * <ol>
- *   <li>Registry Scan - Find all items with source properties ({@link FoodProperties})</li>
+ *   <li>Registry Scan - Find items matching {@link MarieLibContext#sourceItemFilter()}</li>
  *   <li>Signal Analysis - Multi-signal, weighted classification</li>
  *   <li>Confidence Validation - Spread-based, not threshold-based</li>
  *   <li>Tag Recommendation - Auto-generate JSON entries for high-confidence hits</li>
@@ -319,12 +319,11 @@ public final class ItemScanner {
         int alreadyTagged = 0;
 
         for (Item item : BuiltInRegistries.ITEM) {
-            FoodProperties sourceProperties = item.components().get(DataComponents.FOOD);
-            if (sourceProperties == null || sourceProperties.nutrition() == 0) {
+            ItemStack stack = new ItemStack(item);
+            if (!MarieLibContext.get().sourceItemFilter().test(stack)) {
                 continue;
             }
 
-            ItemStack stack = new ItemStack(item);
             if (hasValueTag(stack)) {
                 alreadyTagged++;
                 continue;

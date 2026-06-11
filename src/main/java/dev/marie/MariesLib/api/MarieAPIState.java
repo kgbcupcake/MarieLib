@@ -2,6 +2,8 @@ package dev.marie.MariesLib.api;
 
 import dev.marie.MariesLib.core.MariesLib;
 
+import java.util.concurrent.atomic.AtomicReference;
+
 @ApiStatus.Internal
 public final class MarieAPIState {
 
@@ -11,16 +13,31 @@ public final class MarieAPIState {
         CLOSED
     }
 
-    private static volatile Phase currentPhase = Phase.MOD_INIT;
+    private static final AtomicReference<Phase> currentPhase =
+            new AtomicReference<>(Phase.MOD_INIT);
 
     private MarieAPIState() {}
 
     public static boolean isRegistrationAllowed() {
-        return currentPhase == Phase.MOD_INIT || currentPhase == Phase.DATAPACK_RELOAD;
+        Phase phase = currentPhase.get();
+        return phase == Phase.MOD_INIT || phase == Phase.DATAPACK_RELOAD;
     }
 
     public static Phase getPhase() {
-        return currentPhase;
+        return currentPhase.get();
+    }
+
+    /**
+     * Asserts registration is currently allowed.
+     * Thread-safe: reads the atomic reference once.
+     */
+    public static void assertRegistrationAllowed(String context) {
+        Phase p = currentPhase.get();
+        if (p != Phase.MOD_INIT && p != Phase.DATAPACK_RELOAD) {
+            throw new IllegalStateException(
+                    "[MarieAPI] Registration closed — " + context +
+                    " must be called during mod initialization or datapack reload.");
+        }
     }
 
     /**
@@ -29,16 +46,16 @@ public final class MarieAPIState {
      */
     @ApiStatus.Internal
     public static void close() {
-        if (currentPhase == Phase.CLOSED) {
+        if (currentPhase.get() == Phase.CLOSED) {
             return;
         }
-        currentPhase = Phase.CLOSED;
+        currentPhase.set(Phase.CLOSED);
         MariesLib.LOGGER.info("[MarieLib] Registration phase: CLOSED");
     }
 
     @ApiStatus.Internal
     public static DatapackReloadScope openForDatapackReload() {
-        currentPhase = Phase.DATAPACK_RELOAD;
+        currentPhase.set(Phase.DATAPACK_RELOAD);
         MariesLib.LOGGER.info("[MarieLib] Registration phase: DATAPACK_RELOAD");
         return new DatapackReloadScope();
     }
@@ -46,7 +63,7 @@ public final class MarieAPIState {
     public static final class DatapackReloadScope implements AutoCloseable {
         @Override
         public void close() {
-            currentPhase = Phase.CLOSED;
+            currentPhase.set(Phase.CLOSED);
             MariesLib.LOGGER.info("[MarieLib] Registration phase: CLOSED");
         }
     }

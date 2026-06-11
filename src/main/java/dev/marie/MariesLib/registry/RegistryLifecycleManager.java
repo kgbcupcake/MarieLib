@@ -72,6 +72,12 @@ public final class RegistryLifecycleManager {
         if (reload == null) {
             throw new IllegalArgumentException("reload runnable must be non-null for " + name);
         }
+        for (Entry entry : ENTRIES) {
+            if (entry.name().equals(name)) {
+                MariesLib.LOGGER.warn("[RegistryLifecycleManager] Ignoring duplicate registry registration: {}", name);
+                return;
+            }
+        }
         ENTRIES.add(new Entry(name, load, reload, datapackLoad));
     }
 

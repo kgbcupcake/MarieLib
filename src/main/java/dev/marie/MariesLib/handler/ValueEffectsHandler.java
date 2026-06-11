@@ -21,14 +21,22 @@ public class ValueEffectsHandler {
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
         if (player.level().getGameTime() % APPLY_INTERVAL_TICKS != 0) return;
         if (ReloadHandler.isReloadInProgress()) return;
+        if (!TrackingAttachment.isRegistered()) return;
 
         if (ModuleCache.enableEffects) {
-            TrackingData data = player.getData(TrackingAttachment.TRACKING.get());
+            TrackingData data = TrackingAttachment.getData(player);
             MarieLibContext.get().effectApplier().accept(player, data);
             for (String oldId : MarieLibContext.get().previousEffectIds()) {
+                if (oldId == null || oldId.isBlank()) {
+                    continue;
+                }
                 if (!MarieLibContext.get().isEffectDefinitionRegistered(oldId)) {
+                    ResourceLocation effectId = ResourceLocation.tryParse(oldId);
+                    if (effectId == null) {
+                        continue;
+                    }
                     BuiltInRegistries.MOB_EFFECT
-                            .getHolder(ResourceLocation.parse(oldId))
+                            .getHolder(effectId)
                             .ifPresent(player::removeEffect);
                 }
             }

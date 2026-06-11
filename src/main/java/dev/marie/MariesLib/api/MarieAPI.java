@@ -10,11 +10,20 @@ import dev.marie.MariesLib.api.registry.ProfileRegistry;
 import dev.marie.MariesLib.api.registry.MilestoneRegistry;
 import dev.marie.MariesLib.api.registry.ReportProviderRegistry;
 import dev.marie.MariesLib.api.registry.SeasonHookRegistry;
+import dev.marie.MariesLib.api.registry.SleepBonusEvaluatorRegistry;
+import dev.marie.MariesLib.api.registry.SourcePropertySignalRegistry;
 import dev.marie.MariesLib.api.registry.SynergyRegistry;
+import dev.marie.MariesLib.api.registry.ValueRegistry;
 import dev.marie.MariesLib.config.ModuleCache;
 import dev.marie.MariesLib.core.MarieLibContext;
+import dev.marie.MariesLib.core.MariesLib;
 import dev.marie.MariesLib.core.MarieLibPlayerDataProvider;
 import dev.marie.MariesLib.core.MarieLibRegistrationDelegate;
+import dev.marie.MariesLib.handler.SourceApplicationPipeline;
+import dev.marie.MariesLib.runtime.SourceTriggerRegistry;
+import dev.marie.MariesLib.runtime.TriggerHandlerRegistry;
+import dev.marie.MariesLib.tracking.TrackingAttachment;
+import dev.marie.MariesLib.tracking.TrackingData;
 import dev.marie.MariesLib.util.MarieRegistryUtils;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -39,7 +48,8 @@ import java.util.Map;
 public final class MarieAPI {
 
     private static ResourceLocation apiModifierSource() {
-        return ResourceLocation.fromNamespaceAndPath(MarieLibContext.get().modId(), "api");
+        String modId = MarieLibContext.isRegistered() ? MarieLibContext.get().modId() : MariesLib.MOD_ID;
+        return ResourceLocation.fromNamespaceAndPath(modId, "api");
     }
 
     private MarieAPI() {}
@@ -180,7 +190,7 @@ public final class MarieAPI {
      * @throws IllegalArgumentException if a value with the same id already exists
      */
     public static void registerValue(ValueDefinition definition) {
-        if (!MarieAPIState.isRegistrationAllowed()) throw new IllegalStateException("MarieAPI registration is closed — register during mod initialization only.");
+        MarieAPIState.assertRegistrationAllowed("registerValue");
         MarieLibRegistrationDelegate delegate = MarieLibContext.get().registrationDelegate();
         if (delegate == null) {
             throw new IllegalStateException("MarieLib registration delegate not configured");
@@ -189,6 +199,7 @@ public final class MarieAPI {
             throw new IllegalArgumentException("Value already registered: " + definition.getId());
         }
         delegate.registerValue(definition);
+        ValueRegistry.register(definition);
     }
 
     /**
@@ -211,9 +222,11 @@ public final class MarieAPI {
      * @throws IllegalArgumentException if the value key is not registered
      */
     public static void registerSourceClassification(ResourceLocation sourceId, String valueKey, float amount) {
-        if (!MarieAPIState.isRegistrationAllowed()) throw new IllegalStateException("MarieAPI registration is closed — register during mod initialization only.");
+        MarieAPIState.assertRegistrationAllowed("registerSourceClassification");
         dev.marie.MariesLib.util.MarieValidation.requireNonNullId(sourceId, "MarieAPI.registerSourceClassification");
-        dev.marie.MariesLib.util.MarieValidation.requireFinite(amount, -10f, 10f, "MarieAPI.registerSourceClassification.amount");
+        if (!Float.isFinite(amount)) {
+            throw new IllegalArgumentException("MarieAPI.registerSourceClassification.amount: value must be finite, got " + amount);
+        }
         if (!net.minecraft.core.registries.BuiltInRegistries.ITEM.containsKey(sourceId)) {
             org.slf4j.LoggerFactory.getLogger(MarieAPI.class).warn("[MarieAPI] registerSourceClassification: item '{}' not found in BuiltInRegistries.ITEM", sourceId);
         }
@@ -248,7 +261,7 @@ public final class MarieAPI {
      * @throws IllegalArgumentException if the referenced value or effect doesn't exist
      */
     public static void registerCustomEffect(ThresholdEffect definition) {
-        if (!MarieAPIState.isRegistrationAllowed()) throw new IllegalStateException("MarieAPI registration is closed — register during mod initialization only.");
+        MarieAPIState.assertRegistrationAllowed("registerCustomEffect");
         MarieLibRegistrationDelegate delegate = MarieLibContext.get().registrationDelegate();
         if (delegate == null) {
             throw new IllegalStateException("MarieLib registration delegate not configured");
@@ -277,7 +290,7 @@ public final class MarieAPI {
      * @param definition the compat definition with source-to-value mappings
      */
     public static void registerCompatEntry(CompatDefinition definition) {
-        if (!MarieAPIState.isRegistrationAllowed()) throw new IllegalStateException("MarieAPI registration is closed — register during mod initialization only.");
+        MarieAPIState.assertRegistrationAllowed("registerCompatEntry");
         dev.marie.MariesLib.compat.ModCompat.registerExternal(definition);
     }
 
@@ -304,7 +317,7 @@ public final class MarieAPI {
      * @throws IllegalArgumentException if referenced values don't exist
      */
     public static void registerValueSynergy(SynergyDefinition definition) {
-        if (!MarieAPIState.isRegistrationAllowed()) throw new IllegalStateException("MarieAPI registration is closed — register during mod initialization only.");
+        MarieAPIState.assertRegistrationAllowed("registerValueSynergy");
         SynergyRegistry.registerValueSynergy(definition);
     }
 
@@ -325,7 +338,7 @@ public final class MarieAPI {
      * @param definition the source synergy definition
      */
     public static void registerSourcePairSynergy(SourcePairSynergy definition) {
-        if (!MarieAPIState.isRegistrationAllowed()) throw new IllegalStateException("MarieAPI registration is closed — register during mod initialization only.");
+        MarieAPIState.assertRegistrationAllowed("registerSourcePairSynergy");
         SynergyRegistry.registerSourcePairSynergy(definition);
     }
 
@@ -350,7 +363,7 @@ public final class MarieAPI {
      * @throws IllegalArgumentException if a profile with the same id already exists
      */
     public static void registerTrackingProfile(ProfileDefinition definition) {
-        if (!MarieAPIState.isRegistrationAllowed()) throw new IllegalStateException("MarieAPI registration is closed — register during mod initialization only.");
+        MarieAPIState.assertRegistrationAllowed("registerTrackingProfile");
         ProfileRegistry.register(definition);
     }
 
@@ -372,7 +385,7 @@ public final class MarieAPI {
      * @throws IllegalArgumentException if a milestone with the same id already exists
      */
     public static void registerMilestone(MilestoneDefinition definition) {
-        if (!MarieAPIState.isRegistrationAllowed()) throw new IllegalStateException("MarieAPI registration is closed — register during mod initialization only.");
+        MarieAPIState.assertRegistrationAllowed("registerMilestone");
         MilestoneRegistry.register(definition);
     }
 
@@ -397,7 +410,7 @@ public final class MarieAPI {
      * @param hook the season hook implementation
      */
     public static void registerSeasonHook(MarieSeasonHook hook) {
-        if (!MarieAPIState.isRegistrationAllowed()) throw new IllegalStateException("MarieAPI registration is closed — register during mod initialization only.");
+        MarieAPIState.assertRegistrationAllowed("registerSeasonHook");
         SeasonHookRegistry.register(hook);
     }
 
@@ -418,7 +431,7 @@ public final class MarieAPI {
      * @param modifier the absorption modifier implementation
      */
     public static void registerAbsorptionModifier(AbsorptionModifier modifier) {
-        if (!MarieAPIState.isRegistrationAllowed()) throw new IllegalStateException("MarieAPI registration is closed — register during mod initialization only.");
+        MarieAPIState.assertRegistrationAllowed("registerAbsorptionModifier");
         AbsorptionModifierRegistry.register(modifier);
     }
 
@@ -439,7 +452,7 @@ public final class MarieAPI {
      * @param provider the report provider implementation
      */
     public static void registerReportProvider(ReportProvider provider) {
-        if (!MarieAPIState.isRegistrationAllowed()) throw new IllegalStateException("MarieAPI registration is closed — register during mod initialization only.");
+        MarieAPIState.assertRegistrationAllowed("registerReportProvider");
         ReportProviderRegistry.register(provider);
     }
 
@@ -451,5 +464,99 @@ public final class MarieAPI {
     @ApiStatus.Stable
     public static void addReportSection(ReportProvider provider) {
         registerReportProvider(provider);
+    }
+
+    /**
+     * Registers a source property signal used by the scanner to classify
+     * items. The consuming mod provides all signal logic — the lib has
+     * no opinion on what item properties mean.
+     */
+    @ApiStatus.Stable
+    public static void registerSourcePropertySignal(SourcePropertySignal signal) {
+        MarieAPIState.assertRegistrationAllowed("registerSourcePropertySignal");
+        if (signal == null) {
+            throw new IllegalArgumentException("signal cannot be null");
+        }
+        SourcePropertySignalRegistry.register(signal);
+    }
+
+    /**
+     * Registers a sleep bonus evaluator. When a player wakes up,
+     * MarieLib calls the evaluator and applies any returned effect.
+     * Only one evaluator should be registered per mod; registering
+     * multiple evaluators is supported and all are called in order.
+     */
+    @ApiStatus.Stable
+    public static void registerSleepBonusEvaluator(SleepBonusEvaluator evaluator) {
+        MarieAPIState.assertRegistrationAllowed("registerSleepBonusEvaluator");
+        if (evaluator == null) {
+            throw new IllegalArgumentException("evaluator cannot be null");
+        }
+        SleepBonusEvaluatorRegistry.register(evaluator);
+    }
+
+    /**
+     * Registers a consuming-mod trigger handler. MarieLib will call
+     * {@link ISourceTriggerHandler#register(IEventBus)} during
+     * server event bus setup so the handler can subscribe its own
+     * NeoForge event listeners.
+     *
+     * <p>This is optional — consuming mods may instead call
+     * {@link #fireSourceTrigger} directly from their own event handlers
+     * without using this registration.</p>
+     */
+    @ApiStatus.Stable
+    public static void registerTriggerHandler(ISourceTriggerHandler handler) {
+        MarieAPIState.assertRegistrationAllowed("registerTriggerHandler");
+        if (handler == null) {
+            throw new IllegalArgumentException("handler cannot be null");
+        }
+        TriggerHandlerRegistry.register(handler);
+    }
+
+    /**
+     * Registers a non-item source contribution for a specific trigger type.
+     * When {@link #fireSourceTrigger} is called with a matching trigger,
+     * the registered amounts are added to the pipeline.
+     *
+     * <p>Use this for EMC transactions, crafting, block breaking, etc.</p>
+     */
+    @ApiStatus.Stable
+    public static void registerTriggerSource(SourceTriggerDefinition definition) {
+        MarieAPIState.assertRegistrationAllowed("registerTriggerSource");
+        if (definition == null) {
+            throw new IllegalArgumentException("definition cannot be null");
+        }
+        MarieRegistryUtils.requireValueKey(definition.getValueKey(), "registerTriggerSource");
+        SourceTriggerRegistry.register(definition);
+    }
+
+    /** Alias for registerTriggerSource. */
+    @ApiStatus.Stable
+    public static void addTriggerSource(SourceTriggerDefinition definition) {
+        registerTriggerSource(definition);
+    }
+
+    /**
+     * Fires the value pipeline for a custom trigger on a player.
+     * Use this to contribute values from non-item actions (crafting,
+     * EMC transactions, block breaking, etc.).
+     *
+     * <p>Must be called server-side. The trigger will be processed through
+     * the full pipeline including absorption modifiers, synergies, and
+     * threshold checks.</p>
+     *
+     * @param player  the server-side player receiving the value
+     * @param trigger the trigger describing the source action
+     */
+    @ApiStatus.Stable
+    public static void fireSourceTrigger(ServerPlayer player, ValueSourceTrigger trigger) {
+        if (player == null || trigger == null) return;
+        if (!TrackingAttachment.isRegistered()) return;
+        TrackingData tracking = TrackingAttachment.getData(player);
+        long gameTimeMs = player.level().getGameTime() * 50L;
+        tracking.tickTime(gameTimeMs);
+        tracking.tick();
+        SourceApplicationPipeline.process(player, trigger, null, tracking, gameTimeMs);
     }
 }

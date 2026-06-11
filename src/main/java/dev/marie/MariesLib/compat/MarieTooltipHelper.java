@@ -15,19 +15,21 @@ import dev.marie.MariesLib.api.registry.SynergyRegistry;
 import dev.marie.MariesLib.config.ModuleCache;
 import dev.marie.MariesLib.core.MarieLibContext;
 import dev.marie.MariesLib.tracking.TrackingData;
-import dev.marie.MariesLib.util.MarieItemTags;
 import dev.marie.MariesLib.util.MarieRegistryUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.fml.loading.FMLEnvironment;
 
 /**
  * Shared source tooltip formatter used by JEI/REI/EMI integrations.
@@ -42,16 +44,21 @@ public final class MarieTooltipHelper {
         if (stack == null || stack.isEmpty()) {
             return lines;
         }
+        if (FMLEnvironment.dist != Dist.CLIENT) {
+            return lines;
+        }
+        if (!MarieLibContext.isRegistered()) {
+            return lines;
+        }
 
         Minecraft mc = Minecraft.getInstance();
-        if (!ModuleCache.enableSourceTooltips) {
+        if (!sourceTooltipsEnabled()) {
             return lines;
         }
 
         Player player = mc.player;
         Map<String, Float> valueBars = MarieLibContext.get().tooltipValueResolver().apply(stack, player);
-        FoodProperties sourceProperties = stack.getItem().getFoodProperties(stack, player);
-        if (sourceProperties == null && valueBars.isEmpty()) {
+        if (!MarieLibContext.get().sourceItemFilter().test(stack) && valueBars.isEmpty()) {
             return lines;
         }
 
@@ -120,7 +127,7 @@ public final class MarieTooltipHelper {
             lines.add(Component.literal("  " + label + "  +" + gain).withStyle(Style.EMPTY.withColor(color)));
         }
 
-        if (ModuleCache.enableDebugLogging && player != null) {
+        if (debugLoggingEnabled() && player != null) {
             var breakdown = tracking.getMultiplierBreakdown(itemId, dominantCategory, familyKey, gameTimeMs);
             float fin = breakdown.finalMultiplier();
             lines.add(Component.empty());
@@ -134,19 +141,19 @@ public final class MarieTooltipHelper {
                     .withStyle(breakdown.finalMultiplier() < 1.0f ? ChatFormatting.GOLD : ChatFormatting.GREEN));
         }
 
-        if (ModuleCache.enableDecay && ModuleCache.enableSourceApplication && sourceProperties != null) {
+        if (decayEnabled() && sourceApplicationEnabled()) {
             boolean bypassEligible =
-                    (sourceProperties.nutrition() <= 2 || stack.is(MarieItemTags.lightSource())) && !stack.is(MarieItemTags.heavySource());
+                    stackHasTagRole(stack, "light_source") && !stackHasTagRole(stack, "heavy_source");
             if (bypassEligible) {
                 lines.add(Component.translatable(modId + ".tooltip.light_source").withStyle(ChatFormatting.GRAY));
             }
         }
 
         ResourceLocation thisItem = MarieRegistryUtils.itemKey(stack);
-        if (ModuleCache.enableSynergies) {
+        if (synergiesEnabled()) {
             addSourceSynergyLine(lines, thisItem);
         }
-        if (ModuleCache.enableMilestones && !valueBars.isEmpty()) {
+        if (milestonesEnabled() && !valueBars.isEmpty()) {
             addMilestoneLine(lines, valueBars.keySet());
         }
         return lines;
@@ -154,7 +161,7 @@ public final class MarieTooltipHelper {
 
     private static void addSourceSynergyLine(List<Component> lines, ResourceLocation sourceId) {
         List<SourcePairSynergy> sourceSynergies = SynergyRegistry.getSourcePairSynergies();
-        if (!ModuleCache.enableSynergies || sourceSynergies.isEmpty()) {
+        if (!synergiesEnabled() || sourceSynergies.isEmpty()) {
             return;
         }
         for (SourcePairSynergy def : sourceSynergies) {
@@ -176,7 +183,7 @@ public final class MarieTooltipHelper {
     }
 
     private static void addMilestoneLine(List<Component> lines, Set<String> valuesInTooltip) {
-        if (!ModuleCache.enableMilestones || MilestoneRegistry.getAll().isEmpty()) {
+        if (!milestonesEnabled() || MilestoneRegistry.getAll().isEmpty()) {
             return;
         }
         Set<String> valueSet = new LinkedHashSet<>(valuesInTooltip);
@@ -211,5 +218,39 @@ public final class MarieTooltipHelper {
             return COL_WARNING;
         }
         return COL_GOOD;
+    }
+
+    private static boolean sourceTooltipsEnabled() {
+        return !ModuleCache.isInitialized() || ModuleCache.enableSourceTooltips;
+    }
+
+    private static boolean debugLoggingEnabled() {
+        return ModuleCache.isInitialized() && ModuleCache.enableDebugLogging;
+    }
+
+    private static boolean decayEnabled() {
+        return !ModuleCache.isInitialized() || ModuleCache.enableDecay;
+    }
+
+    private static boolean sourceApplicationEnabled() {
+        return !ModuleCache.isInitialized() || ModuleCache.enableSourceApplication;
+    }
+
+    private static boolean synergiesEnabled() {
+        return !ModuleCache.isInitialized() || ModuleCache.enableSynergies;
+    }
+
+    private static boolean milestonesEnabled() {
+        return !ModuleCache.isInitialized() || ModuleCache.enableMilestones;
+    }
+
+    private static boolean stackHasTagRole(ItemStack stack, String role) {
+        String tagPath = MarieLibContext.get().resolveTagRole(role);
+        if (tagPath == null) {
+            return false;
+        }
+        TagKey<Item> tag = TagKey.create(Registries.ITEM,
+                ResourceLocation.fromNamespaceAndPath(MarieLibContext.get().modId(), tagPath));
+        return stack.is(tag);
     }
 }

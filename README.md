@@ -314,3 +314,4 @@ LGPL-3.0-only
 - [Modrinth](https://modrinth.com/mod/marieslib)
 - [Nourished on Modrinth](https://modrinth.com/mod/nourished)
 - [GitHub](https://github.com/kgbcupcake)
+- [Changelog](CHANGELOG.md)

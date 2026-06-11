@@ -69,6 +69,13 @@ public final class MarieResourceLoader {
             String errorMessage,
             String fallbackInfoLog
     ) {
+        if (!MarieLibContext.isRegistered()) {
+            fallback.run();
+            if (fallbackInfoLog != null) {
+                MariesLib.LOGGER.info(fallbackInfoLog);
+            }
+            return;
+        }
         ResourceLocation path = ResourceLocation.fromNamespaceAndPath(MarieLibContext.get().modId(), relativePath);
         Optional<Resource> resource = resourceManager.getResource(path);
         if (resource.isEmpty()) {

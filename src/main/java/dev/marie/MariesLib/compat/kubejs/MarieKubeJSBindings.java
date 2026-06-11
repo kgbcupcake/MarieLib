@@ -48,6 +48,7 @@ public final class MarieKubeJSBindings {
                 if (data.has("critical")) builder.criticalThreshold(data.get("critical").getAsFloat());
                 if (data.has("low")) builder.lowThreshold(data.get("low").getAsFloat());
                 if (data.has("excess")) builder.excessThreshold(data.get("excess").getAsFloat());
+                if (data.has("amountScale")) builder.amountScale(data.get("amountScale").getAsDouble());
                 MarieAPI.registerValue(builder.build());
             } catch (Exception e) {
                 throw new IllegalArgumentException("Failed to register value", e);
@@ -57,7 +58,7 @@ public final class MarieKubeJSBindings {
         public void registerSourceClassification(String itemId, String valueKey, float amount) {
             ResourceLocation loc = ResourceLocation.parse(itemId);
             MarieValidation.requireNonNullId(loc, "registerSourceClassification");
-            MarieValidation.requireFinite(amount, -10f, 10f, "registerSourceClassification.amount");
+            MarieValidation.requireFiniteUnbounded(amount, "registerSourceClassification.amount");
             MarieAPI.registerSourceClassification(loc, valueKey, amount);
         }
 
@@ -66,7 +67,7 @@ public final class MarieKubeJSBindings {
                 if (windowSeconds <= 0 || windowSeconds >= 3600) {
                     throw new IllegalArgumentException("windowSeconds must be in (0, 3600), got: " + windowSeconds);
                 }
-                MarieValidation.requireFinite(amount, -10f, 10f, "registerSourcePairSynergy.amount");
+                MarieValidation.requireFiniteUnbounded(amount, "registerSourcePairSynergy.amount");
                 String id = ResourceLocation.parse(sourceA).getPath() + "_" + ResourceLocation.parse(sourceB).getPath();
                 SourcePairSynergy definition = SourcePairSynergy.builder(id)
                         .sourceA(ResourceLocation.parse(sourceA))
@@ -124,9 +125,12 @@ public final class MarieKubeJSBindings {
         }
 
         public void setValueLevel(ServerPlayer player, String valueKey, float value) {
-            TrackingData data = player.getData(TrackingAttachment.TRACKING.get());
+            if (!TrackingAttachment.isRegistered()) {
+                return;
+            }
+            TrackingData data = TrackingAttachment.getData(player);
             data.values.put(valueKey, Math.max(0f, Math.min(1f, value)));
-            player.setData(TrackingAttachment.TRACKING.get(), data);
+            TrackingAttachment.setData(player, data);
         }
     }
 }

@@ -5,6 +5,7 @@ import dev.marie.MariesLib.api.ApiStatus;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.bus.api.Event;
+import net.neoforged.bus.api.ICancellableEvent;
 
 /**
  * Contains all NeoForge event classes fired by the MarieLib value system.
@@ -165,6 +166,25 @@ public final class MarieEvents {
         public String getValueKey() {
             return valueKey;
         }
+    }
+
+    /**
+     * Fired before the value pipeline processes a trigger.
+     * Cancellable — cancel to prevent all value changes for this trigger.
+     */
+    @ApiStatus.Stable
+    public static class SourceTriggerEvent extends Event implements ICancellableEvent {
+
+        private final Player player;
+        private final ValueSourceTrigger trigger;
+
+        public SourceTriggerEvent(Player player, ValueSourceTrigger trigger) {
+            this.player = player;
+            this.trigger = trigger;
+        }
+
+        public Player getPlayer() { return player; }
+        public ValueSourceTrigger getTrigger() { return trigger; }
     }
 
     /**

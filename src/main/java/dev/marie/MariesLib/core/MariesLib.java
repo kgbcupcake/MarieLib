@@ -16,7 +16,7 @@ public final class MariesLib {
 
     public MariesLib(IEventBus modEventBus, ModContainer modContainer) {
         if (!MarieLibContext.isRegistered()) {
-            MarieLibContext.register(MarieLibContext.builder(MOD_ID).build());
+            MariesLibBootstrap.bootstrap(modEventBus);
         }
         LOGGER.info("MariesLib initialized");
     }

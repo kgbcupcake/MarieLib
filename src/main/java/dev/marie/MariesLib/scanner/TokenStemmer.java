@@ -27,23 +27,26 @@ public final class TokenStemmer {
     private static final Pattern CAMEL_BOUNDARY_LOWER_UPPER = Pattern.compile("(?<=[a-z])(?=[A-Z])");
     private static final Pattern CAMEL_BOUNDARY_ACRONYM = Pattern.compile("(?<=[A-Z])(?=[A-Z][a-z])");
 
-    /** Resource-noise suffix built from chars to avoid literal grep hits. */
-    private static final String RESOURCE_NOISE_SUFFIX = new String(new char[]{'f', 'o', 'o', 'd'});
-
     private static String[] dictionary() {
-        return MarieLibContext.get().stemmerDictionary();
+        return MarieLibContext.isRegistered() ? MarieLibContext.get().stemmerDictionary() : new String[0];
     }
 
     private static Map<String, String[]> compoundSplits() {
-        return MarieLibContext.get().stemmerCompoundSplits();
+        return MarieLibContext.isRegistered() ? MarieLibContext.get().stemmerCompoundSplits() : Map.of();
     }
 
     private static Map<String, String> irregularForms() {
-        return MarieLibContext.get().stemmerIrregularForms();
+        return MarieLibContext.isRegistered() ? MarieLibContext.get().stemmerIrregularForms() : Map.of();
     }
 
     private static Set<String> stopWords() {
-        return MarieLibContext.get().stemmerStopWords();
+        return MarieLibContext.isRegistered() ? MarieLibContext.get().stemmerStopWords() : Set.of();
+    }
+
+    private static Set<String> noiseSuffixes() {
+        return MarieLibContext.isRegistered()
+                ? MarieLibContext.get().stemmerNoiseSuffixes()
+                : Set.of();
     }
 
     private TokenStemmer() {}
@@ -161,7 +164,15 @@ public final class TokenStemmer {
     private static boolean isResourceNoiseToken(String s) {
         if (s == null || s.isEmpty()) return false;
         String t = s.toLowerCase(Locale.ROOT);
-        return t.equals("item") || t.equals("block") || t.equals(RESOURCE_NOISE_SUFFIX);
+        if (t.equals("item") || t.equals("block")) {
+            return true;
+        }
+        for (String suffix : noiseSuffixes()) {
+            if (t.equals(suffix)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static boolean hasUpperCaseAscii(String s) {
@@ -173,17 +184,25 @@ public final class TokenStemmer {
     }
 
     /**
-     * Strips trailing resource-noise suffixes ({@code item}, {@code block}, source suffix) case-insensitively.
+     * Strips trailing resource-noise suffixes ({@code item}, {@code block}, and configured noise suffixes)
+     * case-insensitively.
      */
     private static String stripTrailingResourceNoise(String s) {
         String cur = s;
         while (!cur.isEmpty()) {
             String lower = cur.toLowerCase(Locale.ROOT);
             int trim = 0;
-            if (lower.endsWith("item") && cur.length() > 4) trim = 4;
-            else if (lower.endsWith("block") && cur.length() > 5) trim = 5;
-            else if (lower.endsWith(RESOURCE_NOISE_SUFFIX) && cur.length() > RESOURCE_NOISE_SUFFIX.length()) {
-                trim = RESOURCE_NOISE_SUFFIX.length();
+            if (lower.endsWith("item") && cur.length() > 4) {
+                trim = 4;
+            } else if (lower.endsWith("block") && cur.length() > 5) {
+                trim = 5;
+            } else {
+                for (String suffix : noiseSuffixes()) {
+                    if (!suffix.isEmpty() && lower.endsWith(suffix) && cur.length() > suffix.length()) {
+                        trim = suffix.length();
+                        break;
+                    }
+                }
             }
             if (trim == 0) break;
             cur = cur.substring(0, cur.length() - trim);

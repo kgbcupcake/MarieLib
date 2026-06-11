@@ -5,6 +5,7 @@ import dev.marie.MariesLib.api.ThresholdEffect;
 import dev.marie.MariesLib.api.ValueDefinition;
 import net.minecraft.resources.ResourceLocation;
 
+import javax.annotation.Nullable;
 import java.util.List;
 
 /**
@@ -21,4 +22,12 @@ public interface MarieLibRegistrationDelegate {
     void registerEffect(ThresholdEffect definition);
 
     void registerSourceClassification(ResourceLocation sourceId, String valueKey, float amount);
+
+    /**
+     * Returns the {@link ValueDefinition} for the given key, or {@code null} if not registered.
+     */
+    @Nullable
+    default ValueDefinition valueDefinitionFor(String key) {
+        return null;
+    }
 }

@@ -22,6 +22,7 @@ import dev.marie.MariesLib.data.SchemaDefinition;
 import dev.marie.MariesLib.datapack.SchemaTemplateGenerator;
 import dev.marie.MariesLib.handler.ReloadHandler;
 import dev.marie.MariesLib.handler.ReloadPipeline;
+import dev.marie.MariesLib.scanner.ClassificationResult;
 import dev.marie.MariesLib.scanner.ItemScanner;
 import dev.marie.MariesLib.scanner.analysis.MultiValueAnalysisPipeline;
 import dev.marie.MariesLib.tracking.TrackingAttachment;
@@ -35,7 +36,6 @@ import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.core.Holder;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
@@ -83,12 +83,15 @@ public class MarieCommand {
             );
 
     private static final SuggestionProvider<CommandSourceStack> SCHEMA_TYPE_SUGGESTIONS =
-            (ctx, builder) -> SharedSuggestionProvider.suggest(
-                    MarieLibContext.get().schemaProviders().get().stream()
-                            .map(SchemaDefinition::getTypeName)
-                            .toList(),
-                    builder
-            );
+            (ctx, builder) -> {
+                List<SchemaDefinition> schemas = MarieLibContext.get().schemaProviders().get();
+                if (schemas == null) {
+                    schemas = List.of();
+                }
+                return SharedSuggestionProvider.suggest(
+                        schemas.stream().map(SchemaDefinition::getTypeName).toList(),
+                        builder);
+            };
 
     @SubscribeEvent
     public void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
@@ -306,7 +309,8 @@ public class MarieCommand {
         Map<String, List<ResourceLocation>> byNamespace = new TreeMap<>();
 
         for (Item item : BuiltInRegistries.ITEM) {
-            if (item.components().get(DataComponents.FOOD) == null) {
+            ItemStack stack = new ItemStack(item);
+            if (!MarieLibContext.get().sourceItemFilter().test(stack)) {
                 continue;
             }
             ResourceLocation itemId = item.builtInRegistryHolder().key().location();
@@ -375,10 +379,14 @@ public class MarieCommand {
         }
         float value = FloatArgumentType.getFloat(ctx, "value");
         ServerPlayer player = EntityArgument.getPlayer(ctx, "player");
-        TrackingData data = player.getData(TrackingAttachment.TRACKING.get());
+        if (!TrackingAttachment.isRegistered()) {
+            ctx.getSource().sendFailure(Component.literal("Tracking attachment is not registered."));
+            return 0;
+        }
+        TrackingData data = TrackingAttachment.getData(player);
         float old = data.values.getOrDefault(key, 0f);
         data.values.put(key, value);
-        player.setData(TrackingAttachment.TRACKING.get(), data);
+        TrackingAttachment.setData(player, data);
         MarieLibContext.get().trackingDeltaSyncer().accept(player, data);
         MarieLibContext.get().effectApplier().accept(player, data);
         NeoForge.EVENT_BUS.post(new MarieEvents.ValueChangedEvent(player, key, old, value));
@@ -388,7 +396,11 @@ public class MarieCommand {
 
     private int resetPlayer(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         ServerPlayer player = EntityArgument.getPlayer(ctx, "player");
-        TrackingData data = player.getData(TrackingAttachment.TRACKING.get());
+        if (!TrackingAttachment.isRegistered()) {
+            ctx.getSource().sendFailure(Component.literal("Tracking attachment is not registered."));
+            return 0;
+        }
+        TrackingData data = TrackingAttachment.getData(player);
         TrackingMemoryConfig cfg = MarieLibContext.get().trackingMemoryConfigProvider().get();
         float start = cfg != null ? (float) cfg.startingValueFill() : 0.5f;
         for (String key : MarieLibContext.get().valueKeys()) {
@@ -396,7 +408,7 @@ public class MarieCommand {
             data.values.put(key, start);
             NeoForge.EVENT_BUS.post(new MarieEvents.ValueChangedEvent(player, key, old, start));
         }
-        player.setData(TrackingAttachment.TRACKING.get(), data);
+        TrackingAttachment.setData(player, data);
         ctx.getSource().sendSuccess(() -> Component.literal("Reset values for " + player.getName().getString()), true);
         return 1;
     }
@@ -444,7 +456,7 @@ public class MarieCommand {
 
     private int debugTarget(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         ServerPlayer target = EntityArgument.getPlayer(ctx, "player");
-        TrackingData data = target.getData(TrackingAttachment.TRACKING.get());
+        TrackingData data = TrackingAttachment.getData(target);
 
         JsonObject root = new JsonObject();
         root.addProperty("player", target.getGameProfile().getName());
@@ -467,8 +479,11 @@ public class MarieCommand {
     }
 
     private int runScanAnalysis(CommandContext<CommandSourceStack> ctx) {
-        MultiValueAnalysisPipeline.runFullRegistry(
-                MarieLibContext.get().classifiedSourceProvider().get(), 0.15f, 0.35f, 0.10f);
+        List<ClassificationResult> classified = MarieLibContext.get().classifiedSourceProvider().get();
+        if (classified == null) {
+            classified = List.of();
+        }
+        MultiValueAnalysisPipeline.runFullRegistry(classified, 0.15f, 0.35f, 0.10f);
         String outputPath = "config/" + MarieLibContext.get().modId() + "/scanner_analysis/";
         ctx.getSource().sendSuccess(
                 () -> Component.literal("Multi-value analysis written to " + outputPath)
@@ -508,7 +523,11 @@ public class MarieCommand {
 
     private int showSchemaTemplate(CommandContext<CommandSourceStack> ctx) {
         String type = StringArgumentType.getString(ctx, "type");
-        SchemaDefinition schema = MarieLibContext.get().schemaProviders().get().stream()
+        List<SchemaDefinition> schemas = MarieLibContext.get().schemaProviders().get();
+        if (schemas == null) {
+            schemas = List.of();
+        }
+        SchemaDefinition schema = schemas.stream()
                 .filter(s -> s.getTypeName().equals(type))
                 .findFirst()
                 .orElse(null);
@@ -530,7 +549,7 @@ public class MarieCommand {
             source.sendFailure(Component.literal("You do not have permission to target another player."));
             return 0;
         }
-        TrackingData data = target.getData(TrackingAttachment.TRACKING.get());
+        TrackingData data = TrackingAttachment.getData(target);
         List<Component> lines = MarieCommandSource.buildReportLines(target, data, activeProfile(target));
         for (Component line : lines) {
             source.sendSuccess(() -> line, false);
@@ -550,7 +569,7 @@ public class MarieCommand {
             return 0;
         }
 
-        TrackingData data = target.getData(TrackingAttachment.TRACKING.get());
+        TrackingData data = TrackingAttachment.getData(target);
         float value = data.values.getOrDefault(key, 0f);
         float decay = MarieLibContext.get().valueDecayRateProvider().apply(key);
         float critical = MarieLibContext.get().criticalThresholdFor(key);

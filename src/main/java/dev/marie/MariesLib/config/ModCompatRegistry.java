@@ -8,7 +8,6 @@ import com.google.gson.JsonObject;
 import dev.marie.MariesLib.api.ApiStatus;
 import dev.marie.MariesLib.core.MarieLibContext;
 import dev.marie.MariesLib.core.MariesLib;
-import net.minecraft.util.Mth;
 import net.neoforged.fml.ModList;
 
 import java.io.InputStream;
@@ -19,14 +18,13 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * Loads bundled {@code data/<modid>/config/mod_compat.json} at startup (integration metadata and
- * optional per-mod tuning). Other systems may query {@link #isLoaded(String)} or heavy-source thresholds.
+ * Loads bundled {@code data/<modid>/config/mod_compat.json} at startup (integration metadata).
+ * Other systems may query {@link #isLoaded(String)}.
  */
 @ApiStatus.Internal
 public final class ModCompatRegistry {
 
     private static final Gson GSON = new Gson();
-    private static final String SOLONION_MOD_ID = "solonion";
 
     private static String resourcePath() {
         return "/data/" + MarieLibContext.get().modId() + "/config/mod_compat.json";
@@ -34,23 +32,9 @@ public final class ModCompatRegistry {
 
     private static final Map<String, IntegrationEntry> INTEGRATIONS = new LinkedHashMap<>();
 
-    private static final String LEGACY_HEAVY_THRESHOLD_KEY = new String(new char[]{
-            'h', 'e', 'a', 'v', 'y', 'M', 'e', 'a', 'l', 'N', 'u', 't', 'r', 'i', 't', 'i', 'o', 'n', 'T', 'h', 'r', 'e', 's', 'h', 'o', 'l', 'd'
-    });
-
     private ModCompatRegistry() {}
 
-    public record IntegrationEntry(String modId, Integer heavySourcePropertyThreshold, String notes) {}
-
-    private static Integer readHeavySourcePropertyThreshold(JsonObject o) {
-        if (o.has("heavySourcePropertyThreshold") && !o.get("heavySourcePropertyThreshold").isJsonNull()) {
-            return Mth.clamp(o.get("heavySourcePropertyThreshold").getAsInt(), 1, 20);
-        }
-        if (o.has(LEGACY_HEAVY_THRESHOLD_KEY) && !o.get(LEGACY_HEAVY_THRESHOLD_KEY).isJsonNull()) {
-            return Mth.clamp(o.get(LEGACY_HEAVY_THRESHOLD_KEY).getAsInt(), 1, 20);
-        }
-        return null;
-    }
+    public record IntegrationEntry(String modId, String notes) {}
 
     public static void load() {
         INTEGRATIONS.clear();
@@ -76,12 +60,11 @@ public final class ModCompatRegistry {
                         continue;
                     }
                     String modId = o.get("modId").getAsString();
-                    Integer heavy = readHeavySourcePropertyThreshold(o);
                     String notes = "";
                     if (o.has("notes") && o.get("notes").isJsonPrimitive()) {
                         notes = o.get("notes").getAsString();
                     }
-                    INTEGRATIONS.put(modId, new IntegrationEntry(modId, heavy, notes));
+                    INTEGRATIONS.put(modId, new IntegrationEntry(modId, notes));
                 }
             }
             MariesLib.LOGGER.info("[MarieLib] Loaded {} integration entries from mod_compat.json",
@@ -99,21 +82,5 @@ public final class ModCompatRegistry {
 
     public static boolean isLoaded(String modId) {
         return ModList.get().isLoaded(modId);
-    }
-
-    /**
-     * When Spice of Life: Onion ({@code solonion}) is loaded, returns {@code heavySourcePropertyThreshold}
-     * from its mod_compat entry when present; otherwise {@link ModuleCache#heavySourcePropertyThreshold}.
-     * When {@code solonion} is not loaded, returns {@link ModuleCache#heavySourcePropertyThreshold} only.
-     */
-    public static int getHeavySourceThreshold() {
-        if (!ModList.get().isLoaded(SOLONION_MOD_ID)) {
-            return ModuleCache.heavySourcePropertyThreshold;
-        }
-        IntegrationEntry entry = INTEGRATIONS.get(SOLONION_MOD_ID);
-        if (entry != null && entry.heavySourcePropertyThreshold != null) {
-            return entry.heavySourcePropertyThreshold();
-        }
-        return ModuleCache.heavySourcePropertyThreshold;
     }
 }

@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.DoubleSupplier;
 import java.util.function.Function;
@@ -16,6 +17,9 @@ import javax.annotation.Nullable;
 import com.google.gson.JsonObject;
 
 import dev.marie.MariesLib.api.ApiStatus;
+import dev.marie.MariesLib.api.ValueDefinition;
+import dev.marie.MariesLib.api.ValueSourceTrigger;
+import dev.marie.MariesLib.api.registry.ValueRegistry;
 import dev.marie.MariesLib.classification.ClassificationTrace;
 import dev.marie.MariesLib.config.PresetRegistry;
 import dev.marie.MariesLib.data.SchemaDefinition;
@@ -46,7 +50,19 @@ public final class MarieLibContext {
 
     @FunctionalInterface
     public interface SourceDeltaResolver {
-        SourceDelta resolve(ItemStack stack, Level level, int nutrition, float saturation,
+        /**
+         * Resolves value deltas for a source item.
+         *
+         * @param stack       the item stack being applied (may be null for
+         *                    non-item triggers)
+         * @param level       the current level
+         * @param payload     the numeric payload from the trigger (consuming
+         *                    mod defines what this means — could be nutrition,
+         *                    EMC value, damage dealt, anything)
+         * @param matchedBars the pre-resolved value bar weights for this item
+         * @return a SourceDelta with total and per-value amounts
+         */
+        SourceDelta resolve(ItemStack stack, Level level, double payload,
                 Map<String, Float> matchedBars);
     }
 
@@ -60,6 +76,7 @@ public final class MarieLibContext {
     private final Supplier<List<String>> valueKeys;
     private final Consumer<Map<ResourceLocation, Map<String, Float>>> scannerApplyCallback;
     private final Supplier<Predicate<ItemStack>> valueTagChecker;
+    private final Supplier<Predicate<ItemStack>> sourceItemFilter;
     private final Supplier<Long> memoryWindowMinutes;
     private final Supplier<Integer> memoryWindowCount;
     private final Supplier<Long> streakWindowMs;
@@ -92,12 +109,16 @@ public final class MarieLibContext {
     private final Function<ResourceLocation, String> sourceFamilyResolver;
     private final Function<ItemStack, Boolean> isSourceResolvable;
     private final Function<Item, Map<String, Float>> valueTagScoresProvider;
+    private final Function<String, String> tagRoleResolver;
+    private final BiPredicate<ServerPlayer, ValueSourceTrigger> heavySourceBlocker;
+    private final BiPredicate<ServerPlayer, ValueSourceTrigger> lightSourceBlocker;
     private final DoubleSupplier multiValueInheritanceThreshold;
     private final ResolutionStageHandler[] runtimeResolverStages;
     private final String[] stemmerDictionary;
     private final Map<String, String[]> stemmerCompoundSplits;
     private final Map<String, String> stemmerIrregularForms;
     private final Set<String> stemmerStopWords;
+    private final Supplier<Set<String>> stemmerNoiseSuffixes;
     private final Runnable onServerStarting;
     private final Consumer<MinecraftServer> onReloadBroadcast;
     private final Consumer<RecipeManager> onRecipeManagerBound;
@@ -138,6 +159,7 @@ public final class MarieLibContext {
         this.valueKeys = builder.valueKeys;
         this.scannerApplyCallback = builder.scannerApplyCallback;
         this.valueTagChecker = builder.valueTagChecker;
+        this.sourceItemFilter = builder.sourceItemFilter;
         this.memoryWindowMinutes = builder.memoryWindowMinutes;
         this.memoryWindowCount = builder.memoryWindowCount;
         this.streakWindowMs = builder.streakWindowMs;
@@ -170,12 +192,16 @@ public final class MarieLibContext {
         this.sourceFamilyResolver = builder.sourceFamilyResolver;
         this.isSourceResolvable = builder.isSourceResolvable;
         this.valueTagScoresProvider = builder.valueTagScoresProvider;
+        this.tagRoleResolver = builder.tagRoleResolver;
+        this.heavySourceBlocker = builder.heavySourceBlocker;
+        this.lightSourceBlocker = builder.lightSourceBlocker;
         this.multiValueInheritanceThreshold = builder.multiValueInheritanceThreshold;
         this.runtimeResolverStages = builder.runtimeResolverStages;
         this.stemmerDictionary = builder.stemmerDictionary;
         this.stemmerCompoundSplits = builder.stemmerCompoundSplits;
         this.stemmerIrregularForms = builder.stemmerIrregularForms;
         this.stemmerStopWords = builder.stemmerStopWords;
+        this.stemmerNoiseSuffixes = builder.stemmerNoiseSuffixes;
         this.onServerStarting = builder.onServerStarting;
         this.onReloadBroadcast = builder.onReloadBroadcast;
         this.onRecipeManagerBound = builder.onRecipeManagerBound;
@@ -230,6 +256,7 @@ public final class MarieLibContext {
         scannerApplyCallback.accept(results);
     }
     public Predicate<ItemStack> valueTagChecker() { return valueTagChecker.get(); }
+    public Predicate<ItemStack> sourceItemFilter() { return sourceItemFilter.get(); }
     public long memoryWindowMinutes() { return memoryWindowMinutes.get(); }
     public int memoryWindowCount() { return memoryWindowCount.get(); }
     public long streakWindowMs() { return streakWindowMs.get(); }
@@ -262,12 +289,53 @@ public final class MarieLibContext {
     public Function<ResourceLocation, String> sourceFamilyResolver() { return sourceFamilyResolver; }
     public boolean isSourceResolvable(ItemStack stack) { return isSourceResolvable.apply(stack); }
     public Function<Item, Map<String, Float>> valueTagScoresProvider() { return valueTagScoresProvider; }
+
+    /**
+     * Resolves a named tag role to a full tag path for this mod's domain.
+     * The consuming mod maps well-known role keys to their actual tag paths.
+     *
+     * Built-in role keys used by MarieLib internally:
+     *   "source_override"  — items that bypass scanner classification
+     *   "heavy_source"     — items the pipeline treats as heavy
+     *   "light_source"     — items the pipeline treats as light
+     *
+     * The consuming mod may register any additional roles it needs.
+     * Returns null if the role is not mapped, which means no tag filtering
+     * is applied for that role.
+     */
+    @Nullable
+    public String resolveTagRole(String role) {
+        return tagRoleResolver.apply(role);
+    }
+
+    /**
+     * Predicate that decides whether a source trigger should be blocked
+     * because it is considered "heavy" for the current player state.
+     * The consuming mod defines what "heavy" means — the lib just asks.
+     *
+     * Return true to block the trigger, false to allow it.
+     * Default: never block (always returns false).
+     */
+    public boolean isHeavySourceBlocked(ServerPlayer player, ValueSourceTrigger trigger) {
+        return heavySourceBlocker.test(player, trigger);
+    }
+
+    /**
+     * Predicate that decides whether a source trigger should be blocked
+     * because it is considered "light" for the current player state.
+     * Default: never block (always returns false).
+     */
+    public boolean isLightSourceBlocked(ServerPlayer player, ValueSourceTrigger trigger) {
+        return lightSourceBlocker.test(player, trigger);
+    }
+
     public double multiValueInheritanceThreshold() { return multiValueInheritanceThreshold.getAsDouble(); }
     public ResolutionStageHandler[] runtimeResolverStages() { return runtimeResolverStages; }
     public String[] stemmerDictionary() { return stemmerDictionary; }
     public Map<String, String[]> stemmerCompoundSplits() { return stemmerCompoundSplits; }
     public Map<String, String> stemmerIrregularForms() { return stemmerIrregularForms; }
     public Set<String> stemmerStopWords() { return stemmerStopWords; }
+    public Set<String> stemmerNoiseSuffixes() { return stemmerNoiseSuffixes.get(); }
     public void onServerStarting() { onServerStarting.run(); }
     public void onReloadBroadcast(MinecraftServer server) { onReloadBroadcast.accept(server); }
     public void onRecipeManagerBound(RecipeManager recipeManager) { onRecipeManagerBound.accept(recipeManager); }
@@ -301,6 +369,21 @@ public final class MarieLibContext {
     @Nullable
     public MarieLibRegistrationDelegate registrationDelegate() { return registrationDelegate; }
 
+    /**
+     * Returns the ValueDefinition for the given key, or null if not registered.
+     */
+    @Nullable
+    public ValueDefinition valueDefinitionFor(String key) {
+        ValueDefinition registered = ValueRegistry.get(key);
+        if (registered != null) {
+            return registered;
+        }
+        if (registrationDelegate != null) {
+            return registrationDelegate.valueDefinitionFor(key);
+        }
+        return null;
+    }
+
     public static Builder builder(String modId) { return new Builder(modId); }
 
     public static final class Builder {
@@ -312,6 +395,7 @@ public final class MarieLibContext {
         private Supplier<List<String>> valueKeys = List::of;
         private Consumer<Map<ResourceLocation, Map<String, Float>>> scannerApplyCallback = ignored -> {};
         private Supplier<Predicate<ItemStack>> valueTagChecker = () -> stack -> false;
+        private Supplier<Predicate<ItemStack>> sourceItemFilter = () -> stack -> true;
         private Supplier<Long> memoryWindowMinutes = () -> 60L;
         private Supplier<Integer> memoryWindowCount = () -> 20;
         private Supplier<Long> streakWindowMs = () -> 300_000L;
@@ -345,12 +429,18 @@ public final class MarieLibContext {
         private Function<ResourceLocation, String> sourceFamilyResolver = id -> null;
         private Function<ItemStack, Boolean> isSourceResolvable = stack -> true;
         private Function<Item, Map<String, Float>> valueTagScoresProvider = item -> Map.of();
+        private Function<String, String> tagRoleResolver = role -> null;
+        private BiPredicate<ServerPlayer, ValueSourceTrigger> heavySourceBlocker =
+                (player, trigger) -> false;
+        private BiPredicate<ServerPlayer, ValueSourceTrigger> lightSourceBlocker =
+                (player, trigger) -> false;
         private DoubleSupplier multiValueInheritanceThreshold = () -> 0.20;
         private ResolutionStageHandler[] runtimeResolverStages = new ResolutionStageHandler[0];
         private String[] stemmerDictionary = new String[0];
         private Map<String, String[]> stemmerCompoundSplits = Map.of();
         private Map<String, String> stemmerIrregularForms = Map.of();
         private Set<String> stemmerStopWords = Set.of();
+        private Supplier<Set<String>> stemmerNoiseSuffixes = Set::of;
         private Runnable onServerStarting = () -> {};
         private Consumer<MinecraftServer> onReloadBroadcast = server -> {};
         private Consumer<RecipeManager> onRecipeManagerBound = rm -> {};
@@ -359,7 +449,7 @@ public final class MarieLibContext {
         private Supplier<TrackingMemoryConfig> trackingMemoryConfigProvider = () -> null;
         private BiFunction<ItemStack, Level, Map<String, Float>> sourceValueResolver = (stack, level) -> Map.of();
         private SourceDeltaResolver sourceDeltaResolver =
-                (stack, level, n, s, bars) -> new SourceDelta(0f, Map.of());
+                (stack, level, payload, bars) -> new SourceDelta(0f, Map.of());
         private Function<String, SourceOverrideRegistry.SourceOverride> sourceOverrideLookup = id -> null;
         private Function<ResourceLocation, Map<String, Float>> externalClassificationProvider = id -> null;
         private BiConsumer<ServerPlayer, TrackingData> effectApplier = (p, d) -> {};
@@ -402,6 +492,7 @@ public final class MarieLibContext {
         public Builder valueKeys(Supplier<List<String>> s) { this.valueKeys = s; return this; }
         public Builder scannerApplyCallback(Consumer<Map<ResourceLocation, Map<String, Float>>> c) { this.scannerApplyCallback = c; return this; }
         public Builder valueTagChecker(Supplier<Predicate<ItemStack>> s) { this.valueTagChecker = s; return this; }
+        public Builder sourceItemFilter(Supplier<Predicate<ItemStack>> s) { this.sourceItemFilter = s; return this; }
         public Builder memoryWindowMinutes(Supplier<Long> s) { this.memoryWindowMinutes = s; return this; }
         public Builder memoryWindowCount(Supplier<Integer> s) { this.memoryWindowCount = s; return this; }
         public Builder streakWindowMs(Supplier<Long> s) { this.streakWindowMs = s; return this; }
@@ -434,12 +525,22 @@ public final class MarieLibContext {
         public Builder sourceFamilyResolver(Function<ResourceLocation, String> f) { this.sourceFamilyResolver = f; return this; }
         public Builder isSourceResolvable(Function<ItemStack, Boolean> f) { this.isSourceResolvable = f; return this; }
         public Builder valueTagScoresProvider(Function<Item, Map<String, Float>> f) { this.valueTagScoresProvider = f; return this; }
+        public Builder tagRoleResolver(Function<String, String> f) { this.tagRoleResolver = f; return this; }
+        public Builder heavySourceBlocker(BiPredicate<ServerPlayer, ValueSourceTrigger> p) {
+            this.heavySourceBlocker = p;
+            return this;
+        }
+        public Builder lightSourceBlocker(BiPredicate<ServerPlayer, ValueSourceTrigger> p) {
+            this.lightSourceBlocker = p;
+            return this;
+        }
         public Builder multiValueInheritanceThreshold(DoubleSupplier s) { this.multiValueInheritanceThreshold = s; return this; }
         public Builder runtimeResolverStages(ResolutionStageHandler[] stages) { this.runtimeResolverStages = stages; return this; }
         public Builder stemmerDictionary(String[] dictionary) { this.stemmerDictionary = dictionary; return this; }
         public Builder stemmerCompoundSplits(Map<String, String[]> splits) { this.stemmerCompoundSplits = splits; return this; }
         public Builder stemmerIrregularForms(Map<String, String> forms) { this.stemmerIrregularForms = forms; return this; }
         public Builder stemmerStopWords(Set<String> stopWords) { this.stemmerStopWords = stopWords; return this; }
+        public Builder stemmerNoiseSuffixes(Supplier<Set<String>> s) { this.stemmerNoiseSuffixes = s; return this; }
         public Builder onServerStarting(Runnable r) { this.onServerStarting = r; return this; }
         public Builder onReloadBroadcast(Consumer<MinecraftServer> c) { this.onReloadBroadcast = c; return this; }
         public Builder onRecipeManagerBound(Consumer<RecipeManager> c) { this.onRecipeManagerBound = c; return this; }

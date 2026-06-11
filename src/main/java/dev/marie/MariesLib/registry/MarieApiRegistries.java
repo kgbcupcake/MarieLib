@@ -6,7 +6,10 @@ import dev.marie.MariesLib.api.registry.ProfileRegistry;
 import dev.marie.MariesLib.api.registry.MilestoneRegistry;
 import dev.marie.MariesLib.api.registry.ReportProviderRegistry;
 import dev.marie.MariesLib.api.registry.SeasonHookRegistry;
+import dev.marie.MariesLib.api.registry.SleepBonusEvaluatorRegistry;
+import dev.marie.MariesLib.api.registry.SourcePropertySignalRegistry;
 import dev.marie.MariesLib.api.registry.SynergyRegistry;
+import dev.marie.MariesLib.runtime.TriggerHandlerRegistry;
 
 /**
  * Coordinates freeze/reset for API definition registries around bootstrap and datapack reload.
@@ -25,6 +28,9 @@ public final class MarieApiRegistries {
         AbsorptionModifierRegistry.freezeInternal();
         SeasonHookRegistry.freezeInternal();
         ReportProviderRegistry.freezeInternal();
+        SourcePropertySignalRegistry.freezeInternal();
+        SleepBonusEvaluatorRegistry.freezeInternal();
+        TriggerHandlerRegistry.freezeInternal();
     }
 
     /**

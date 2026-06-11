@@ -15,9 +15,10 @@ public class TrackingPlayerEvents {
     @SubscribeEvent
     public void onPlayerJoin(net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerLoggedInEvent event) {
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
-        TrackingData tracking = player.getData(TrackingAttachment.TRACKING.get());
+        if (!TrackingAttachment.isRegistered()) return;
+        TrackingData tracking = TrackingAttachment.getData(player);
         tracking.tick();
-        player.setData(TrackingAttachment.TRACKING.get(), tracking);
+        TrackingAttachment.setData(player, tracking);
         tracking.setMemoryConfig(HandlerSupport.resolveMemoryConfig());
         MarieLibContext.get().syncOnJoin().accept(player);
         if (ModuleCache.enableEffects) {
@@ -32,9 +33,10 @@ public class TrackingPlayerEvents {
     @SubscribeEvent
     public void onPlayerRespawn(net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerRespawnEvent event) {
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
-        TrackingData tracking = player.getData(TrackingAttachment.TRACKING.get());
+        if (!TrackingAttachment.isRegistered()) return;
+        TrackingData tracking = TrackingAttachment.getData(player);
         tracking.tick();
-        player.setData(TrackingAttachment.TRACKING.get(), tracking);
+        TrackingAttachment.setData(player, tracking);
         tracking.setMemoryConfig(HandlerSupport.resolveMemoryConfig());
         MarieLibContext.get().syncOnJoin().accept(player);
         if (ModuleCache.enableEffects) {
@@ -50,7 +52,8 @@ public class TrackingPlayerEvents {
     @SubscribeEvent
     public void onPlayerChangeDimension(net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerChangedDimensionEvent event) {
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
-        TrackingData tracking = player.getData(TrackingAttachment.TRACKING.get());
+        if (!TrackingAttachment.isRegistered()) return;
+        TrackingData tracking = TrackingAttachment.getData(player);
         MarieLibContext.get().trackingDeltaSyncer().accept(player, tracking);
         if (ModuleCache.enableEffects) {
             MarieLibContext.get().effectApplier().accept(player, tracking);

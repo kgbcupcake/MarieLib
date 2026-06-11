@@ -68,7 +68,12 @@ public final class PresetsWidget extends TooltipListEntry<Object> {
                 } catch (Exception e) {
                     MariesLib.LOGGER.warn("[PresetsWidget] Failed to delete preset {}", preset.path(), e);
                 }
-                mc.setScreen(MarieLibContext.get().configScreenFactory());
+                Screen configScreen = MarieLibContext.get().configScreenFactory();
+                if (configScreen != null) {
+                    mc.setScreen(configScreen);
+                } else {
+                    mc.setScreen(returnTo);
+                }
             } else {
                 mc.setScreen(returnTo);
             }
@@ -83,7 +88,10 @@ public final class PresetsWidget extends TooltipListEntry<Object> {
         PresetRegistry.applyPreset(preset);
         Minecraft mc = Minecraft.getInstance();
         mc.getToasts().addToast(new PresetLoadedToast(preset.name()));
-        mc.setScreen(MarieLibContext.get().configScreenFactory());
+        Screen configScreen = MarieLibContext.get().configScreenFactory();
+        if (configScreen != null) {
+            mc.setScreen(configScreen);
+        }
     }
 
     @Override

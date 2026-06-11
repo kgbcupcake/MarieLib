@@ -29,6 +29,9 @@ public final class PresetRegistry {
 
     public static final Set<String> BUILTIN_STEMS = Set.of("casual", "survival", "hardcore");
 
+    public static final String PRESET_JSON_ENABLE_DECAY = "enableDecay";
+    public static final String PRESET_JSON_ENABLE_EFFECTS = "enableEffects";
+
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
     public record PresetValues(
@@ -46,8 +49,8 @@ public final class PresetRegistry {
             double low = values.has("lowThreshold") ? values.get("lowThreshold").getAsDouble() : 0.4d;
             double excess = values.has("excessThreshold") ? values.get("excessThreshold").getAsDouble() : 0.9d;
             int dur = values.has("defaultEffectDurationTicks") ? values.get("defaultEffectDurationTicks").getAsInt() : 140;
-            boolean decayOn = !values.has("enableDecay") || values.get("enableDecay").getAsBoolean();
-            boolean effectsOn = !values.has("enableEffects") || values.get("enableEffects").getAsBoolean();
+            boolean decayOn = !values.has(PRESET_JSON_ENABLE_DECAY) || values.get(PRESET_JSON_ENABLE_DECAY).getAsBoolean();
+            boolean effectsOn = !values.has(PRESET_JSON_ENABLE_EFFECTS) || values.get(PRESET_JSON_ENABLE_EFFECTS).getAsBoolean();
             return new PresetValues(decay, crit, low, excess, dur, decayOn, effectsOn);
         }
 
@@ -66,8 +69,8 @@ public final class PresetRegistry {
             o.addProperty("lowThreshold", lowThreshold);
             o.addProperty("excessThreshold", excessThreshold);
             o.addProperty("defaultEffectDurationTicks", defaultEffectDurationTicks);
-            o.addProperty("enableDecay", enableDecay);
-            o.addProperty("enableEffects", enableEffects);
+            o.addProperty(PRESET_JSON_ENABLE_DECAY, enableDecay);
+            o.addProperty(PRESET_JSON_ENABLE_EFFECTS, enableEffects);
             return o;
         }
     }

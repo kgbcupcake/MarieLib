@@ -2,6 +2,7 @@ package dev.marie.MariesLib.registry;
 
 import dev.marie.MariesLib.api.ApiStatus;
 import dev.marie.MariesLib.core.MarieLibContext;
+import dev.marie.MariesLib.core.MariesLib;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EntityType;
@@ -19,21 +20,22 @@ public final class MarieAttributes {
     private static DeferredRegister<Attribute> ATTRIBUTES;
     private static DeferredHolder<Attribute, Attribute> VALUE_REGEN_MULTIPLIER;
     private static DeferredHolder<Attribute, Attribute> VALUE_DECAY_MULTIPLIER;
+    private static boolean registered = false;
 
     private MarieAttributes() {}
 
     private static void ensureInitialized() {
         if (ATTRIBUTES != null) return;
-        String modId = MarieLibContext.get().modId();
+        String modId = MarieLibContext.isRegistered() ? MarieLibContext.get().modId() : MariesLib.MOD_ID;
         ATTRIBUTES = DeferredRegister.create(Registries.ATTRIBUTE, modId);
         VALUE_REGEN_MULTIPLIER = ATTRIBUTES.register(
                 "value_regen_multiplier",
-                () -> new RangedAttribute("attribute.name." + MarieLibContext.get().modId() + ".value_regen_multiplier", 1.0, 0.01, 10.0)
+                () -> new RangedAttribute("attribute.name." + modId + ".value_regen_multiplier", 1.0, 0.01, 10.0)
                         .setSyncable(true)
         );
         VALUE_DECAY_MULTIPLIER = ATTRIBUTES.register(
                 "value_decay_multiplier",
-                () -> new RangedAttribute("attribute.name." + MarieLibContext.get().modId() + ".value_decay_multiplier", 1.0, 0.01, 10.0)
+                () -> new RangedAttribute("attribute.name." + modId + ".value_decay_multiplier", 1.0, 0.01, 10.0)
                         .setSyncable(true)
         );
     }
@@ -54,6 +56,8 @@ public final class MarieAttributes {
     }
 
     public static void register(IEventBus modEventBus) {
+        if (registered) return;
+        registered = true;
         ensureInitialized();
         ATTRIBUTES.register(modEventBus);
         modEventBus.addListener(MarieAttributes::onEntityAttributeModification);

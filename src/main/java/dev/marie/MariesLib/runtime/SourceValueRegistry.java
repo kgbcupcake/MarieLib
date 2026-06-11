@@ -8,6 +8,7 @@ import com.google.gson.JsonObject;
 import com.mojang.logging.LogUtils;
 import dev.marie.MariesLib.api.ApiStatus;
 import dev.marie.MariesLib.core.MarieLibContext;
+import dev.marie.MariesLib.data.DatapackSchema;
 import dev.marie.MariesLib.registry.AbstractRegistry;
 import dev.marie.MariesLib.util.MarieResourceLoader;
 import net.minecraft.server.packs.resources.ResourceManager;
@@ -110,7 +111,7 @@ public class SourceValueRegistry {
     public static void loadFromDatapack(ResourceManager resourceManager) {
         MarieResourceLoader.loadFromModConfig(
                 resourceManager,
-                "config/source_values.json",
+                DatapackSchema.CONFIG_SOURCE_VALUES,
                 SourceValueRegistry::parseFromReader,
                 SourceValueRegistry::load,
                 "[SourceValueRegistry] Loaded from datapack override",

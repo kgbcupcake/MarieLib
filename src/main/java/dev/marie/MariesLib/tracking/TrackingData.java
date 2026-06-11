@@ -58,7 +58,43 @@ public class TrackingData {
 
     /** Display / bar order — delegates to the registry so it stays in sync. */
     public static List<String> barOrder() {
-        return MarieLibContext.get().valueKeys();
+        return MarieLibContext.isRegistered() ? MarieLibContext.get().valueKeys() : List.of();
+    }
+
+    private static boolean isValueBeneficial(String key) {
+        return MarieLibContext.isRegistered() && MarieLibContext.get().isValueBeneficial().test(key);
+    }
+
+    private static int configuredMemoryWindowCount() {
+        return MarieLibContext.isRegistered() ? MarieLibContext.get().memoryWindowCount() : 20;
+    }
+
+    private static long configuredStreakWindowMs() {
+        return MarieLibContext.isRegistered() ? MarieLibContext.get().streakWindowMs() : 300_000L;
+    }
+
+    private static float configuredStreakWeight() {
+        return MarieLibContext.isRegistered() ? MarieLibContext.get().streakWeight() : 1.5f;
+    }
+
+    private static boolean configuredDebugMemoryLogging() {
+        return MarieLibContext.isRegistered() && MarieLibContext.get().debugMemoryLogging();
+    }
+
+    private static float configuredDebtThreshold() {
+        return MarieLibContext.isRegistered() ? MarieLibContext.get().debtThreshold() : 5f;
+    }
+
+    private static float configuredDebtDecayRate() {
+        return MarieLibContext.isRegistered() ? MarieLibContext.get().debtDecayRate() : 0.01f;
+    }
+
+    private static double configuredDiminishingSteepness() {
+        return MarieLibContext.isRegistered() ? MarieLibContext.get().diminishingSteepness() : 1.0;
+    }
+
+    private static double configuredDiminishingMidpoint() {
+        return MarieLibContext.isRegistered() ? MarieLibContext.get().diminishingMidpoint() : 3.0;
     }
 
     // ── Codec ─────────────────────────────────────────────────────────────────
@@ -268,7 +304,7 @@ public class TrackingData {
 
     /**
      * Updates the last known game time anchor.
-     * Call from SourceAppliedHandler on every source apply event with
+     * Call on every source application with
      * {@code player.level().getGameTime() * 50L} to keep time
      * anchored to game ticks rather than wall-clock time.
      */
@@ -303,7 +339,7 @@ public class TrackingData {
     }
 
     private static float effectiveWellnessValue(String key, float value) {
-        return MarieLibContext.get().isValueBeneficial().test(key) ? value : 1f - value;
+        return isValueBeneficial(key) ? value : 1f - value;
     }
 
     /** Override in consuming mod to produce network sync payload. */
@@ -319,29 +355,29 @@ public class TrackingData {
      * This method:
      * <ol>
      *   <li>Performs single cleanup pass on all three memory maps</li>
-     *   <li>Updates item, category, and family memories with appropriate weights</li>
+     *   <li>Updates source, category, and family memories with appropriate weights</li>
      *   <li>Applies value debt if threshold exceeded</li>
      *   <li>Returns blended multiplier for the source</li>
      * </ol>
      *
-     * @param itemId           the specific source item identifier
+     * @param sourceKey        the specific source key
      * @param dominantCategory the primary value category
      * @param familyKey        the source family, nullable
      * @param gameTimeMs       current game time in milliseconds
      * @return blended multiplier to apply to tracking deltas
      */
-    public float recordSource(String itemId, String dominantCategory, String familyKey, long gameTimeMs) {
+    public float recordSource(String sourceKey, String dominantCategory, String familyKey, long gameTimeMs) {
         
-        int maxCount = MarieLibContext.get().memoryWindowCount();
-        long streakWindowMs = MarieLibContext.get().streakWindowMs();
-        float streakWeight = MarieLibContext.get().streakWeight();
+        int maxCount = configuredMemoryWindowCount();
+        long streakWindowMs = configuredStreakWindowMs();
+        float streakWeight = configuredStreakWeight();
         long currentTime = resolveCurrentTime(gameTimeMs);
 
         // Single cleanup pass for all three maps (remove entries decayed below threshold)
         cleanupAllMemories(currentTime);
 
         // Enforce count cap on source memory (evict oldest)
-        if (!sourceMemory.containsKey(itemId) && sourceMemory.size() >= maxCount) {
+        if (!sourceMemory.containsKey(sourceKey) && sourceMemory.size() >= maxCount) {
             String oldest = sourceMemory.entrySet().stream()
                     .min(Comparator.comparingLong(e -> e.getValue().lastAppliedTick()))
                     .map(Map.Entry::getKey)
@@ -350,7 +386,7 @@ public class TrackingData {
         }
 
         // Update all three memories with appropriate weights
-        updateMemory(sourceMemory, itemId, currentTime, 1.0f, streakWindowMs, streakWeight);
+        updateMemory(sourceMemory, sourceKey, currentTime, 1.0f, streakWindowMs, streakWeight);
         if (dominantCategory != null) {
             updateMemory(categoryMemory, dominantCategory, currentTime, 0.3f, streakWindowMs, streakWeight);
         }
@@ -366,14 +402,14 @@ public class TrackingData {
             applyValueDebt(dominantCategory, currentTime);
         }
 
-        float result = computeBlendedMultiplier(itemId, dominantCategory, familyKey, currentTime);
+        float result = computeBlendedMultiplier(sourceKey, dominantCategory, familyKey, currentTime);
 
         // Debug logging when enabled
-        if (MarieLibContext.get().debugMemoryLogging()) {
-            MultiplierBreakdown breakdown = getMultiplierBreakdown(itemId, dominantCategory, familyKey, currentTime);
+        if (configuredDebugMemoryLogging()) {
+            MultiplierBreakdown breakdown = getMultiplierBreakdown(sourceKey, dominantCategory, familyKey, currentTime);
             MariesLib.LOGGER.debug(
                     "Memory breakdown for {}: item={} (w={}) cat={} (w={}) family={} (w={}) novelty={} => final={}",
-                    itemId,
+                    sourceKey,
                     breakdown.itemContribution(), breakdown.itemWeight(),
                     breakdown.categoryContribution(), breakdown.categoryWeight(),
                     breakdown.familyContribution(), breakdown.familyWeight(),
@@ -404,21 +440,21 @@ public class TrackingData {
      * Preserved for existing callers. For new code, prefer
      * {@link #recordSource(String, String, String, long)}.
      *
-     * @param itemId the source item identifier
+     * @param sourceKey the source key
      * @return multiplier to apply
      */
-    public float recordSource(String itemId) {
-        return recordSource(itemId, null, null, resolveCurrentTime(0L));
+    public float recordSource(String sourceKey) {
+        return recordSource(sourceKey, null, null, resolveCurrentTime(0L));
     }
 
     /**
      * Peek the multiplier that would apply if this source were applied next next.
      * Used for tooltip display.
      */
-    public float peekMultiplier(String itemId) {
+    public float peekMultiplier(String sourceKey) {
         long halfLifeMs = config().memoryWindowMinutes() * 60_000L;
         long gameTimeMs = resolveCurrentTime(0L);
-        SourceMemoryEntry entry = sourceMemory.get(itemId);
+        SourceMemoryEntry entry = sourceMemory.get(sourceKey);
         if (entry == null || entry.isEffectivelyExpired(halfLifeMs, gameTimeMs, 0.1f)) {
             return (float) config().noveltyBonus();
         }
@@ -441,8 +477,8 @@ public class TrackingData {
         TrackingMemoryConfig memCfg = config();
         long halfLifeMs = memCfg.memoryWindowMinutes() * 60_000L;
         
-        float debtThreshold = MarieLibContext.get().debtThreshold();
-        float debtRate = MarieLibContext.get().debtDecayRate();
+        float debtThreshold = configuredDebtThreshold();
+        float debtRate = configuredDebtDecayRate();
 
         // Check if category memory exceeds debt threshold
         SourceMemoryEntry catEntry = categoryMemory.get(dominantCategory);
@@ -491,8 +527,8 @@ public class TrackingData {
     private float resolveMultiplier(float decayedCount) {
         TrackingMemoryConfig memCfg = config();
         double floor = memCfg.diminishingFloor();
-        double steepness = MarieLibContext.get().diminishingSteepness();
-        double midpoint = MarieLibContext.get().diminishingMidpoint();
+        double steepness = configuredDiminishingSteepness();
+        double midpoint = configuredDiminishingMidpoint();
         double noveltyBonus = memCfg.noveltyBonus();
 
         if (decayedCount <= 0f) {
@@ -512,7 +548,7 @@ public class TrackingData {
     }
 
     /**
-     * Computes a novelty score for a source item based on how recently/frequently it was applied.
+     * Computes a novelty score for a source based on how recently/frequently it was applied.
      * <p>
      * Returns a value in [0, 1]:
      * - 1.0 = completely novel (never applied or fully decayed)
@@ -520,7 +556,7 @@ public class TrackingData {
      * <p>
      * This score is used to lerp between 1.0 and noveltyBonus as a final multiplier.
      *
-     * @param itemId       the source item identifier
+     * @param itemId       the source key
      * @param halfLifeMs   memory half-life in milliseconds
      * @param currentTimeMs current game time in ms
      * @return novelty score in [0, 1]
@@ -541,19 +577,19 @@ public class TrackingData {
     }
 
     /**
-     * Computes the blended multiplier combining item, category, and family signals
+     * Computes the blended multiplier combining source, category, and family signals
      * with dynamic weighting based on signal strength.
      * <p>
      * The blending formula:
      * <ol>
-     *   <li>Get decayed counts for item, category, and family</li>
+     *   <li>Get decayed counts for source, category, and family</li>
      *   <li>Resolve individual multipliers via logistic curve</li>
      *   <li>Compute dynamic weights based on signal strength</li>
      *   <li>Blend weighted contributions</li>
      *   <li>Apply novelty as final multiplicative layer</li>
      * </ol>
      *
-     * @param itemId           the specific source item identifier
+     * @param itemId           the specific source key
      * @param dominantCategory the primary value category
      * @param familyKey        the source family, nullable
      * @param gameTimeMs       current game time in milliseconds
@@ -598,11 +634,11 @@ public class TrackingData {
         float familyWeight = familyKey != null ? Math.min(0.2f, familyDecayed * 0.04f) : 0f;
         // Category gets weight proportional to category saturation
         float categoryWeight = Math.min(0.25f, categoryDecayed * 0.05f);
-        // Item gets the remaining weight
+        // Source gets the remaining weight
         float itemWeight = 1.0f - categoryWeight - familyWeight;
 
         // Blend contributions
-        // Apply novelty only to item freshness contribution, not category/family fatigue.
+        // Apply novelty only to source freshness contribution, not category/family fatigue.
         float noveltyScore = resolveNoveltyScore(itemId, halfLifeMs, gameTimeMs);
         float noveltyFactor = 1.0f + (noveltyScore * ((float) noveltyBonus - 1.0f));
         float itemContribution = itemMultiplier * itemWeight * noveltyFactor;
@@ -624,14 +660,14 @@ public class TrackingData {
      * Effective multiplier for tooltip display with full category/family context.
      * Pure read, no mutations - safe for render thread.
      *
-     * @param itemId           the source item identifier
+     * @param sourceKey        the source key
      * @param dominantCategory the primary value category
      * @param familyKey        the source family (nullable)
      * @param gameTimeMs       current game time in ms
      * @return the multiplier that would apply
      */
-    public float peekMultiplier(String itemId, String dominantCategory, String familyKey, long gameTimeMs) {
-        return computeBlendedMultiplier(itemId, dominantCategory, familyKey, gameTimeMs);
+    public float peekMultiplier(String sourceKey, String dominantCategory, String familyKey, long gameTimeMs) {
+        return computeBlendedMultiplier(sourceKey, dominantCategory, familyKey, gameTimeMs);
     }
 
     /**
@@ -656,9 +692,9 @@ public class TrackingData {
     }
 
     /**
-     * Gets novelty score for a specific item.
+     * Gets novelty score for a specific source.
      *
-     * @param itemId     the source item identifier
+     * @param itemId     the source key
      * @param gameTimeMs current game time in ms
      * @return novelty score in [0, 1]
      */
@@ -704,20 +740,20 @@ public class TrackingData {
     /**
      * Full multiplier breakdown for debug display or advanced tooltips.
      *
-     * @param itemId           the source item identifier
+     * @param sourceKey        the source key
      * @param dominantCategory the primary value category
      * @param familyKey        the source family (nullable)
      * @param gameTimeMs       current game time in ms
      * @return detailed breakdown record
      */
-    public MultiplierBreakdown getMultiplierBreakdown(String itemId, String dominantCategory, String familyKey, long gameTimeMs) {
+    public MultiplierBreakdown getMultiplierBreakdown(String sourceKey, String dominantCategory, String familyKey, long gameTimeMs) {
         TrackingMemoryConfig memCfg = config();
         long halfLifeMs = memCfg.memoryWindowMinutes() * 60_000L;
         double noveltyBonus = memCfg.noveltyBonus();
 
         // Get decayed counts
         float itemDecayed = 0f;
-        SourceMemoryEntry itemEntry = sourceMemory.get(itemId);
+        SourceMemoryEntry itemEntry = sourceMemory.get(sourceKey);
         if (itemEntry != null) {
             itemDecayed = itemEntry.decayedApplicationCount(halfLifeMs, gameTimeMs);
         }
@@ -754,7 +790,7 @@ public class TrackingData {
         float familyContribution = familyMultiplier * familyWeight;
 
         // Novelty
-        float noveltyScore = resolveNoveltyScore(itemId, halfLifeMs, gameTimeMs);
+        float noveltyScore = resolveNoveltyScore(sourceKey, halfLifeMs, gameTimeMs);
         float noveltyContribution = 1.0f + (noveltyScore * ((float) noveltyBonus - 1.0f));
 
         itemContribution *= noveltyContribution;

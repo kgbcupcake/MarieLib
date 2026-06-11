@@ -25,6 +25,18 @@ public final class MarieValidation {
         return v;
     }
 
+    /**
+     * Validates that a value is finite (not NaN or Infinity).
+     * Does NOT enforce range bounds — use requireFinite for that.
+     */
+    public static float requireFiniteUnbounded(float v, String context) {
+        if (!Float.isFinite(v)) {
+            LOGGER.warn("[MarieValidation] {} — non-finite float value: {}", context, v);
+            throw new IllegalArgumentException(context + ": value must be finite, got " + v);
+        }
+        return v;
+    }
+
     public static double requireFiniteDouble(double v, double min, double max, String context) {
         if (!Double.isFinite(v) || v < min || v > max) {
             LOGGER.warn("[MarieValidation] {} — invalid double value: {} (expected [{}, {}])", context, v, min, max);

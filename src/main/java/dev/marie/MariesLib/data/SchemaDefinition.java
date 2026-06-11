@@ -35,7 +35,8 @@ public final class SchemaDefinition {
                 SchemaField.optional("default_decay_rate", SchemaType.FLOAT, null),
                 SchemaField.optional("critical_threshold", SchemaType.FLOAT, null),
                 SchemaField.optional("low_threshold", SchemaType.FLOAT, null),
-                SchemaField.optional("excess_threshold", SchemaType.FLOAT, null)
+                SchemaField.optional("excess_threshold", SchemaType.FLOAT, null),
+                SchemaField.optional("amountScale", SchemaType.DOUBLE, 1.0)
         ));
     }
 

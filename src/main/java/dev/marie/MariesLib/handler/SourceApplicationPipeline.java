@@ -11,7 +11,9 @@ import dev.marie.MariesLib.api.ApiStatus;
 import dev.marie.MariesLib.api.MarieEvents;
 import dev.marie.MariesLib.api.MarieSeasonHook;
 import dev.marie.MariesLib.api.AbsorptionModifier;
+import dev.marie.MariesLib.api.ValueDefinition;
 import dev.marie.MariesLib.api.ValueModifierEvent;
+import dev.marie.MariesLib.api.ValueSourceTrigger;
 import dev.marie.MariesLib.api.registry.AbsorptionModifierRegistry;
 import dev.marie.MariesLib.api.registry.SeasonHookRegistry;
 import dev.marie.MariesLib.config.ModuleCache;
@@ -19,20 +21,22 @@ import dev.marie.MariesLib.core.MarieLibContext;
 import dev.marie.MariesLib.core.MariesLib;
 import dev.marie.MariesLib.debug.MarieDebugLogger;
 import dev.marie.MariesLib.runtime.SourceOverrideRegistry;
+import dev.marie.MariesLib.runtime.SourceTriggerRegistry;
 import dev.marie.MariesLib.tracking.TrackingAttachment;
 import dev.marie.MariesLib.tracking.TrackingData;
 import dev.marie.MariesLib.registry.MarieAttributes;
-import dev.marie.MariesLib.util.MarieItemTags;
 import dev.marie.MariesLib.util.MarieRegistryUtils;
 
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.food.FoodProperties;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.common.NeoForge;
 
 @ApiStatus.Internal
-final class SourceApplicationPipeline {
+public final class SourceApplicationPipeline {
 
     private static final java.util.concurrent.atomic.AtomicBoolean THRESHOLD_WARN_ONCE =
             new java.util.concurrent.atomic.AtomicBoolean(false);
@@ -41,38 +45,52 @@ final class SourceApplicationPipeline {
 
     private SourceApplicationPipeline() {}
 
-    static void process(ServerPlayer player, ItemStack stack, TrackingData tracking, long gameTimeMs) {
+    public static void process(ServerPlayer player, ValueSourceTrigger trigger, ItemStack stack,
+                             TrackingData tracking, long gameTimeMs) {
         if (ReloadHandler.isReloadInProgress()) {
             return;
         }
+
+        MarieEvents.SourceTriggerEvent triggerEvent =
+                new MarieEvents.SourceTriggerEvent(player, trigger);
+        NeoForge.EVENT_BUS.post(triggerEvent);
+        if (triggerEvent.isCanceled()) {
+            return;
+        }
+
         var ctx = MarieLibContext.get();
+        if (ModuleCache.enableBlockHeavySources
+                && ctx.isHeavySourceBlocked(player, trigger)) {
+            return;
+        }
+        if (ModuleCache.enableBlockLightSource
+                && ctx.isLightSourceBlocked(player, trigger)) {
+            return;
+        }
         TrackingMemoryConfigOrNull config = resolveMemoryConfig();
         tracking.setMemoryConfig(config.config());
         boolean debugApplyLog = ModuleCache.enableDebugLogging;
         Map<String, Float> valuesBefore = debugApplyLog ? snapshotValues(tracking) : Map.of();
 
-        String itemId = MarieRegistryUtils.itemKey(stack).toString();
-        SourceOverrideRegistry.SourceOverride override = ctx.sourceOverrideLookup().apply(itemId);
+        String sourceKey = trigger.sourceId();
+        SourceOverrideRegistry.SourceOverride override = ctx.sourceOverrideLookup().apply(sourceKey);
 
         float totalAdded;
         Map<String, Float> valueDeltas;
         Map<String, Float> matchedBars;
-        ResourceLocation sourceResourceId = MarieRegistryUtils.itemKey(stack);
-        FoodProperties sourceProps = stack.getItem().getFoodProperties(stack, player);
-
+        ResourceLocation sourceResourceId = stack != null
+                ? MarieRegistryUtils.itemKey(stack)
+                : ResourceLocation.parse(trigger.sourceId());
         if (override != null) {
             totalAdded = override.total();
             valueDeltas = new HashMap<>(override.values());
             matchedBars = new HashMap<>(override.values());
             MariesLib.LOGGER.debug("[MarieLib] using override for {} (total={}, values={})",
-                    itemId, totalAdded, valueDeltas);
+                    sourceKey, totalAdded, valueDeltas);
         } else {
-            if (sourceProps == null) {
-                return;
-            }
             matchedBars = new LinkedHashMap<>(ctx.sourceValueResolver().apply(stack, player.level()));
             MarieLibContext.SourceDelta delta = ctx.sourceDeltaResolver().resolve(
-                    stack, player.level(), sourceProps.nutrition(), sourceProps.saturation(), matchedBars);
+                    stack, player.level(), trigger.payload(), matchedBars);
             totalAdded = delta.total();
             valueDeltas = new HashMap<>(delta.values());
         }
@@ -84,6 +102,12 @@ final class SourceApplicationPipeline {
             externalClassification.forEach((key, value) -> valueDeltas.merge(key, value, Float::sum));
         }
 
+        java.util.List<SourceTriggerRegistry.Entry> triggerEntries =
+                SourceTriggerRegistry.getEntries(trigger.type(), trigger.sourceId());
+        for (SourceTriggerRegistry.Entry entry : triggerEntries) {
+            valueDeltas.merge(entry.valueKey(), entry.amount(), Float::sum);
+        }
+
         String dominantCategory = matchedBars.isEmpty()
                 ? null
                 : matchedBars.entrySet().stream()
@@ -92,14 +116,15 @@ final class SourceApplicationPipeline {
                         .orElse(null);
         String familyKey = ctx.sourceFamilyResolver().apply(sourceResourceId);
 
-        float multiplier = tracking.recordSource(itemId, dominantCategory, familyKey, gameTimeMs);
+        float multiplier = tracking.recordSource(sourceKey, dominantCategory, familyKey, gameTimeMs);
         TrackingData.MultiplierBreakdown multiplierBreakdown = debugApplyLog
-                ? tracking.getMultiplierBreakdown(itemId, dominantCategory, familyKey, gameTimeMs)
+                ? tracking.getMultiplierBreakdown(sourceKey, dominantCategory, familyKey, gameTimeMs)
                 : null;
 
         if (ModuleCache.enableTotalTracking) {
             MariesLib.LOGGER.debug("[MarieLib] total: adding {} * {} for {}",
-                    totalAdded, multiplier, stack.getItem().getDescriptionId());
+                    totalAdded, multiplier,
+                    stack != null ? stack.getItem().getDescriptionId() : trigger.sourceId());
             tracking.addTotal(totalAdded * multiplier);
         }
 
@@ -108,6 +133,10 @@ final class SourceApplicationPipeline {
 
         for (String key : ctx.valueKeys()) {
             float valueDelta = valueDeltas.getOrDefault(key, 0f);
+            ValueDefinition valueDef = MarieLibContext.get().valueDefinitionFor(key);
+            if (valueDef != null && valueDef.getAmountScale() != 1.0) {
+                valueDelta = (float) (valueDelta / valueDef.getAmountScale());
+            }
             if (valueDelta != 0f) {
                 float adjustedDelta = valueDelta * multiplier;
                 afterMultiplierOnly.put(key, adjustedDelta);
@@ -124,9 +153,9 @@ final class SourceApplicationPipeline {
                 }
 
                 float finalDelta = modifierEvent.getAmount();
-                if (!Float.isFinite(finalDelta) || finalDelta < -10f || finalDelta > 100f) {
-                    MariesLib.LOGGER.warn("[MarieLib] Invalid finalDelta {} for player={} item={} value={} — skipping",
-                            finalDelta, player.getName().getString(), itemId, key);
+                if (!Float.isFinite(finalDelta)) {
+                    MariesLib.LOGGER.warn("[MarieLib] non-finite finalDelta {} for player={} source={} value={} — skipping",
+                            finalDelta, player.getName().getString(), sourceKey, key);
                     continue;
                 }
                 finalApplied.put(key, finalDelta);
@@ -150,7 +179,7 @@ final class SourceApplicationPipeline {
                     player,
                     stack,
                     gameTimeMs,
-                    itemId,
+                    sourceKey,
                     sourceResourceId,
                     override != null,
                     matchedBarWeights,
@@ -160,20 +189,19 @@ final class SourceApplicationPipeline {
                     valuesBefore,
                     valuesAfter,
                     multiplier,
-                    multiplierBreakdown,
-                    sourceProps
+                    multiplierBreakdown
             );
         }
 
         checkThresholdCrossings(player, tracking);
 
-        player.setData(TrackingAttachment.TRACKING.get(), tracking);
+        TrackingAttachment.setData(player, tracking);
         ctx.trackingDeltaSyncer().accept(player, tracking);
         ctx.effectApplier().accept(player, tracking);
 
         MariesLib.LOGGER.debug("{} applied {} -> {}",
                 player.getName().getString(),
-                stack.getItem().getDescriptionId(),
+                stack != null ? stack.getItem().getDescriptionId() : trigger.sourceId(),
                 tracking);
     }
 
@@ -211,8 +239,7 @@ final class SourceApplicationPipeline {
             Map<String, Float> valuesBefore,
             Map<String, Float> valuesAfter,
             float multiplier,
-            TrackingData.MultiplierBreakdown breakdown,
-            FoodProperties source
+            TrackingData.MultiplierBreakdown breakdown
     ) {
         JsonObject root = new JsonObject();
         root.addProperty("timestamp", MarieDebugLogger.isoTimestamp());
@@ -231,7 +258,10 @@ final class SourceApplicationPipeline {
 
         JsonArray tagMatch = new JsonArray();
         if (sourceOverride) {
-            tagMatch.add(MarieLibContext.get().modId() + ":source_override");
+            String tagPath = MarieLibContext.get().resolveTagRole("source_override");
+            if (tagPath != null) {
+                tagMatch.add(MarieLibContext.get().modId() + ":" + tagPath);
+            }
         } else if (matchedBarWeights.isEmpty()) {
             tagMatch.add("none");
         } else {
@@ -250,9 +280,9 @@ final class SourceApplicationPipeline {
         root.add("values_before", MarieDebugLogger.floatMapToJson(valuesBefore));
         root.add("values_after", MarieDebugLogger.floatMapToJson(valuesAfter));
 
-        boolean lightBypass = source != null
-                && (source.nutrition() <= 2 || stack.is(MarieItemTags.lightSource()))
-                && !stack.is(MarieItemTags.heavySource());
+        boolean lightBypass = stack != null
+                && stackHasTagRole(stack, "light_source")
+                && !stackHasTagRole(stack, "heavy_source");
         root.addProperty("light_snack_bypass_eligible", lightBypass);
 
         root.addProperty("game_time_ms", gameTimeMs);
@@ -260,6 +290,16 @@ final class SourceApplicationPipeline {
         root.addProperty("dimension", player.level().dimension().location().toString());
 
         MarieDebugLogger.submitSourceLog(root);
+    }
+
+    private static boolean stackHasTagRole(ItemStack stack, String role) {
+        String tagPath = MarieLibContext.get().resolveTagRole(role);
+        if (tagPath == null) {
+            return false;
+        }
+        TagKey<Item> tag = TagKey.create(Registries.ITEM,
+                ResourceLocation.fromNamespaceAndPath(MarieLibContext.get().modId(), tagPath));
+        return stack.is(tag);
     }
 
     private static JsonObject buildMultiplierBreakdownJson(TrackingData.MultiplierBreakdown b) {

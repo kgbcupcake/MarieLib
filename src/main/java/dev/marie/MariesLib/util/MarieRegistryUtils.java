@@ -34,6 +34,9 @@ public final class MarieRegistryUtils {
      * Validates a value key is registered, throws {@link IllegalArgumentException} if not.
      */
     public static void requireValueKey(String key, String context) {
+        if (!MarieLibContext.isRegistered()) {
+            throw new IllegalStateException("MarieLibContext not registered");
+        }
         if (!MarieLibContext.get().valueKeys().contains(key)) {
             throw new IllegalArgumentException(
                     "Unknown value key '" + key + "' in " + context);

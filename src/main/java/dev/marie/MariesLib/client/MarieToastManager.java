@@ -69,8 +69,15 @@ public final class MarieToastManager {
                 }
 
                 if (showToast) {
-                    ItemStack icon = new ItemStack(
-                            BuiltInRegistries.ITEM.get(ResourceLocation.parse(ctx.valueIcon(key))));
+                    ResourceLocation iconId = ResourceLocation.tryParse(ctx.valueIcon(key));
+                    if (iconId == null) {
+                        continue;
+                    }
+                    var item = BuiltInRegistries.ITEM.get(iconId);
+                    if (item == null) {
+                        continue;
+                    }
+                    ItemStack icon = new ItemStack(item);
                     mc.getToasts().addToast(new CriticalValueToast(key, icon));
                 }
             }

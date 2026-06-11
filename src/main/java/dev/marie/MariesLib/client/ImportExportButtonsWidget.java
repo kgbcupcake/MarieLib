@@ -30,12 +30,20 @@ public final class ImportExportButtonsWidget extends TooltipListEntry<Object> {
                 () -> Optional.of(new Component[]{Component.translatable(configKey("importExport.groupTitle.desc"))}),
                 false);
         Minecraft mc = Minecraft.getInstance();
-        this.exportButton = Button.builder(Component.translatable(configKey("importExport.export")), b ->
-                        mc.setScreen(MarieLibContext.get().exportScreenFactory(getConfigScreen())))
+        this.exportButton = Button.builder(Component.translatable(configKey("importExport.export")), b -> {
+                    Screen exportScreen = MarieLibContext.get().exportScreenFactory(getConfigScreen());
+                    if (exportScreen != null) {
+                        mc.setScreen(exportScreen);
+                    }
+                })
                 .bounds(0, 0, BTN_W, BTN_H)
                 .build();
-        this.importButton = Button.builder(Component.translatable(configKey("importExport.import")), b ->
-                        mc.setScreen(MarieLibContext.get().importScreenFactory(getConfigScreen())))
+        this.importButton = Button.builder(Component.translatable(configKey("importExport.import")), b -> {
+                    Screen importScreen = MarieLibContext.get().importScreenFactory(getConfigScreen());
+                    if (importScreen != null) {
+                        mc.setScreen(importScreen);
+                    }
+                })
                 .bounds(0, 0, BTN_W, BTN_H)
                 .build();
     }

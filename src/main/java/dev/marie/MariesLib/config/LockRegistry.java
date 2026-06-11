@@ -8,6 +8,7 @@ import com.google.gson.JsonObject;
 
 import dev.marie.MariesLib.core.MarieLibContext;
 import dev.marie.MariesLib.core.MariesLib;
+import dev.marie.MariesLib.data.DatapackSchema;
 import dev.marie.MariesLib.registry.AbstractRegistry;
 import dev.marie.MariesLib.util.MarieResourceLoader;
 import net.minecraft.server.packs.resources.ResourceManager;
@@ -126,7 +127,7 @@ public class LockRegistry {
     public static void loadFromDatapack(ResourceManager resourceManager) {
         MarieResourceLoader.loadFromModConfig(
                 resourceManager,
-                "config/locks.json",
+                DatapackSchema.CONFIG_LOCKS,
                 LockRegistry::parseFromReader,
                 LockRegistry::load,
                 "[LockRegistry] Loaded from datapack override",

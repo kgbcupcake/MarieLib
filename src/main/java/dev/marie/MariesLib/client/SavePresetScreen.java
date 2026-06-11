@@ -72,7 +72,10 @@ public final class SavePresetScreen extends Screen {
             MariesLib.LOGGER.warn("[SavePresetScreen] Failed to save preset", e);
             return;
         }
-        mc.setScreen(MarieLibContext.get().configScreenFactory());
+        Screen configScreen = MarieLibContext.get().configScreenFactory();
+        if (configScreen != null) {
+            mc.setScreen(configScreen);
+        }
     }
 
     @Override

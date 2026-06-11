@@ -23,6 +23,7 @@ public final class ValueDefinition {
     @Nullable
     private final ValueRenderer customRenderer;
     private final boolean beneficial;
+    private final double amountScale;
 
     private ValueDefinition(
             String id,
@@ -33,7 +34,8 @@ public final class ValueDefinition {
             float lowThreshold,
             float excessThreshold,
             @Nullable ValueRenderer customRenderer,
-            boolean beneficial
+            boolean beneficial,
+            double amountScale
     ) {
         this.id = id;
         this.displayName = displayName;
@@ -44,6 +46,7 @@ public final class ValueDefinition {
         this.excessThreshold = excessThreshold;
         this.customRenderer = customRenderer;
         this.beneficial = beneficial;
+        this.amountScale = amountScale;
     }
 
     /**
@@ -141,6 +144,15 @@ public final class ValueDefinition {
     }
 
     /**
+     * Returns how many raw source amount units equal a full bar (1.0).
+     *
+     * @return the amount scale (default 1.0)
+     */
+    public double getAmountScale() {
+        return amountScale;
+    }
+
+    /**
      * Builder for constructing {@link ValueDefinition} instances.
      */
     public static final class Builder {
@@ -155,6 +167,7 @@ public final class ValueDefinition {
         @Nullable
         private ValueRenderer customRenderer;
         private boolean beneficial = true;
+        private double amountScale = 1.0;
 
         private Builder(String id) {
             this.id = id;
@@ -250,6 +263,12 @@ public final class ValueDefinition {
             return this;
         }
 
+        /** How many raw source amount units equal a full bar (1.0). Default 1.0. */
+        public Builder amountScale(double scale) {
+            this.amountScale = scale;
+            return this;
+        }
+
         /**
          * Builds and returns the immutable {@link ValueDefinition}.
          *
@@ -263,6 +282,9 @@ public final class ValueDefinition {
             if (displayName == null) {
                 throw new IllegalStateException("displayName is required");
             }
+            if (amountScale <= 0 || !Double.isFinite(amountScale)) {
+                throw new IllegalStateException("amountScale must be positive and finite");
+            }
             return new ValueDefinition(
                     id,
                     displayName,
@@ -272,7 +294,8 @@ public final class ValueDefinition {
                     lowThreshold,
                     excessThreshold,
                     customRenderer,
-                    beneficial
+                    beneficial,
+                    amountScale
             );
         }
     }

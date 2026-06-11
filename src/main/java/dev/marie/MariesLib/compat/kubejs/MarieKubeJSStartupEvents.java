@@ -5,6 +5,7 @@ import dev.latvian.mods.kubejs.event.EventGroupRegistry;
 import dev.latvian.mods.kubejs.event.KubeEvent;
 import dev.marie.MariesLib.api.ApiStatus;
 import dev.marie.MariesLib.core.MarieLibContext;
+import dev.marie.MariesLib.core.MariesLib;
 
 /**
  * Startup event hook holder for MarieLib KubeJS registration flows.
@@ -12,18 +13,38 @@ import dev.marie.MariesLib.core.MarieLibContext;
 @ApiStatus.Internal
 public final class MarieKubeJSStartupEvents {
 
-    public static final String REGISTER_VALUES = MarieLibContext.get().modId() + ".startup.register_values";
-    public static final String REGISTER_PROFILES = MarieLibContext.get().modId() + ".startup.register_profiles";
-    public static final String REGISTER_MILESTONES = MarieLibContext.get().modId() + ".startup.register_milestones";
-
     private static final EventGroup GROUP = EventGroup.of("MarieStartupEvents");
+    private static boolean registered;
 
     private MarieKubeJSStartupEvents() {}
 
+    public static String registerValues() {
+        return modId() + ".startup.register_values";
+    }
+
+    public static String registerProfiles() {
+        return modId() + ".startup.register_profiles";
+    }
+
+    public static String registerMilestones() {
+        return modId() + ".startup.register_milestones";
+    }
+
+    private static String modId() {
+        return MarieLibContext.isRegistered() ? MarieLibContext.get().modId() : MariesLib.MOD_ID;
+    }
+
     public static void register(EventGroupRegistry registry) {
-        GROUP.startup(REGISTER_VALUES, () -> RegisterValuesEvent.class);
-        GROUP.startup(REGISTER_PROFILES, () -> RegisterProfilesEvent.class);
-        GROUP.startup(REGISTER_MILESTONES, () -> RegisterMilestonesEvent.class);
+        if (!MarieLibContext.isRegistered()) {
+            return;
+        }
+        if (registered) {
+            return;
+        }
+        registered = true;
+        GROUP.startup(registerValues(), () -> RegisterValuesEvent.class);
+        GROUP.startup(registerProfiles(), () -> RegisterProfilesEvent.class);
+        GROUP.startup(registerMilestones(), () -> RegisterMilestonesEvent.class);
         registry.register(GROUP);
     }
 

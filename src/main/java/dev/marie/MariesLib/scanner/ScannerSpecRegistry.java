@@ -41,9 +41,9 @@ import java.util.Set;
  *   <li>{@code data/<ns>/<modid>/scanner/scanner_spec.json} (datapack override)</li>
  * </ol>
  *
- * <p>The spec contains all signal multipliers, weight maps, archetype patterns, and
- * runtime source-property heuristics used by {@link ItemClassifier}. Nothing in the
- * scanner pipeline is hardcoded in Java.</p>
+ * <p>The spec contains all signal multipliers, weight maps, and archetype patterns
+ * used by {@link ItemClassifier}. Domain-specific source property signals are
+ * registered via {@link dev.marie.MariesLib.api.MarieAPI#registerSourcePropertySignal}.</p>
  */
 @ApiStatus.Internal
 public final class ScannerSpecRegistry {
@@ -166,11 +166,6 @@ public final class ScannerSpecRegistry {
         if (root == null) return null;
 
         Multipliers mult = parseMultipliers(getObj(root, "multipliers"));
-        JsonObject heurObj = getObj(root, "source_property_heuristics");
-        if (heurObj == null) {
-            heurObj = getObj(root, "food_property_heuristics");
-        }
-        SourcePropertyHeuristics heur = parseHeuristics(heurObj);
         Map<String, Map<String, Float>> communityTags = parseStringFloatMap(getObj(root, "community_tags"));
         Map<String, Map<String, Float>> namespaces = parseStringFloatMap(getObj(root, "namespaces"));
         Map<String, Map<String, Float>> suffixes = parseStringFloatMap(getObj(root, "suffixes"));
@@ -179,7 +174,7 @@ public final class ScannerSpecRegistry {
         List<ArchetypePattern> archetypes = parseArchetypes(getArr(root, "archetypes"));
         Set<String> excludedItems = parseStringSet(getArr(root, "excluded_items"));
 
-        return new ScannerSpec(mult, heur, communityTags, namespaces, suffixes, keywords, negatives, archetypes, excludedItems);
+        return new ScannerSpec(mult, communityTags, namespaces, suffixes, keywords, negatives, archetypes, excludedItems);
     }
 
     private static Multipliers parseMultipliers(JsonObject obj) {
@@ -190,55 +185,11 @@ public final class ScannerSpecRegistry {
                 getFloat(obj, "suffix", 3.0f),
                 getFloat(obj, "keyword", 2.0f),
                 getFloat(obj, "archetype", 2.0f),
-                obj.has("source_properties")
-                        ? getFloat(obj, "source_properties", 1.0f)
-                        : getFloat(obj, "food_properties", 1.0f),
                 getFloat(obj, "recipe_inheritance", 1.0f),
                 getFloat(obj, "namespace_peer", 0.5f),
                 getFloat(obj, "secondary_suffix", 0.5f),
                 getFloat(obj, "namespace_peer_average_weight", 0.5f)
         );
-    }
-
-    private static SourcePropertyHeuristics parseHeuristics(JsonObject obj) {
-        if (obj == null) return SourcePropertyHeuristics.defaults();
-
-        JsonObject saturating = getObj(obj, "saturating_source");
-        if (saturating == null) {
-            saturating = getObj(obj, "saturating_meal");
-        }
-        SaturatingSourceRule saturatingRule = saturating != null
-                ? new SaturatingSourceRule(
-                        getFloat(saturating, "min_saturation", 1.2f),
-                        saturating.has("min_property_points")
-                                ? getInt(saturating, "min_property_points", 6)
-                                : getInt(saturating, "min_nutrition", 6),
-                        parseFlatFloatMap(getObj(saturating, "contributions")))
-                : SaturatingSourceRule.empty();
-
-        JsonObject snack = getObj(obj, "light_application");
-        if (snack == null) {
-            snack = getObj(obj, "light_snack");
-        }
-        LightApplicationRule snackRule = snack != null
-                ? new LightApplicationRule(
-                        snack.has("max_property_points")
-                                ? getInt(snack, "max_property_points", 2)
-                                : getInt(snack, "max_nutrition", 2),
-                        parseFlatFloatMap(getObj(snack, "contributions")))
-                : LightApplicationRule.empty();
-
-        List<String> badEffects = new ArrayList<>();
-        JsonArray badArr = getArr(obj, "bad_effect_keywords");
-        if (badArr != null) {
-            for (JsonElement el : badArr) {
-                if (el != null && el.isJsonPrimitive()) {
-                    badEffects.add(el.getAsString().toLowerCase());
-                }
-            }
-        }
-        float badMult = getFloat(obj, "bad_effect_multiplier", 0.5f);
-        return new SourcePropertyHeuristics(saturatingRule, snackRule, Collections.unmodifiableList(badEffects), badMult);
     }
 
     private static Map<String, Map<String, Float>> parseStringFloatMap(JsonObject obj) {
@@ -322,7 +273,6 @@ public final class ScannerSpecRegistry {
 
     public record ScannerSpec(
             Multipliers multipliers,
-            SourcePropertyHeuristics sourcePropertyHeuristics,
             Map<String, Map<String, Float>> communityTagWeights,
             Map<String, Map<String, Float>> namespaceWeights,
             Map<String, Map<String, Float>> suffixWeights,
@@ -334,7 +284,6 @@ public final class ScannerSpecRegistry {
         public static ScannerSpec empty() {
             return new ScannerSpec(
                     Multipliers.defaults(),
-                    SourcePropertyHeuristics.defaults(),
                     Map.of(), Map.of(), Map.of(), Map.of(), Map.of(),
                     List.of(),
                     Set.of()
@@ -348,48 +297,13 @@ public final class ScannerSpecRegistry {
             float suffix,
             float keyword,
             float archetype,
-            float sourceProperties,
             float recipeInheritance,
             float namespacePeer,
             float secondarySuffix,
             float namespacePeerAverageWeight
     ) {
         public static Multipliers defaults() {
-            return new Multipliers(5.0f, 4.0f, 3.0f, 2.0f, 2.0f, 1.0f, 1.0f, 0.5f, 0.5f, 0.5f);
-        }
-    }
-
-    public record SourcePropertyHeuristics(
-            SaturatingSourceRule saturatingSource,
-            LightApplicationRule lightApplication,
-            List<String> badEffectKeywords,
-            float badEffectMultiplier
-    ) {
-        public static SourcePropertyHeuristics defaults() {
-            return new SourcePropertyHeuristics(
-                    SaturatingSourceRule.empty(),
-                    LightApplicationRule.empty(),
-                    List.of(),
-                    1.0f
-            );
-        }
-    }
-
-    public record SaturatingSourceRule(float minSaturation, int minPropertyPoints, Map<String, Float> contributions) {
-        public static SaturatingSourceRule empty() {
-            return new SaturatingSourceRule(Float.POSITIVE_INFINITY, Integer.MAX_VALUE, Map.of());
-        }
-        public boolean matches(int propertyPoints, float saturation) {
-            return saturation > minSaturation && propertyPoints > minPropertyPoints;
-        }
-    }
-
-    public record LightApplicationRule(int maxPropertyPoints, Map<String, Float> contributions) {
-        public static LightApplicationRule empty() {
-            return new LightApplicationRule(Integer.MIN_VALUE, Map.of());
-        }
-        public boolean matches(int propertyPoints) {
-            return propertyPoints <= maxPropertyPoints;
+            return new Multipliers(5.0f, 4.0f, 3.0f, 2.0f, 2.0f, 1.0f, 0.5f, 0.5f, 0.5f);
         }
     }
 }

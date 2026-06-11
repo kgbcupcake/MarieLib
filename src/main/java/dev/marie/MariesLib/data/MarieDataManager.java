@@ -10,43 +10,56 @@ import java.util.Set;
  */
 public final class MarieDataManager {
 
-    private static final MarieDataLoader LOADER = new MarieDataLoader();
+    private static volatile MarieDataLoader loader;
 
     private MarieDataManager() {}
 
+    private static MarieDataLoader loader() {
+        MarieDataLoader current = loader;
+        if (current == null) {
+            synchronized (MarieDataManager.class) {
+                current = loader;
+                if (current == null) {
+                    loader = current = new MarieDataLoader();
+                }
+            }
+        }
+        return current;
+    }
+
     public static void registerReloadListener(AddReloadListenerEvent event) {
-        event.addListener(LOADER);
+        event.addListener(loader());
     }
 
     public static Set<ResourceLocation> getLoadedValues() {
-        return LOADER.getLoadedValues();
+        return loader().getLoadedValues();
     }
 
     public static Set<ResourceLocation> getLoadedSourceClassifications() {
-        return LOADER.getLoadedSourceClassifications();
+        return loader().getLoadedSourceClassifications();
     }
 
     public static Set<ResourceLocation> getLoadedEffects() {
-        return LOADER.getLoadedEffects();
+        return loader().getLoadedEffects();
     }
 
     public static Set<ResourceLocation> getLoadedSynergies() {
-        return LOADER.getLoadedSynergies();
+        return loader().getLoadedSynergies();
     }
 
     public static Set<ResourceLocation> getLoadedSourcePairSynergies() {
-        return LOADER.getLoadedSourcePairSynergies();
+        return loader().getLoadedSourcePairSynergies();
     }
 
     public static Set<ResourceLocation> getLoadedMilestones() {
-        return LOADER.getLoadedMilestones();
+        return loader().getLoadedMilestones();
     }
 
     public static Set<ResourceLocation> getLoadedProfiles() {
-        return LOADER.getLoadedProfiles();
+        return loader().getLoadedProfiles();
     }
 
     public static Set<ResourceLocation> getLoadedCompatEntries() {
-        return LOADER.getLoadedCompatEntries();
+        return loader().getLoadedCompatEntries();
     }
 }

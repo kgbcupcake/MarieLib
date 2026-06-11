@@ -23,8 +23,6 @@ import java.util.stream.Stream;
 @ApiStatus.Internal
 public final class MarieKubeJSPlugin implements KubeJSPlugin {
 
-    private static final String PLUGIN_LINE = MarieKubeJSPlugin.class.getName() + " " + MarieLibContext.get().modId();
-
     private static boolean manualRegistrationAttempted;
 
     /**
@@ -74,7 +72,11 @@ public final class MarieKubeJSPlugin implements KubeJSPlugin {
         Method loadFromFile = KubeJSPlugins.class.getDeclaredMethod(
                 "loadFromFile", Stream.class, String.class, boolean.class);
         loadFromFile.setAccessible(true);
-        loadFromFile.invoke(null, Stream.of(PLUGIN_LINE), MarieLibContext.get().modId(), false);
+        if (!MarieLibContext.isRegistered()) {
+            return;
+        }
+        String pluginLine = MarieKubeJSPlugin.class.getName() + " " + MarieLibContext.get().modId();
+        loadFromFile.invoke(null, Stream.of(pluginLine), MarieLibContext.get().modId(), false);
     }
 
     /**
@@ -95,6 +97,9 @@ public final class MarieKubeJSPlugin implements KubeJSPlugin {
         if (!ModList.get().isLoaded("kubejs")) {
             return;
         }
+        if (!MarieLibContext.isRegistered()) {
+            return;
+        }
         bindings.add(MarieKubeJSBindings.API_BINDING, MarieKubeJSBindings.createBindingObject());
         bindings.add(MarieKubeJSBindings.EVENTS_BINDING, MarieKubeJSBindings.createEventsBindingObject(bindings.type()));
     }
@@ -104,6 +109,7 @@ public final class MarieKubeJSPlugin implements KubeJSPlugin {
         if (!ModList.get().isLoaded("kubejs")) {
             return;
         }
+        if (!MarieLibContext.isRegistered()) return;
         registry.register(MarieKubeJSEvents.GROUP);
         MarieKubeJSEventBridge.register();
         MarieKubeJSStartupEvents.register(registry);

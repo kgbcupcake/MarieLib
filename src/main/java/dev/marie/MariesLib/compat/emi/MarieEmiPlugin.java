@@ -5,8 +5,8 @@ import dev.emi.emi.api.EmiRegistry;
 import dev.emi.emi.api.stack.Comparison;
 import dev.marie.MariesLib.api.ApiStatus;
 import dev.marie.MariesLib.compat.MarieTooltipHelper;
+import dev.marie.MariesLib.core.MarieLibContext;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.fml.ModList;
@@ -25,8 +25,7 @@ public final class MarieEmiPlugin implements EmiPlugin {
         }
         for (Item item : BuiltInRegistries.ITEM) {
             ItemStack stack = new ItemStack(item);
-            FoodProperties sourceProperties = item.components().get(net.minecraft.core.component.DataComponents.FOOD);
-            if (sourceProperties == null) {
+            if (!MarieLibContext.isRegistered() || !MarieLibContext.get().sourceItemFilter().test(stack)) {
                 continue;
             }
             int tooltipHash = MarieTooltipHelper.getTooltipLines(stack).hashCode();

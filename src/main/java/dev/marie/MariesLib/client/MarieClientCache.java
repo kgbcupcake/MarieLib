@@ -63,6 +63,9 @@ public class MarieClientCache {
     private static boolean firstClientSync = true;
 
     private static TrackingMemoryConfig injectClientMemoryConfig() {
+        if (!MarieLibContext.isRegistered()) {
+            return new TrackingMemoryConfig(60L, 1.2, 3.0, 0.2, 0.5);
+        }
         return MarieLibContext.get().clientMemoryConfigProvider();
     }
 

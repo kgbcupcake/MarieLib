@@ -12,8 +12,6 @@ public final class ModuleCache {
     public static boolean enableDecay = true;
     public static boolean enableSourceApplication = true;
     public static boolean enableBlockHeavySources = false;
-    /** Fallback / config value for heavy-source property threshold (see {@link ModCompatRegistry#getHeavySourceThreshold()}). */
-    public static int heavySourcePropertyThreshold = 6;
     public static boolean enableBlockLightSource = false;
     public static boolean enableEffects = true;
     public static boolean enableHUD = true;
@@ -23,27 +21,39 @@ public final class ModuleCache {
     public static boolean enableTrackingScreen = true;
     public static boolean enableCriticalToasts = true;
     public static boolean enableSleepBonus = true;
-    public static boolean enableRawSourcePenalty = true;
-    public static boolean enableGutHealth = true;
-    // public static boolean enableStamina = true; // STAMINA_SHELVED
-    public static boolean enableStamina = false;
-    public static boolean enablePSStaminaUsage = true;
-    public static boolean enablePSPenaltyDecay = true;
-    public static boolean enablePSExhaustionDuration = true;
-    public static boolean enableSOLDiversityHealth = false;
-    public static boolean enableSOLDiversityPenalty = true;
-    public static boolean enableLSOThermalResistance = true;
-    public static boolean enableLSOBrokenHeartResilience = true;
-    public static boolean enableLSOThirstSaturation = true;
     public static boolean enableSynergies = true;
     public static boolean enableMilestones = true;
     public static boolean enableSeasonHooks = true;
     public static boolean enableAbsorptionModifiers = true;
     public static boolean enableDebugLogging = false;
 
+    private static volatile boolean initialized;
+
     private ModuleCache() {}
 
+    public static boolean isInitialized() {
+        return initialized;
+    }
+
     public static void refresh() {
-        // Populated by consuming mod.
+        MariesLibConfigHolder h = MariesLibConfigHolder.get();
+        enableDecay = h.enableDecay;
+        enableSourceApplication = h.enableSourceApplication;
+        enableBlockHeavySources = h.enableBlockHeavySources;
+        enableBlockLightSource = h.enableBlockLightSource;
+        enableEffects = h.enableEffects;
+        enableHUD = h.enableHUD;
+        enableToasts = h.enableToasts;
+        enableSourceTooltips = h.enableSourceTooltips;
+        enableTotalTracking = h.enableTotalTracking;
+        enableTrackingScreen = h.enableTrackingScreen;
+        enableCriticalToasts = h.enableCriticalToasts;
+        enableSleepBonus = h.enableSleepBonus;
+        enableSynergies = h.enableSynergies;
+        enableMilestones = h.enableMilestones;
+        enableSeasonHooks = h.enableSeasonHooks;
+        enableAbsorptionModifiers = h.enableAbsorptionModifiers;
+        enableDebugLogging = h.enableDebugLogging;
+        initialized = true;
     }
 }

@@ -9,7 +9,6 @@ import dev.marie.MariesLib.util.MarieValidation;
 import dev.marie.MariesLib.util.MarieRegistryUtils;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.fml.ModList;
@@ -97,8 +96,7 @@ public final class AutoCompatDiscovery {
             }
 
             ItemStack stack = new ItemStack(item);
-            FoodProperties sourceProperties = item.getFoodProperties(stack, null);
-            if (sourceProperties == null) {
+            if (!MarieLibContext.get().sourceItemFilter().test(stack)) {
                 continue;
             }
 

@@ -1,10 +1,13 @@
 package dev.marie.MariesLib.scanner;
 
 import dev.marie.MariesLib.api.ApiStatus;
+import dev.marie.MariesLib.api.SourcePropertySignal;
+import dev.marie.MariesLib.api.registry.SourcePropertySignalRegistry;
 import dev.marie.MariesLib.classification.ClassificationTraceStep;
 import dev.marie.MariesLib.classification.TraceStepId;
 import dev.marie.MariesLib.classification.TraceStepStatus;
-import dev.marie.MariesLib.scanner.ScannerSpecRegistry.SourcePropertyHeuristics;
+import dev.marie.MariesLib.core.MarieLibContext;
+import dev.marie.MariesLib.core.MariesLib;
 import dev.marie.MariesLib.scanner.ScannerSpecRegistry.Multipliers;
 import dev.marie.MariesLib.scanner.ScannerSpecRegistry.ScannerSpec;
 import dev.marie.MariesLib.scanner.stages.RecipeInheritanceStage;
@@ -20,13 +23,10 @@ import java.util.Map.Entry;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 import net.minecraft.core.Holder;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
-import net.minecraft.world.effect.MobEffect;
-import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
@@ -71,12 +71,12 @@ public final class ItemClassifier {
          Holder<Item> holder = stack.getItemHolder();
          String namespace = itemId.getNamespace();
          String path = itemId.getPath();
-         FoodProperties sourceProperties = (FoodProperties)item.components().get(DataComponents.FOOD);
-         boolean hasSourceProperties = sourceProperties != null && sourceProperties.nutrition() > 0;
+         boolean hasSourceProperties = !MarieLibContext.isRegistered()
+                 || MarieLibContext.get().sourceItemFilter().test(stack);
          if (traceOut.isPresent()) {
             Map<String, Object> discoveryDetail = new LinkedHashMap<>();
             discoveryDetail.put("itemId", itemId.toString());
-            discoveryDetail.put("propertyPoints", sourceProperties != null ? sourceProperties.nutrition() : 0);
+            discoveryDetail.put("passesSourceFilter", hasSourceProperties);
             discoveryDetail.put("hasTag", false);
             if (!hasSourceProperties) {
                discoveryDetail.put("errorCode", "NOT_SOURCE_CAPABLE");
@@ -87,7 +87,7 @@ public final class ItemClassifier {
                   new ClassificationTraceStep(
                      TraceStepId.ITEM_DISCOVERY,
                      hasSourceProperties ? TraceStepStatus.SUCCESS : TraceStepStatus.FAILURE,
-                     hasSourceProperties ? "Source-capable item discovered" : "Not source-capable or property points <= 0",
+                     hasSourceProperties ? "Source-capable item discovered" : "Item failed source filter",
                      discoveryDetail
                   )
                );
@@ -146,18 +146,16 @@ public final class ItemClassifier {
             signals.add(new ClassificationSignal("ARCHETYPE", path, this.scaleContributions(archetypeContribs, mult.archetype())));
          }
 
-         if (sourceProperties != null) {
-            Map<String, Float> sourcePropContribs = this.analyzeSignal7SourceProperties(sourceProperties, spec.sourcePropertyHeuristics());
-            this.applySignal(scores, sourcePropContribs, mult.sourceProperties());
-            if (!sourcePropContribs.isEmpty()) {
-               signals.add(
-                  new ClassificationSignal(
-                     ClassificationSignal.TYPE_SOURCE_PROPERTIES,
-                     String.format("propertyPoints=%d,saturation=%.1f", sourceProperties.nutrition(), sourceProperties.saturation()),
-                     sourcePropContribs
-                  )
-               );
-            }
+         Map<String, Float> sourcePropContribs = this.analyzeSignal7SourcePropertySignals(stack);
+         this.applySignal(scores, sourcePropContribs, 1.0F);
+         if (!sourcePropContribs.isEmpty()) {
+            signals.add(
+               new ClassificationSignal(
+                  ClassificationSignal.TYPE_SOURCE_PROPERTIES,
+                  "source_property_signals",
+                  sourcePropContribs
+               )
+            );
          }
 
          RecipeInheritanceStage.apply(
@@ -323,52 +321,25 @@ public final class ItemClassifier {
       return contributions;
    }
 
-   private Map<String, Float> analyzeSignal7SourceProperties(FoodProperties sourceProperties, SourcePropertyHeuristics heur) {
-      Map<String, Float> contributions = new HashMap<>();
-      int propertyPoints = sourceProperties.nutrition();
-      float saturation = sourceProperties.saturation();
-      if (propertyPoints == 0) {
-         return contributions;
-      } else {
-         if (heur.saturatingSource().matches(propertyPoints, saturation)) {
-            for (Entry<String, Float> e : heur.saturatingSource().contributions().entrySet()) {
-               contributions.merge(e.getKey(), e.getValue(), Float::sum);
-            }
-         }
-
-         if (heur.lightApplication().matches(propertyPoints)) {
-            for (Entry<String, Float> e : heur.lightApplication().contributions().entrySet()) {
-               contributions.merge(e.getKey(), e.getValue(), Float::sum);
-            }
-         }
-
-         List<String> badEffectKeywords = heur.badEffectKeywords();
-         boolean hasBadEffects = !badEffectKeywords.isEmpty() && sourceProperties.effects().stream().anyMatch(e -> {
-            ResourceLocation effectId = BuiltInRegistries.MOB_EFFECT.getKey((MobEffect)e.effect().getEffect().value());
-            if (effectId == null) {
-               return false;
-            } else {
-               String id = effectId.toString().toLowerCase();
-
-               for (String kw : badEffectKeywords) {
-                  if (id.contains(kw)) {
-                     return true;
-                  }
-               }
-
-               return false;
-            }
-         });
-         if (hasBadEffects) {
-            float dampen = heur.badEffectMultiplier();
-
-            for (String key : contributions.keySet()) {
-               contributions.put(key, contributions.get(key) * dampen);
-            }
-         }
-
-         return contributions;
+   private Map<String, Float> analyzeSignal7SourcePropertySignals(ItemStack stack) {
+      List<SourcePropertySignal> signals = SourcePropertySignalRegistry.getAll();
+      if (signals.isEmpty()) {
+         return Map.of();
       }
+      Map<String, Float> contributions = new HashMap<>();
+      for (SourcePropertySignal signal : signals) {
+         try {
+            Map<String, Float> result = signal.evaluate(stack);
+            if (result != null) {
+               result.forEach((k, v) -> contributions.merge(k, v, Float::sum));
+            }
+         } catch (Exception ex) {
+            MariesLib.LOGGER.warn(
+               "[MarieLib] SourcePropertySignal '{}' threw during evaluate(): {}",
+               signal.signalId(), ex.getMessage());
+         }
+      }
+      return contributions;
    }
 
    private Map<String, Float> analyzeSignal9NamespacePeers(Map<String, Float> peerAverages, float averageWeight) {

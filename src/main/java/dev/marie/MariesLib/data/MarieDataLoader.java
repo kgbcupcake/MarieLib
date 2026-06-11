@@ -5,8 +5,14 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import dev.marie.MariesLib.compat.CompatDefinition;
+import dev.marie.MariesLib.api.MilestoneDefinition;
 import dev.marie.MariesLib.api.MarieAPIState;
+import dev.marie.MariesLib.api.ProfileDefinition;
+import dev.marie.MariesLib.api.SourcePairSynergy;
+import dev.marie.MariesLib.api.SynergyDefinition;
+import dev.marie.MariesLib.api.ThresholdEffect;
+import dev.marie.MariesLib.api.ValueDefinition;
+import dev.marie.MariesLib.compat.CompatDefinition;
 import dev.marie.MariesLib.core.MariesLib;
 import dev.marie.MariesLib.util.MarieRegistryUtils;
 import net.minecraft.core.Holder;
@@ -35,13 +41,13 @@ public final class MarieDataLoader extends SimpleJsonResourceReloadListener {
     public interface Callbacks {
         default void onApplyBegin() {}
         default void onApplyEnd() {}
-        default void registerValue(Object def) {}
+        default void registerValue(ValueDefinition def) {}
         default void registerSourceClassification(ResourceLocation itemId, String valueKey, float amount) {}
-        default void registerCustomEffect(Object def) {}
-        default void registerValueSynergy(Object def) {}
-        default void registerSourcePairSynergy(Object def) {}
-        default void registerMilestone(Object def) {}
-        default void registerTrackingProfile(Object def) {}
+        default void registerCustomEffect(ThresholdEffect def) {}
+        default void registerValueSynergy(SynergyDefinition def) {}
+        default void registerSourcePairSynergy(SourcePairSynergy def) {}
+        default void registerMilestone(MilestoneDefinition def) {}
+        default void registerTrackingProfile(ProfileDefinition def) {}
         default void registerCompatEntry(CompatDefinition def) {}
         default void replaceSourceFamilies(Map<String, List<String>> families) {}
         default void replaceModuleLocks(Set<String> locked, Set<String> serverOnly) {}
@@ -106,7 +112,7 @@ public final class MarieDataLoader extends SimpleJsonResourceReloadListener {
                 continue;
             }
             try {
-                Object def = parseValue(fileId, json);
+                ValueDefinition def = parseValue(fileId, json);
                 callbacks.registerValue(def);
                 nextValues.add(fileId);
             } catch (Exception ex) {
@@ -137,7 +143,7 @@ public final class MarieDataLoader extends SimpleJsonResourceReloadListener {
                 continue;
             }
             try {
-                Object def = parseEffect(fileId, json);
+                ThresholdEffect def = parseEffect(fileId, json);
                 callbacks.registerCustomEffect(def);
                 nextEffects.add(fileId);
             } catch (Exception ex) {
@@ -153,7 +159,7 @@ public final class MarieDataLoader extends SimpleJsonResourceReloadListener {
                 continue;
             }
             try {
-                Object def = parseSynergy(fileId, json);
+                SynergyDefinition def = parseSynergy(fileId, json);
                 callbacks.registerValueSynergy(def);
                 nextSynergies.add(fileId);
             } catch (Exception ex) {
@@ -169,7 +175,7 @@ public final class MarieDataLoader extends SimpleJsonResourceReloadListener {
                 continue;
             }
             try {
-                Object def = parseSourcePairSynergy(fileId, json);
+                SourcePairSynergy def = parseSourcePairSynergy(fileId, json);
                 callbacks.registerSourcePairSynergy(def);
                 nextSourcePairSynergies.add(fileId);
             } catch (Exception ex) {
@@ -185,7 +191,7 @@ public final class MarieDataLoader extends SimpleJsonResourceReloadListener {
                 continue;
             }
             try {
-                Object def = parseMilestone(fileId, json);
+                MilestoneDefinition def = parseMilestone(fileId, json);
                 callbacks.registerMilestone(def);
                 nextMilestones.add(fileId);
             } catch (Exception ex) {
@@ -201,7 +207,7 @@ public final class MarieDataLoader extends SimpleJsonResourceReloadListener {
                 continue;
             }
             try {
-                Object def = parseTrackingProfile(fileId, json);
+                ProfileDefinition def = parseTrackingProfile(fileId, json);
                 callbacks.registerTrackingProfile(def);
                 nextProfiles.add(fileId);
             } catch (Exception ex) {
@@ -331,9 +337,28 @@ public final class MarieDataLoader extends SimpleJsonResourceReloadListener {
         return result;
     }
 
-    private static Object parseValue(ResourceLocation fileId, JsonObject json) {
-        // TODO: implement when ValueDefinition is moved to MarieLib
-        return null;
+    private static ValueDefinition parseValue(ResourceLocation fileId, JsonObject json) {
+        ValueDefinition.Builder builder = ValueDefinition.builder(fileId.getPath());
+        builder.displayName(getRequiredString(json, DatapackSchema.KEY_DISPLAY_NAME));
+        if (json.has("color")) {
+            builder.color(json.get("color").getAsInt());
+        }
+        if (json.has("default_decay_rate")) {
+            builder.defaultDecayRate(json.get("default_decay_rate").getAsFloat());
+        }
+        if (json.has("critical_threshold")) {
+            builder.criticalThreshold(json.get("critical_threshold").getAsFloat());
+        }
+        if (json.has("low_threshold")) {
+            builder.lowThreshold(json.get("low_threshold").getAsFloat());
+        }
+        if (json.has("excess_threshold")) {
+            builder.excessThreshold(json.get("excess_threshold").getAsFloat());
+        }
+        if (json.has("amountScale")) {
+            builder.amountScale(json.get("amountScale").getAsDouble());
+        }
+        return builder.build();
     }
 
     private void registerSourceClassification(ResourceLocation fileId, JsonObject json) {
@@ -369,27 +394,27 @@ public final class MarieDataLoader extends SimpleJsonResourceReloadListener {
         throw new IllegalArgumentException("Entry must include either 'item' or 'tag'");
     }
 
-    private static Object parseEffect(ResourceLocation fileId, JsonObject json) {
+    private static ThresholdEffect parseEffect(ResourceLocation fileId, JsonObject json) {
         // TODO: implement when EffectDefinition is moved to MarieLib
         return null;
     }
 
-    private static Object parseSynergy(ResourceLocation fileId, JsonObject json) {
+    private static SynergyDefinition parseSynergy(ResourceLocation fileId, JsonObject json) {
         // TODO: implement when ValueSynergyDefinition is moved to MarieLib
         return null;
     }
 
-    private static Object parseSourcePairSynergy(ResourceLocation fileId, JsonObject json) {
+    private static SourcePairSynergy parseSourcePairSynergy(ResourceLocation fileId, JsonObject json) {
         // TODO: implement when SourcePairSynergy datapack parsing is moved to MarieLib
         return null;
     }
 
-    private static Object parseMilestone(ResourceLocation fileId, JsonObject json) {
+    private static MilestoneDefinition parseMilestone(ResourceLocation fileId, JsonObject json) {
         // TODO: implement when ValueMilestoneDefinition is moved to MarieLib
         return null;
     }
 
-    private static Object parseTrackingProfile(ResourceLocation fileId, JsonObject json) {
+    private static ProfileDefinition parseTrackingProfile(ResourceLocation fileId, JsonObject json) {
         // TODO: implement when TrackingProfileDefinition is moved to MarieLib
         return null;
     }

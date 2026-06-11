@@ -26,7 +26,8 @@ public class ValueDecayHandler {
         if (ReloadHandler.isReloadInProgress()) return;
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
         TrackingMemoryConfigOrSkip configOrSkip = resolveConfigOrSkip();
-        TrackingData data = player.getData(TrackingAttachment.TRACKING.get());
+        if (!TrackingAttachment.isRegistered()) return;
+        TrackingData data = TrackingAttachment.getData(player);
         if (configOrSkip.skipDecay()) {
             data.setMemoryConfig(configOrSkip.config());
             return;
@@ -60,7 +61,7 @@ public class ValueDecayHandler {
         }
 
         if (changed) {
-            player.setData(TrackingAttachment.TRACKING.get(), data);
+            TrackingAttachment.setData(player, data);
             MarieLibContext.get().trackingDeltaSyncer().accept(player, data);
         }
     }

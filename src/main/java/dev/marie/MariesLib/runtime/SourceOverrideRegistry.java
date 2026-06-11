@@ -8,6 +8,7 @@ import com.google.gson.JsonObject;
 import com.mojang.logging.LogUtils;
 import dev.marie.MariesLib.api.ApiStatus;
 import dev.marie.MariesLib.core.MarieLibContext;
+import dev.marie.MariesLib.data.DatapackSchema;
 import dev.marie.MariesLib.registry.AbstractRegistry;
 import dev.marie.MariesLib.util.MarieResourceLoader;
 import net.minecraft.server.packs.resources.ResourceManager;
@@ -95,7 +96,7 @@ public class SourceOverrideRegistry {
     public static void loadFromDatapack(ResourceManager resourceManager) {
         MarieResourceLoader.loadFromModConfig(
                 resourceManager,
-                "config/source_overrides.json",
+                DatapackSchema.CONFIG_SOURCE_OVERRIDES,
                 SourceOverrideRegistry::parseFromReader,
                 SourceOverrideRegistry::load,
                 "[SourceOverrideRegistry] Loaded from datapack override",
