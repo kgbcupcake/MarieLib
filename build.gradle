@@ -53,10 +53,19 @@ neoForge {
 // After `clean`, Gradle may still treat createMinecraftArtifacts as up-to-date from
 // cache even though build/moddev/artifacts/ was deleted — force a rerun when the
 // NeoForge compile jar is missing.
+def neoForgeCompileJar = layout.buildDirectory.file("moddev/artifacts/neoforge-${neo_version}.jar")
+
 tasks.named('createMinecraftArtifacts') {
+    outputs.file(neoForgeCompileJar)
     outputs.upToDateWhen {
-        file("${layout.buildDirectory.get().asFile}/moddev/artifacts/neoforge-${neo_version}.jar").exists()
+        def jar = neoForgeCompileJar.get().asFile
+        jar.isFile() && jar.length() > 0
     }
+}
+
+tasks.named('compileJava').configure {
+    dependsOn(tasks.named('createMinecraftArtifacts'))
+    mustRunAfter(tasks.named('clean'))
 }
 
 sourceSets.main.resources { srcDir 'src/generated/resources' }

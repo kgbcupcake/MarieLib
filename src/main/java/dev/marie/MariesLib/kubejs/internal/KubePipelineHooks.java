@@ -1,6 +1,7 @@
 package dev.marie.MariesLib.kubejs.internal;
 
 import dev.marie.MariesLib.api.ApiStatus;
+import dev.marie.MariesLib.api.ValueModifierContext;
 import dev.marie.MariesLib.kubejs.MarieKubeEvents;
 import dev.marie.MariesLib.kubejs.events.MarieDecayTickEvent;
 import dev.marie.MariesLib.kubejs.events.MariePlayerSyncedEvent;
@@ -15,17 +16,11 @@ public final class KubePipelineHooks {
 
     private KubePipelineHooks() {}
 
-    public static float applyValueDeltaModifier(
-            String playerId,
-            String itemId,
-            String valueKey,
-            float delta
-    ) {
+    public static float applyValueDeltaModifier(ValueModifierContext ctx, float delta) {
         if (!KubeGuard.hasListeners(MarieKubeEvents.VALUE_DELTA_MODIFIER_ID)) {
             return delta;
         }
-        MarieValueDeltaModifierEvent kube =
-                new MarieValueDeltaModifierEvent(playerId, itemId, valueKey, delta);
+        MarieValueDeltaModifierEvent kube = new MarieValueDeltaModifierEvent(ctx, delta);
         MarieKubeEvents.VALUE_DELTA_MODIFIER.post(kube);
         return kube.getAmount();
     }

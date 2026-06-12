@@ -167,7 +167,8 @@ public final class MarieAPI {
         if (provider == null) {
             return;
         }
-        ValueModifierEvent modifierEvent = new ValueModifierEvent(player, apiModifierSource(), valueKey, delta);
+        ValueModifierEvent modifierEvent = new ValueModifierEvent(
+                ValueModifierContext.of(player, apiModifierSource(), valueKey), delta);
         NeoForge.EVENT_BUS.post(modifierEvent);
         if (modifierEvent.isCanceled()) {
             return;
