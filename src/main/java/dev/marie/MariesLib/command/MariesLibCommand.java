@@ -2,6 +2,7 @@ package dev.marie.MariesLib.command;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.context.CommandContext;
+import dev.marie.MariesLib.api.ApiStatus;
 import dev.marie.MariesLib.api.MarieAPIState;
 import dev.marie.MariesLib.api.MarieAPIVersion;
 import dev.marie.MariesLib.core.MarieLibContext;
@@ -22,6 +23,7 @@ import java.util.List;
  * Library-only commands registered under /marieslib and /marie.
  * These introspect the framework itself, not consumer mod data.
  */
+@ApiStatus.Internal
 public final class MariesLibCommand {
 
     @SubscribeEvent

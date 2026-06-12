@@ -2,6 +2,7 @@ package dev.marie.MariesLib.command;
 
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import dev.marie.MariesLib.api.ApiStatus;
 import dev.marie.MariesLib.core.MarieLibContext;
 import dev.marie.MariesLib.core.MariesLib;
 import dev.marie.MariesLib.runtime.RuntimeResolver;
@@ -30,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+@ApiStatus.Internal
 final class MarieScannerCommands {
 
     private MarieScannerCommands() {}

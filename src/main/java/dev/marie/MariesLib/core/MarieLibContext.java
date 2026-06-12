@@ -43,11 +43,12 @@ import net.minecraft.world.level.Level;
  * <p>Only {@link Builder#build()} requires {@code modId}; every other builder field has a
  * safe lib-owned default. Use {@link MariesLibBootstrap#attach} for zero-config wiring.</p>
  */
-@ApiStatus.Stable
 public final class MarieLibContext implements MarieLibSettings, IMarieLibConfig {
 
+    @ApiStatus.Internal
     public record SourceDelta(float total, Map<String, Float> values) {}
 
+    @ApiStatus.Internal
     @FunctionalInterface
     public interface SourceDeltaResolver {
         /**
@@ -184,11 +185,13 @@ public final class MarieLibContext implements MarieLibSettings, IMarieLibConfig 
         this.reloadBroadcastHook = builder.reloadBroadcastHook;
     }
 
+    @ApiStatus.Stable
     public static void register(MarieLibContext context) {
         instance = context;
         MarieModRegistry.register(context);
     }
 
+    @ApiStatus.Stable
     public static MarieLibContext get() {
         MarieLibContext ctx = instance;
         if (ctx == null) {
@@ -197,35 +200,42 @@ public final class MarieLibContext implements MarieLibSettings, IMarieLibConfig 
         return ctx;
     }
 
+    @ApiStatus.Stable
     public static boolean isRegistered() {
         return instance != null;
     }
 
     @Override
+    @ApiStatus.Stable
     public String modId() {
         return modId;
     }
 
     @Override
+    @ApiStatus.Internal
     public float scannerConfidenceSpreadThreshold() {
         return scannerConfidenceSpreadThreshold.get();
     }
 
     @Override
+    @ApiStatus.Internal
     public float compositeRatioThreshold() {
         return compositeRatioThreshold.get();
     }
 
     @Override
+    @ApiStatus.Internal
     public boolean scannerEnableRecipeInheritance() {
         return scannerEnableRecipeInheritance.get();
     }
 
     @Override
+    @ApiStatus.Internal
     public boolean enableDebugLogging() {
         return enableDebugLogging.get();
     }
 
+    @ApiStatus.Stable
     public List<String> valueKeys() {
         return ValueRegistry.getAll()
                 .stream()
@@ -233,122 +243,152 @@ public final class MarieLibContext implements MarieLibSettings, IMarieLibConfig 
                 .toList();
     }
 
+    @ApiStatus.Internal
     public Predicate<ItemStack> sourceItemFilter() {
         return sourceItemFilter.get();
     }
 
+    @ApiStatus.Internal
     public long memoryWindowMinutes() {
         return memoryWindowMinutes.get();
     }
 
+    @ApiStatus.Internal
     public int memoryWindowCount() {
         return memoryWindowCount.get();
     }
 
+    @ApiStatus.Internal
     public long streakWindowMs() {
         return streakWindowMs.get();
     }
 
+    @ApiStatus.Internal
     public float streakWeight() {
         return streakWeight.get();
     }
 
+    @ApiStatus.Internal
     public float debtThreshold() {
         return debtThreshold.get();
     }
 
+    @ApiStatus.Internal
     public float debtDecayRate() {
         return debtDecayRate.get();
     }
 
+    @ApiStatus.Internal
     public float diminishingSteepness() {
         return diminishingSteepness.get();
     }
 
+    @ApiStatus.Internal
     public float diminishingMidpoint() {
         return diminishingMidpoint.get();
     }
 
+    @ApiStatus.Internal
     public boolean debugMemoryLogging() {
         return debugMemoryLogging.get();
     }
 
+    @ApiStatus.Internal
     public float excessThreshold() {
         return excessThreshold.get();
     }
 
+    @ApiStatus.Internal
     public float lowThreshold() {
         return lowThreshold.get();
     }
 
+    @ApiStatus.Internal
     public float criticalThreshold() {
         return criticalThreshold.get();
     }
 
+    @ApiStatus.Internal
     public void onFullTrackingDataSynced() {
         onFullTrackingDataSynced.run();
     }
 
+    @ApiStatus.Internal
     public Object configScreenFactory() {
         return configScreenFactory.get();
     }
 
+    @ApiStatus.Internal
     public Object exportScreenFactory(Object parent) {
         return exportScreenFactory.apply(parent);
     }
 
+    @ApiStatus.Internal
     public Object importScreenFactory(Object parent) {
         return importScreenFactory.apply(parent);
     }
 
+    @ApiStatus.Internal
     public void onValuesDeltaReceived(Map<String, Float> delta) {
         onValuesDeltaReceived.accept(delta);
     }
 
+    @ApiStatus.Internal
     public DiminishingReturnsConfig clientMemoryConfigProvider() {
         return clientMemoryConfigProvider.get();
     }
 
+    @ApiStatus.Internal
     public JsonObject configExporter() {
         return configExporter.get();
     }
 
+    @ApiStatus.Internal
     public void configImporter(JsonObject json) {
         configImporter.accept(json);
     }
 
+    @ApiStatus.Internal
     public PresetRegistry.PresetValues currentConfigPresetValues() {
         return currentConfigPresetValues.get();
     }
 
+    @ApiStatus.Internal
     public void ensureBuiltInPresetsOnDisk() {
         ensureBuiltInPresetsOnDisk.run();
     }
 
+    @ApiStatus.Internal
     public void applyPresetValues(PresetRegistry.PresetValues values) {
         applyPresetValues.accept(values);
     }
 
+    @ApiStatus.Internal
     public void enableAllEffectsForPresets() {
         enableAllEffectsForPresets.run();
     }
 
+    @ApiStatus.Internal
     public String valueIcon(String key) {
         return valueIconProvider.apply(key);
     }
 
+    @ApiStatus.Internal
     public BiFunction<ItemStack, Player, Map<String, Float>> tooltipValueResolver() {
         return tooltipValueResolver;
     }
 
+    @ApiStatus.Internal
     public Supplier<TrackingData> clientTrackingDataProvider() {
         return clientTrackingDataProvider;
     }
 
+    @ApiStatus.Internal
     public Function<ResourceLocation, String> sourceFamilyResolver() {
         return sourceFamilyResolver;
     }
 
+    @ApiStatus.Internal
     public Function<Item, Map<String, Float>> valueTagScoresProvider() {
         return valueTagScoresProvider;
     }
@@ -362,6 +402,7 @@ public final class MarieLibContext implements MarieLibSettings, IMarieLibConfig 
      * is applied for that role.
      */
     @Nullable
+    @ApiStatus.Internal
     public String resolveTagRole(String role) {
         return tagRoleResolver.apply(role);
     }
@@ -374,6 +415,7 @@ public final class MarieLibContext implements MarieLibSettings, IMarieLibConfig 
      * Return true to block the trigger, false to allow it.
      * Default: never block (always returns false).
      */
+    @ApiStatus.Internal
     public boolean isHeavySourceBlocked(ServerPlayer player, ValueSourceTrigger trigger) {
         return heavySourceBlocker.test(player, trigger);
     }
@@ -383,65 +425,80 @@ public final class MarieLibContext implements MarieLibSettings, IMarieLibConfig 
      * because it is considered "light" for the current player state.
      * Default: never block (always returns false).
      */
+    @ApiStatus.Internal
     public boolean isLightSourceBlocked(ServerPlayer player, ValueSourceTrigger trigger) {
         return lightSourceBlocker.test(player, trigger);
     }
 
     @Override
+    @ApiStatus.Internal
     public double multiValueInheritanceThreshold() {
         return multiValueInheritanceThreshold.getAsDouble();
     }
 
+    @ApiStatus.Internal
     public ResolutionStageHandler[] runtimeResolverStages() {
         return runtimeResolverStages;
     }
 
+    @ApiStatus.Internal
     public DiminishingReturnsConfig trackingMemoryConfig() {
         DiminishingReturnsConfig cfg = trackingMemoryConfigProvider.get();
         return cfg != null ? cfg : defaultDiminishingReturnsConfig();
     }
 
+    @ApiStatus.Internal
     public BiFunction<ItemStack, Level, Map<String, Float>> sourceValueResolver() {
         return sourceValueResolver;
     }
 
+    @ApiStatus.Internal
     public SourceDeltaResolver sourceDeltaResolver() {
         return sourceDeltaResolver;
     }
 
+    @ApiStatus.Internal
     public BiConsumer<ServerPlayer, TrackingData> effectApplier() {
         return effectApplier;
     }
 
+    @ApiStatus.Internal
     public Consumer<ServerPlayer> effectClearer() {
         return effectClearer;
     }
 
+    @ApiStatus.Internal
     public int decayIntervalTicks() {
         return decayIntervalTicks.get();
     }
 
+    @ApiStatus.Internal
     public float criticalThresholdFor(String valueKey) {
         ValueDefinition def = ValueRegistry.get(valueKey);
         return def != null ? def.getCriticalThreshold() : criticalThreshold();
     }
 
+    @ApiStatus.Internal
     public boolean showJoinMessage() {
         return showJoinMessage.get();
     }
 
+    @ApiStatus.Internal
     public Component joinMessageLine1() {
         return joinMessageLine1.get();
     }
 
+    @ApiStatus.Internal
     public Component joinMessageLine2() {
         return joinMessageLine2.get();
     }
 
+    @ApiStatus.Internal
     public BiConsumer<ServerPlayer, TrackingData> trackingDeltaSyncer() {
         return trackingDeltaSyncer;
     }
 
+    @ApiStatus.Internal
     public Consumer<ServerPlayer> syncOnJoin() {
         return syncOnJoin;
     }
@@ -457,10 +514,15 @@ public final class MarieLibContext implements MarieLibSettings, IMarieLibConfig 
     }
 
     @Nullable
+    @ApiStatus.Internal
     public MarieLibDataProvider dataProvider() {
         return dataProvider;
     }
 
+    /**
+     * @deprecated Use {@link dev.marie.MariesLib.api.MarieAPI#registerValue} and related
+     *             {@code MarieAPI.register*} methods directly instead of supplying a delegate.
+     */
     @Nullable
     @Deprecated
     @ApiStatus.Internal
@@ -472,15 +534,18 @@ public final class MarieLibContext implements MarieLibSettings, IMarieLibConfig 
      * Returns the ValueDefinition for the given key, or null if not registered.
      */
     @Nullable
+    @ApiStatus.Stable
     public ValueDefinition valueDefinitionFor(String key) {
         return ValueRegistry.get(key);
     }
 
+    @ApiStatus.Internal
     public static boolean isValueBeneficial(String valueKey) {
         ValueDefinition def = ValueRegistry.get(valueKey);
         return def == null || def.isBeneficial();
     }
 
+    @ApiStatus.Stable
     public static Builder builder(String modId) {
         return new Builder(modId);
     }
@@ -633,13 +698,12 @@ public final class MarieLibContext implements MarieLibSettings, IMarieLibConfig 
         public Builder excessThreshold(Supplier<Float> s) { this.excessThreshold = s; return this; }
         public Builder lowThreshold(Supplier<Float> s) { this.lowThreshold = s; return this; }
         public Builder criticalThreshold(Supplier<Float> s) { this.criticalThreshold = s; return this; }
+        @ApiStatus.Experimental
         public Builder onFullTrackingDataSynced(Runnable r) { this.onFullTrackingDataSynced = r; return this; }
-        @ApiStatus.Stable
         public Builder configScreenFactory(Supplier<Object> s) { this.configScreenFactory = s; return this; }
-        @ApiStatus.Stable
         public Builder exportScreenFactory(Function<Object, Object> f) { this.exportScreenFactory = f; return this; }
-        @ApiStatus.Stable
         public Builder importScreenFactory(Function<Object, Object> f) { this.importScreenFactory = f; return this; }
+        @ApiStatus.Experimental
         public Builder onValuesDeltaReceived(Consumer<Map<String, Float>> c) { this.onValuesDeltaReceived = c; return this; }
         public Builder clientMemoryConfigProvider(Supplier<DiminishingReturnsConfig> s) { this.clientMemoryConfigProvider = s; return this; }
         public Builder configExporter(Supplier<JsonObject> s) { this.configExporter = s; return this; }
@@ -648,7 +712,6 @@ public final class MarieLibContext implements MarieLibSettings, IMarieLibConfig 
         public Builder ensureBuiltInPresetsOnDisk(Runnable r) { this.ensureBuiltInPresetsOnDisk = r; return this; }
         public Builder applyPresetValues(Consumer<PresetRegistry.PresetValues> c) { this.applyPresetValues = c; return this; }
         public Builder enableAllEffectsForPresets(Runnable r) { this.enableAllEffectsForPresets = r; return this; }
-        @ApiStatus.Stable
         public Builder valueIconProvider(Function<String, String> f) { this.valueIconProvider = f; return this; }
         @ApiStatus.Experimental
         public Builder tooltipValueResolver(BiFunction<ItemStack, Player, Map<String, Float>> f) { this.tooltipValueResolver = f; return this; }
@@ -656,14 +719,11 @@ public final class MarieLibContext implements MarieLibSettings, IMarieLibConfig 
         public Builder sourceFamilyResolver(Function<ResourceLocation, String> f) { this.sourceFamilyResolver = f; return this; }
         @ApiStatus.Experimental
         public Builder valueTagScoresProvider(Function<Item, Map<String, Float>> f) { this.valueTagScoresProvider = f; return this; }
-        @ApiStatus.Stable
         public Builder tagRoleResolver(Function<String, String> f) { this.tagRoleResolver = f; return this; }
-        @ApiStatus.Stable
         public Builder heavySourceBlocker(BiPredicate<ServerPlayer, ValueSourceTrigger> p) {
             this.heavySourceBlocker = p;
             return this;
         }
-        @ApiStatus.Stable
         public Builder lightSourceBlocker(BiPredicate<ServerPlayer, ValueSourceTrigger> p) {
             this.lightSourceBlocker = p;
             return this;
@@ -676,20 +736,20 @@ public final class MarieLibContext implements MarieLibSettings, IMarieLibConfig 
         public Builder sourceValueResolver(BiFunction<ItemStack, Level, Map<String, Float>> f) { this.sourceValueResolver = f; return this; }
         @ApiStatus.Experimental
         public Builder sourceDeltaResolver(SourceDeltaResolver r) { this.sourceDeltaResolver = r; return this; }
-        @ApiStatus.Stable
+        @ApiStatus.Experimental
         public Builder effectApplier(BiConsumer<ServerPlayer, TrackingData> c) { this.effectApplier = c; return this; }
-        @ApiStatus.Stable
+        @ApiStatus.Experimental
         public Builder effectClearer(Consumer<ServerPlayer> c) { this.effectClearer = c; return this; }
         public Builder decayIntervalTicks(Supplier<Integer> s) { this.decayIntervalTicks = s; return this; }
-        @ApiStatus.Stable
+        @ApiStatus.Experimental
         public Builder showJoinMessage(Supplier<Boolean> s) { this.showJoinMessage = s; return this; }
-        @ApiStatus.Stable
+        @ApiStatus.Experimental
         public Builder joinMessageLine1(Supplier<Component> s) { this.joinMessageLine1 = s; return this; }
-        @ApiStatus.Stable
+        @ApiStatus.Experimental
         public Builder joinMessageLine2(Supplier<Component> s) { this.joinMessageLine2 = s; return this; }
-        @ApiStatus.Stable
+        @ApiStatus.Experimental
         public Builder trackingDeltaSyncer(BiConsumer<ServerPlayer, TrackingData> c) { this.trackingDeltaSyncer = c; return this; }
-        @ApiStatus.Stable
+        @ApiStatus.Experimental
         public Builder syncOnJoin(Consumer<ServerPlayer> c) { this.syncOnJoin = c; return this; }
         @ApiStatus.Experimental
         public Builder onCacheInvalidated(Runnable hook) {
@@ -703,10 +763,15 @@ public final class MarieLibContext implements MarieLibSettings, IMarieLibConfig 
         }
         @ApiStatus.Stable
         public Builder dataProvider(MarieLibDataProvider p) { this.dataProvider = p; return this; }
+        /**
+         * @deprecated Use {@link dev.marie.MariesLib.api.MarieAPI#registerValue} and related
+         *             {@code MarieAPI.register*} methods directly instead of supplying a delegate.
+         */
         @Deprecated
         @ApiStatus.Internal
         public Builder registrationDelegate(MarieLibRegistrationDelegate d) { this.registrationDelegate = d; return this; }
 
+        @ApiStatus.Stable
         public MarieLibContext build() {
             return new MarieLibContext(this);
         }

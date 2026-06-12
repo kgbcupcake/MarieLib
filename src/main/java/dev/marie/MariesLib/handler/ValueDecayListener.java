@@ -11,6 +11,7 @@ import dev.marie.MariesLib.core.IMarieLibConfig;
 import dev.marie.MariesLib.core.MarieLibContext;
 import dev.marie.MariesLib.tracking.TrackingAttachment;
 import dev.marie.MariesLib.tracking.TrackingData;
+import dev.marie.MariesLib.core.KubeIntegration;
 import dev.marie.MariesLib.registry.MarieAttributes;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -46,7 +47,14 @@ public class ValueDecayListener {
             rate *= MarieAttributes.valueDecayMultiplier(player);
             float current = data.values.getOrDefault(key, 0f);
             if (current > 0f) {
-                float newValue = Math.max(0f, current - rate);
+                float decayAmount = KubeIntegration.applyDecayTick(
+                        player.getUUID().toString(),
+                        key,
+                        rate);
+                if (decayAmount <= 0f) {
+                    continue;
+                }
+                float newValue = Math.max(0f, current - decayAmount);
                 data.values.put(key, newValue);
                 changed = true;
 

@@ -14,7 +14,7 @@ import dev.marie.MariesLib.api.ApiStatus;
  * {@link MarieLibContext}. Supports the upcoming multi-mod config UI
  * and any feature that needs to enumerate consuming mods.
  */
-@ApiStatus.Stable
+@ApiStatus.Experimental
 public final class MarieModRegistry {
 
     private static final Map<String, MarieLibContext> MODS = new LinkedHashMap<>();

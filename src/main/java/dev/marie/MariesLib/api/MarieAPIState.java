@@ -60,6 +60,7 @@ public final class MarieAPIState {
         return new DatapackReloadScope();
     }
 
+    @ApiStatus.Experimental
     public static final class DatapackReloadScope implements AutoCloseable {
         @Override
         public void close() {

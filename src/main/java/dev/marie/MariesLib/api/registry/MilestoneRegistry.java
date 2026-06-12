@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * Internal storage for value milestone definitions registered via the public API.
  */
-@ApiStatus.Internal
+@ApiStatus.Stable
 public final class MilestoneRegistry {
 
     private static final class Core extends AbstractRegistry<String, MilestoneDefinition> {

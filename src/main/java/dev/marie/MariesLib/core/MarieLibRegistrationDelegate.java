@@ -12,7 +12,7 @@ import java.util.List;
  * Runtime delegate for value/effect registration.
  * Registered by the consuming mod at bootstrap.
  */
-@ApiStatus.Stable
+@ApiStatus.Internal
 public interface MarieLibRegistrationDelegate {
 
     List<String> getValueKeys();

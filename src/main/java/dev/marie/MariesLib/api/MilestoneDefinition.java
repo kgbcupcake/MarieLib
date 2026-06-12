@@ -16,7 +16,7 @@ import javax.annotation.Nullable;
  * <p>Use the {@link Builder} to construct instances and register them
  * via {@link MarieAPI#registerMilestone(MilestoneDefinition)}.</p>
  */
-@ApiStatus.Experimental
+@ApiStatus.Stable
 public final class MilestoneDefinition {
 
     private final String id;
@@ -127,6 +127,7 @@ public final class MilestoneDefinition {
     /**
      * Builder for constructing {@link MilestoneDefinition} instances.
      */
+    @ApiStatus.Stable
     public static final class Builder {
 
         private final String id;

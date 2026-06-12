@@ -11,7 +11,7 @@ import java.util.List;
  * Internal storage for value synergy and source synergy definitions
  * registered via the public API.
  */
-@ApiStatus.Internal
+@ApiStatus.Stable
 public final class SynergyRegistry {
 
     private static final ListRegistry<SynergyDefinition> VALUE_SYNERGIES =

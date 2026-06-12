@@ -11,7 +11,7 @@ import net.minecraft.resources.ResourceLocation;
  * <p>Use the {@link Builder} to construct instances and register them
  * via {@link MarieAPI#registerSourcePairSynergy(SourcePairSynergy)}.</p>
  */
-@ApiStatus.Experimental
+@ApiStatus.Stable
 public final class SourcePairSynergy {
 
     private final String id;
@@ -106,6 +106,7 @@ public final class SourcePairSynergy {
     /**
      * Builder for constructing {@link SourcePairSynergy} instances.
      */
+    @ApiStatus.Stable
     public static final class Builder {
 
         private final String id;

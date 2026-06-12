@@ -26,6 +26,7 @@ import dev.marie.MariesLib.runtime.SourceTriggerRegistry;
 import dev.marie.MariesLib.tracking.TrackingAttachment;
 import dev.marie.MariesLib.tracking.TrackingData;
 import dev.marie.MariesLib.registry.MarieAttributes;
+import dev.marie.MariesLib.core.KubeIntegration;
 import dev.marie.MariesLib.util.MarieRegistryUtils;
 
 import net.minecraft.resources.ResourceLocation;
@@ -149,6 +150,11 @@ public final class SourceApplicationPipeline {
                 adjustedDelta = applySeasonalAbsorption(player, key, adjustedDelta);
                 adjustedDelta = applyAbsorptionModifiers(player, key, adjustedDelta);
                 adjustedDelta *= MarieAttributes.valueRegenMultiplier(player);
+                adjustedDelta = KubeIntegration.applyValueDeltaModifier(
+                        player.getUUID().toString(),
+                        sourceResourceId.toString(),
+                        key,
+                        adjustedDelta);
 
                 ValueModifierEvent modifierEvent = new ValueModifierEvent(
                         player, sourceResourceId, key, adjustedDelta);

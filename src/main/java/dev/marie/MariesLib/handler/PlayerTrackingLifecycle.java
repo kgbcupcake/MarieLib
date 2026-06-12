@@ -4,6 +4,7 @@ import dev.marie.MariesLib.api.ApiStatus;
 import dev.marie.MariesLib.config.FeatureFlagCache;
 import dev.marie.MariesLib.core.IMarieLibConfig;
 import dev.marie.MariesLib.core.MarieLibContext;
+import dev.marie.MariesLib.core.KubeIntegration;
 import dev.marie.MariesLib.tracking.TrackingAttachment;
 import dev.marie.MariesLib.tracking.TrackingData;
 import net.minecraft.server.level.ServerPlayer;
@@ -23,6 +24,7 @@ public class PlayerTrackingLifecycle {
         tracking.setMemoryConfig(DiminishingReturnsSupport.resolveMemoryConfig());
         if (MarieLibContext.isRegistered()) {
             MarieLibContext.get().syncOnJoin().accept(player);
+            KubeIntegration.firePlayerSynced(player);
             if (FeatureFlagCache.enableEffects()) {
                 MarieLibContext.get().effectApplier().accept(player, tracking);
             }
@@ -43,6 +45,7 @@ public class PlayerTrackingLifecycle {
         tracking.setMemoryConfig(DiminishingReturnsSupport.resolveMemoryConfig());
         if (MarieLibContext.isRegistered()) {
             MarieLibContext.get().syncOnJoin().accept(player);
+            KubeIntegration.firePlayerSynced(player);
             if (FeatureFlagCache.enableEffects()) {
                 MarieLibContext.get().effectApplier().accept(player, tracking);
             }
@@ -61,6 +64,7 @@ public class PlayerTrackingLifecycle {
         TrackingData tracking = TrackingAttachment.getData(player);
         if (MarieLibContext.isRegistered()) {
             MarieLibContext.get().trackingDeltaSyncer().accept(player, tracking);
+            KubeIntegration.firePlayerSynced(player);
             if (FeatureFlagCache.enableEffects()) {
                 MarieLibContext.get().effectApplier().accept(player, tracking);
             }
