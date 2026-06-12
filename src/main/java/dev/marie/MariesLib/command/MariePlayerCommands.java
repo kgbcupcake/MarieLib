@@ -7,13 +7,12 @@ import com.mojang.brigadier.arguments.FloatArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import dev.marie.MariesLib.api.MarieEvents;
 import dev.marie.MariesLib.api.ValueDefinition;
 import dev.marie.MariesLib.api.registry.ProfileRegistry;
 import dev.marie.MariesLib.api.registry.ValueRegistry;
 import dev.marie.MariesLib.core.IMarieLibConfig;
-import dev.marie.MariesLib.core.MarieLibContext;
 import dev.marie.MariesLib.tracking.DiminishingReturnsConfig;
+import dev.marie.MariesLib.handler.SourceApplicationPipeline;
 import dev.marie.MariesLib.tracking.TrackingAttachment;
 import dev.marie.MariesLib.tracking.TrackingData;
 import net.minecraft.ChatFormatting;
@@ -21,7 +20,6 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
-import net.neoforged.neoforge.common.NeoForge;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -76,13 +74,12 @@ final class MariePlayerCommands {
         }
         TrackingData data = TrackingAttachment.getData(player);
         float old = data.values.getOrDefault(key, 0f);
-        data.values.put(key, value);
-        TrackingAttachment.setData(player, data);
-        MarieLibContext.get().trackingDeltaSyncer().accept(player, data);
-        MarieLibContext.get().effectApplier().accept(player, data);
-        NeoForge.EVENT_BUS.post(new MarieEvents.ValueChangedEvent(player, key, old, value));
+        if (SourceApplicationPipeline.writeDirectValue(player, data, key, value)) {
+            SourceApplicationPipeline.finalizeDirectWrite(player, data);
+        }
+        float applied = data.values.getOrDefault(key, 0f);
         ctx.getSource().sendSuccess(() -> Component.literal(String.format(Locale.ROOT,
-                "Set %s for %s: %.2f -> %.2f", key, player.getName().getString(), old, value)), true);
+                "Set %s for %s: %.2f -> %.2f", key, player.getName().getString(), old, applied)), true);
         return 1;
     }
 
@@ -95,12 +92,15 @@ final class MariePlayerCommands {
         TrackingData data = TrackingAttachment.getData(player);
         DiminishingReturnsConfig cfg = IMarieLibConfig.get().trackingMemoryConfig();
         float start = cfg != null ? (float) cfg.startingValueFill() : 0.5f;
+        boolean changed = false;
         for (String key : MarieCommandSupport.registeredValueKeys()) {
-            float old = data.values.getOrDefault(key, 0f);
-            data.values.put(key, start);
-            NeoForge.EVENT_BUS.post(new MarieEvents.ValueChangedEvent(player, key, old, start));
+            if (SourceApplicationPipeline.writeDirectValue(player, data, key, start)) {
+                changed = true;
+            }
         }
-        TrackingAttachment.setData(player, data);
+        if (changed) {
+            SourceApplicationPipeline.finalizeDirectWrite(player, data);
+        }
         ctx.getSource().sendSuccess(() -> Component.literal("Reset values for " + player.getName().getString()), true);
         return 1;
     }

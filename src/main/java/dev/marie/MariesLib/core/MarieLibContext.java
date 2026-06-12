@@ -23,6 +23,7 @@ import dev.marie.MariesLib.api.ValueSourceTrigger;
 import dev.marie.MariesLib.api.registry.ValueRegistry;
 import dev.marie.MariesLib.config.MariesLibConfigBridge;
 import dev.marie.MariesLib.config.PresetRegistry;
+import dev.marie.MariesLib.tracking.AttachmentTrackingDataProvider;
 import dev.marie.MariesLib.runtime.SourceValueRegistry;
 import dev.marie.MariesLib.util.MarieRegistryUtils;
 import dev.marie.MariesLib.scan.ResolutionStageHandler;
@@ -181,7 +182,9 @@ public final class MarieLibContext implements MarieLibSettings, IMarieLibConfig 
         this.joinMessageLine2 = builder.joinMessageLine2;
         this.trackingDeltaSyncer = builder.trackingDeltaSyncer;
         this.syncOnJoin = builder.syncOnJoin;
-        this.dataProvider = builder.dataProvider;
+        this.dataProvider = builder.dataProvider != null
+                ? builder.dataProvider
+                : new AttachmentTrackingDataProvider();
         this.registrationDelegate = builder.registrationDelegate;
         this.cacheInvalidatedHook = builder.cacheInvalidatedHook;
         this.reloadBroadcastHook = builder.reloadBroadcastHook;

@@ -5,7 +5,7 @@ import dev.marie.MariesLib.api.MarieAPI;
 import dev.marie.MariesLib.api.ValueDefinition;
 import dev.marie.MariesLib.api.ValueSourceTrigger;
 import dev.marie.MariesLib.api.registry.ValueRegistry;
-import dev.marie.MariesLib.core.MarieLibContext;
+import dev.marie.MariesLib.handler.SourceApplicationPipeline;
 import dev.marie.MariesLib.tracking.TrackingAttachment;
 import dev.marie.MariesLib.tracking.TrackingData;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -36,10 +36,8 @@ public final class MarieKubeServerBindings {
             return;
         }
         TrackingData data = TrackingAttachment.getData(serverPlayer);
-        data.values.put(valueKey, Math.max(0f, Math.min(1f, value)));
-        TrackingAttachment.setData(serverPlayer, data);
-        if (MarieLibContext.isRegistered()) {
-            MarieLibContext.get().trackingDeltaSyncer().accept(serverPlayer, data);
+        if (SourceApplicationPipeline.writeDirectValue(serverPlayer, data, valueKey, value)) {
+            SourceApplicationPipeline.finalizeDirectWrite(serverPlayer, data);
         }
     }
 
