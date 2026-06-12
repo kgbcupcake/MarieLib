@@ -1,6 +1,7 @@
 package dev.marie.MariesLib.command;
 
 import com.mojang.brigadier.CommandDispatcher;
+import dev.marie.MariesLib.api.ApiStatus;
 import dev.marie.MariesLib.core.MarieLibContext;
 import dev.marie.MariesLib.core.MarieModRegistry;
 import dev.marie.MariesLib.core.MariesLib;
@@ -11,6 +12,7 @@ import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.server.ServerStoppedEvent;
 
+@ApiStatus.Internal
 public class MarieCommand {
 
     @SubscribeEvent

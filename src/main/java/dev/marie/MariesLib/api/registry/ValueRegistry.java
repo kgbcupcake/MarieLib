@@ -33,6 +33,7 @@ public final class ValueRegistry {
         INSTANCE.reset();
     }
 
+    @ApiStatus.Stable
     public static void register(ValueDefinition definition) {
         if (definition == null) {
             throw new IllegalArgumentException("definition cannot be null");
@@ -41,10 +42,12 @@ public final class ValueRegistry {
     }
 
     @Nullable
+    @ApiStatus.Stable
     public static ValueDefinition get(String id) {
         return INSTANCE.get(id);
     }
 
+    @ApiStatus.Stable
     public static List<ValueDefinition> getAll() {
         return INSTANCE.values();
     }

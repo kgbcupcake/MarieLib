@@ -19,7 +19,7 @@ import java.util.Map;
  * <p>Use the {@link Builder} to construct instances and register them via
  * {@link MarieAPI#registerTrackingProfile(ProfileDefinition)}.</p>
  */
-@ApiStatus.Experimental
+@ApiStatus.Stable
 public final class ProfileDefinition {
 
     private final String id;
@@ -116,6 +116,7 @@ public final class ProfileDefinition {
     /**
      * Builder for constructing {@link ProfileDefinition} instances.
      */
+    @ApiStatus.Stable
     public static final class Builder {
 
         private final String id;

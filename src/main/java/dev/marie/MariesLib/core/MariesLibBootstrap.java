@@ -134,6 +134,10 @@ public final class MariesLibBootstrap {
         return importScreenFactory;
     }
 
+    /**
+     * @deprecated Use {@link #attach(String, IEventBus)} for consuming-mod integration.
+     */
+    @Deprecated
     public static void bootstrap(IEventBus modEventBus) {
         MarieAttributes.register(modEventBus);
         TrackingAttachment.register(modEventBus);
@@ -173,6 +177,7 @@ public final class MariesLibBootstrap {
         NeoForge.EVENT_BUS.register(new RecipeTriggerListener());
         NeoForge.EVENT_BUS.register(new MariesLibCommand());
         NeoForge.EVENT_BUS.register(new MarieCommand());
+        KubeIntegration.registerEventBridge();
         MarieApiRegistries.freezeModOnlyRegistriesAfterCommonSetup();
         for (SourceTriggerListener handler : TriggerHandlerRegistry.getAll()) {
             handler.register(NeoForge.EVENT_BUS);

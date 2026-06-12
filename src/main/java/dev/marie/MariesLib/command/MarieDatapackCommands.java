@@ -8,6 +8,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
+import dev.marie.MariesLib.api.ApiStatus;
 import dev.marie.MariesLib.core.MariesLib;
 import dev.marie.MariesLib.data.DatapackDiagnostic;
 import dev.marie.MariesLib.data.DatapackDiagnostics;
@@ -30,6 +31,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
+@ApiStatus.Internal
 final class MarieDatapackCommands {
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();

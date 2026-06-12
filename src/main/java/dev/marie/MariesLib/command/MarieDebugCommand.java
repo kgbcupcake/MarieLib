@@ -3,6 +3,7 @@ package dev.marie.MariesLib.command;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import dev.marie.MariesLib.api.ApiStatus;
 import dev.marie.MariesLib.classification.ClassificationTrace;
 import dev.marie.MariesLib.classification.ClassificationTraceFormatter;
 import dev.marie.MariesLib.classification.ClassificationTraceStep;
@@ -28,6 +29,7 @@ import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
+@ApiStatus.Internal
 public final class MarieDebugCommand {
 
     private static final int CACHE_MAX = 2048;

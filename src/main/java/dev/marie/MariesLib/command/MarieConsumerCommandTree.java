@@ -1,5 +1,6 @@
 package dev.marie.MariesLib.command;
 
+import dev.marie.MariesLib.api.ApiStatus;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.FloatArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
@@ -7,6 +8,7 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
 
+@ApiStatus.Internal
 final class MarieConsumerCommandTree {
 
     private MarieConsumerCommandTree() {}

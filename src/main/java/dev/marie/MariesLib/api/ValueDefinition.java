@@ -155,6 +155,7 @@ public final class ValueDefinition {
     /**
      * Builder for constructing {@link ValueDefinition} instances.
      */
+    @ApiStatus.Stable
     public static final class Builder {
 
         private final String id;

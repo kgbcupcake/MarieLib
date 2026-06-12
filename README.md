@@ -1,4 +1,4 @@
-![MariesLib Banner](Assets/MariesLib_Banner.png)
+![MariesLib Banner](Assets/MariesLib_banner.png)
 
 I kept rebuilding the same plumbing in every Marie mod, like registries, compat discovery, source
 classification, caching, JSON helpers. It worked, but it was duplicated everywhere and painful

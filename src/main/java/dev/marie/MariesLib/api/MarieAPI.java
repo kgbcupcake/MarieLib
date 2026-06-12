@@ -68,6 +68,7 @@ public final class MarieAPI {
      * @return the player's current aggregate level
      * @throws IllegalStateException if the value system is not initialized
      */
+    @ApiStatus.Stable
     public static float getAggregateLevel(Player player) {
         if (player == null) {
             return 0f;
@@ -87,6 +88,7 @@ public final class MarieAPI {
      * @return the value level as a normalized float (0.0 to 1.0),
      *         or {@code -1.0f} if the value key is not recognized
      */
+    @ApiStatus.Stable
     public static float getValueLevel(Player player, String valueKey) {
         if (player == null) {
             return -1.0f;
@@ -106,6 +108,7 @@ public final class MarieAPI {
      * @return an {@link ApplicationHistoryView} for the given player
      * @throws IllegalStateException if the value system is not initialized
      */
+    @ApiStatus.Stable
     public static ApplicationHistoryView getApplicationHistory(Player player) {
         if (player == null) {
             return EmptyApplicationHistoryView.INSTANCE;
@@ -191,6 +194,7 @@ public final class MarieAPI {
      * @throws IllegalStateException    if called after initialization is complete
      * @throws IllegalArgumentException if a value with the same id already exists
      */
+    @ApiStatus.Stable
     public static void registerValue(ValueDefinition definition) {
         MarieAPIState.assertRegistrationAllowed("registerValue");
         MarieLibRegistrationDelegate delegate = MarieLibContext.get().registrationDelegate();
@@ -223,6 +227,7 @@ public final class MarieAPI {
      * @param amount      the value contribution amount per consumption
      * @throws IllegalArgumentException if the value key is not registered
      */
+    @ApiStatus.Stable
     public static void registerSourceClassification(ResourceLocation sourceId, String valueKey, float amount) {
         MarieAPIState.assertRegistrationAllowed("registerSourceClassification");
         dev.marie.MariesLib.util.MarieValidation.requireNonNullId(sourceId, "MarieAPI.registerSourceClassification");
@@ -262,6 +267,7 @@ public final class MarieAPI {
      * @param definition the effect definition describing the trigger and effect
      * @throws IllegalArgumentException if the referenced value or effect doesn't exist
      */
+    @ApiStatus.Stable
     public static void registerCustomEffect(ThresholdEffect definition) {
         MarieAPIState.assertRegistrationAllowed("registerCustomEffect");
         MarieLibRegistrationDelegate delegate = MarieLibContext.get().registrationDelegate();
@@ -291,6 +297,7 @@ public final class MarieAPI {
      *
      * @param definition the compat definition with source-to-value mappings
      */
+    @ApiStatus.Stable
     public static void registerCompatEntry(CompatDefinition definition) {
         MarieAPIState.assertRegistrationAllowed("registerCompatEntry");
         dev.marie.MariesLib.compat.ModCompat.registerExternal(definition);
@@ -318,6 +325,7 @@ public final class MarieAPI {
      * @param definition the value synergy definition
      * @throws IllegalArgumentException if referenced values don't exist
      */
+    @ApiStatus.Stable
     public static void registerValueSynergy(SynergyDefinition definition) {
         MarieAPIState.assertRegistrationAllowed("registerValueSynergy");
         SynergyRegistry.registerValueSynergy(definition);
@@ -339,6 +347,7 @@ public final class MarieAPI {
      *
      * @param definition the source synergy definition
      */
+    @ApiStatus.Stable
     public static void registerSourcePairSynergy(SourcePairSynergy definition) {
         MarieAPIState.assertRegistrationAllowed("registerSourcePairSynergy");
         SynergyRegistry.registerSourcePairSynergy(definition);
@@ -364,6 +373,7 @@ public final class MarieAPI {
      * @param definition the tracking profile definition with custom thresholds and bonuses
      * @throws IllegalArgumentException if a profile with the same id already exists
      */
+    @ApiStatus.Stable
     public static void registerTrackingProfile(ProfileDefinition definition) {
         MarieAPIState.assertRegistrationAllowed("registerTrackingProfile");
         ProfileRegistry.register(definition);
@@ -386,6 +396,7 @@ public final class MarieAPI {
      * @param definition the milestone definition
      * @throws IllegalArgumentException if a milestone with the same id already exists
      */
+    @ApiStatus.Stable
     public static void registerMilestone(MilestoneDefinition definition) {
         MarieAPIState.assertRegistrationAllowed("registerMilestone");
         MilestoneRegistry.register(definition);
@@ -411,6 +422,7 @@ public final class MarieAPI {
      *
      * @param hook the season hook implementation
      */
+    @ApiStatus.Stable
     public static void registerSeasonHook(MarieSeasonHook hook) {
         MarieAPIState.assertRegistrationAllowed("registerSeasonHook");
         SeasonHookRegistry.register(hook);
@@ -432,6 +444,7 @@ public final class MarieAPI {
      *
      * @param modifier the absorption modifier implementation
      */
+    @ApiStatus.Stable
     public static void registerAbsorptionModifier(AbsorptionModifier modifier) {
         MarieAPIState.assertRegistrationAllowed("registerAbsorptionModifier");
         AbsorptionModifierRegistry.register(modifier);
@@ -453,6 +466,7 @@ public final class MarieAPI {
      *
      * @param provider the report provider implementation
      */
+    @ApiStatus.Stable
     public static void registerReportProvider(ReportProvider provider) {
         MarieAPIState.assertRegistrationAllowed("registerReportProvider");
         ReportProviderRegistry.register(provider);

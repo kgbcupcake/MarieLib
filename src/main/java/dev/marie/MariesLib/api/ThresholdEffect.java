@@ -117,6 +117,7 @@ public final class ThresholdEffect {
     /**
      * Builder for constructing {@link ThresholdEffect} instances.
      */
+    @ApiStatus.Stable
     public static final class Builder {
 
         private String valueKey;
