@@ -1,6 +1,7 @@
 package dev.marie.MariesLib.core;
 
 import dev.marie.MariesLib.api.ApiStatus;
+import dev.marie.MariesLib.api.ValueModifierContext;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.fml.ModList;
 
@@ -26,22 +27,15 @@ public final class KubeIntegration {
         invokeStatic(EVENT_BRIDGE, "register");
     }
 
-    public static float applyValueDeltaModifier(
-            String playerId,
-            String itemId,
-            String valueKey,
-            float delta
-    ) {
+    public static float applyValueDeltaModifier(ValueModifierContext ctx, float delta) {
         if (!PRESENT) {
             return delta;
         }
         Object result = invokeStatic(
                 PIPELINE_HOOKS,
                 "applyValueDeltaModifier",
-                new Class<?>[] {String.class, String.class, String.class, float.class},
-                playerId,
-                itemId,
-                valueKey,
+                new Class<?>[] {ValueModifierContext.class, float.class},
+                ctx,
                 delta
         );
         return result instanceof Float value ? value : delta;

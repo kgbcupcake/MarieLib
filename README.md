@@ -299,4 +299,8 @@ LGPL-3.0-only
 
 - [Modrinth](https://modrinth.com/mod/marieslib)
 - [GitHub](https://github.com/kgbcupcake)
+- [API.md](API.md)
+- [ARCHITECTURE.md](ARCHITECTURE.md)
+- [PHILOSOPHY.md](PHILOSOPHY.md)
+- [RoadMap.md](RoadMap.md)
 - [Changelog](CHANGELOG.md)

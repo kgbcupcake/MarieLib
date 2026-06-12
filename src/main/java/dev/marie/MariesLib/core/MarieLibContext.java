@@ -18,6 +18,7 @@ import com.google.gson.JsonObject;
 
 import dev.marie.MariesLib.api.ApiStatus;
 import dev.marie.MariesLib.api.ValueDefinition;
+import dev.marie.MariesLib.api.ValueModifierContext;
 import dev.marie.MariesLib.api.ValueSourceTrigger;
 import dev.marie.MariesLib.api.registry.ValueRegistry;
 import dev.marie.MariesLib.config.MariesLibConfigBridge;
@@ -126,6 +127,7 @@ public final class MarieLibContext implements MarieLibSettings, IMarieLibConfig 
     private final MarieLibRegistrationDelegate registrationDelegate;
     private final Runnable cacheInvalidatedHook;
     private final Consumer<MinecraftServer> reloadBroadcastHook;
+    private final BiFunction<ValueModifierContext, Float, Float> postValueModifierHook;
 
     private MarieLibContext(Builder builder) {
         this.modId = builder.modId;
@@ -183,6 +185,7 @@ public final class MarieLibContext implements MarieLibSettings, IMarieLibConfig 
         this.registrationDelegate = builder.registrationDelegate;
         this.cacheInvalidatedHook = builder.cacheInvalidatedHook;
         this.reloadBroadcastHook = builder.reloadBroadcastHook;
+        this.postValueModifierHook = builder.postValueModifierHook;
     }
 
     @ApiStatus.Stable
@@ -513,6 +516,11 @@ public final class MarieLibContext implements MarieLibSettings, IMarieLibConfig 
         return reloadBroadcastHook;
     }
 
+    @ApiStatus.Internal
+    public float applyPostValueModifier(ValueModifierContext ctx, float amount) {
+        return postValueModifierHook.apply(ctx, amount);
+    }
+
     @Nullable
     @ApiStatus.Internal
     public MarieLibDataProvider dataProvider() {
@@ -675,6 +683,7 @@ public final class MarieLibContext implements MarieLibSettings, IMarieLibConfig 
         private MarieLibRegistrationDelegate registrationDelegate;
         private Runnable cacheInvalidatedHook = () -> {};
         private Consumer<MinecraftServer> reloadBroadcastHook = server -> {};
+        private BiFunction<ValueModifierContext, Float, Float> postValueModifierHook = (ctx, amount) -> amount;
 
         private Builder(String modId) {
             this.modId = modId;
@@ -759,6 +768,11 @@ public final class MarieLibContext implements MarieLibSettings, IMarieLibConfig 
         @ApiStatus.Experimental
         public Builder onReloadBroadcast(Consumer<MinecraftServer> hook) {
             this.reloadBroadcastHook = hook != null ? hook : server -> {};
+            return this;
+        }
+        @ApiStatus.Experimental
+        public Builder postValueModifierHook(BiFunction<ValueModifierContext, Float, Float> hook) {
+            this.postValueModifierHook = hook != null ? hook : (ctx, amount) -> amount;
             return this;
         }
         @ApiStatus.Stable

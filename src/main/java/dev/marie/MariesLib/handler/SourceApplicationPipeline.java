@@ -12,6 +12,7 @@ import dev.marie.MariesLib.api.MarieEvents;
 import dev.marie.MariesLib.api.MarieSeasonHook;
 import dev.marie.MariesLib.api.AbsorptionModifier;
 import dev.marie.MariesLib.api.ValueDefinition;
+import dev.marie.MariesLib.api.ValueModifierContext;
 import dev.marie.MariesLib.api.ValueModifierEvent;
 import dev.marie.MariesLib.api.ValueSourceTrigger;
 import dev.marie.MariesLib.api.registry.AbsorptionModifierRegistry;
@@ -150,14 +151,11 @@ public final class SourceApplicationPipeline {
                 adjustedDelta = applySeasonalAbsorption(player, key, adjustedDelta);
                 adjustedDelta = applyAbsorptionModifiers(player, key, adjustedDelta);
                 adjustedDelta *= MarieAttributes.valueRegenMultiplier(player);
-                adjustedDelta = KubeIntegration.applyValueDeltaModifier(
-                        player.getUUID().toString(),
-                        sourceResourceId.toString(),
-                        key,
-                        adjustedDelta);
+                ValueModifierContext modifierCtx =
+                        ValueModifierContext.of(player, sourceResourceId, key);
+                adjustedDelta = KubeIntegration.applyValueDeltaModifier(modifierCtx, adjustedDelta);
 
-                ValueModifierEvent modifierEvent = new ValueModifierEvent(
-                        player, sourceResourceId, key, adjustedDelta);
+                ValueModifierEvent modifierEvent = new ValueModifierEvent(modifierCtx, adjustedDelta);
                 NeoForge.EVENT_BUS.post(modifierEvent);
 
                 if (modifierEvent.isCanceled()) {
@@ -165,9 +163,13 @@ public final class SourceApplicationPipeline {
                 }
 
                 float finalDelta = modifierEvent.getAmount();
+                finalDelta = MarieLibContext.get().applyPostValueModifier(modifierCtx, finalDelta);
                 if (!Float.isFinite(finalDelta)) {
                     MariesLib.LOGGER.warn("[MarieLib] non-finite finalDelta {} for player={} source={} value={} — skipping",
                             finalDelta, player.getName().getString(), sourceKey, key);
+                    continue;
+                }
+                if (finalDelta == 0f) {
                     continue;
                 }
                 finalApplied.put(key, finalDelta);
