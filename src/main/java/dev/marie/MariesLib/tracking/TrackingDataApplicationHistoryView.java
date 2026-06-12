@@ -1,7 +1,7 @@
 package dev.marie.MariesLib.tracking;
 
 import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.api.MemoryView;
+import dev.marie.MariesLib.api.ApplicationHistoryView;
 import dev.marie.MariesLib.core.IMarieLibConfig;
 import net.minecraft.resources.ResourceLocation;
 
@@ -10,14 +10,14 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Concrete implementation of {@link MemoryView} backed by a player's {@link TrackingData}.
+ * Concrete implementation of {@link ApplicationHistoryView} backed by a player's {@link TrackingData}.
  */
 @ApiStatus.Internal
-public final class TrackingDataMemoryView implements MemoryView {
+public final class TrackingDataApplicationHistoryView implements ApplicationHistoryView {
 
     private final TrackingData trackingData;
 
-    public TrackingDataMemoryView(TrackingData trackingData) {
+    public TrackingDataApplicationHistoryView(TrackingData trackingData) {
         this.trackingData = trackingData;
     }
 

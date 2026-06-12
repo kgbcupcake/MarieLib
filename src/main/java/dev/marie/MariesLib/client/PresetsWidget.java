@@ -1,6 +1,5 @@
 package dev.marie.MariesLib.client;
 
-import dev.marie.MariesLib.client.config.MariesLibClothConfig;
 import dev.marie.MariesLib.config.PresetRegistry;
 import dev.marie.MariesLib.config.PresetRegistry.ParsedPreset;
 import dev.marie.MariesLib.core.MariesLib;
@@ -68,7 +67,7 @@ public final class PresetsWidget extends TooltipListEntry<Object> {
                 } catch (Exception e) {
                     MariesLib.LOGGER.warn("[PresetsWidget] Failed to delete preset {}", preset.path(), e);
                 }
-                mc.setScreen(MariesLibClothConfig.create(reopenParent));
+                mc.setScreen(reopenParent);
             } else {
                 mc.setScreen(returnTo);
             }
@@ -83,7 +82,7 @@ public final class PresetsWidget extends TooltipListEntry<Object> {
         PresetRegistry.applyPreset(preset);
         Minecraft mc = Minecraft.getInstance();
         mc.getToasts().addToast(new PresetLoadedToast(preset.name()));
-        mc.setScreen(MariesLibClothConfig.create(reopenParent));
+        mc.setScreen(reopenParent);
     }
 
     @Override

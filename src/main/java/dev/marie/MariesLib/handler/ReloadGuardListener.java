@@ -1,6 +1,7 @@
 package dev.marie.MariesLib.handler;
 
 import dev.marie.MariesLib.api.ApiStatus;
+import dev.marie.MariesLib.core.MarieLibContext;
 import dev.marie.MariesLib.core.MariesLib;
 import dev.marie.MariesLib.data.MarieDataManager;
 import dev.marie.MariesLib.registry.RegistryLifecycleManager;
@@ -10,7 +11,7 @@ import net.neoforged.neoforge.event.AddReloadListenerEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 
 @ApiStatus.Internal
-public class ReloadHandler {
+public class ReloadGuardListener {
 
     private static volatile boolean reloadInProgress;
 
@@ -29,7 +30,9 @@ public class ReloadHandler {
     }
 
     public static void reloadAndBroadcast(MinecraftServer server) {
-        // ReloadHandler owns post-reload broadcast; extend here when client sync is needed.
+        if (MarieLibContext.isRegistered()) {
+            MarieLibContext.get().reloadBroadcastHook().accept(server);
+        }
     }
 
     @SubscribeEvent

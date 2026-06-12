@@ -1,7 +1,7 @@
 package dev.marie.MariesLib.runtime;
 
 import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.api.ISourceTriggerHandler;
+import dev.marie.MariesLib.api.SourceTriggerListener;
 import dev.marie.MariesLib.registry.ListRegistry;
 
 import java.util.List;
@@ -9,16 +9,16 @@ import java.util.List;
 @ApiStatus.Internal
 public final class TriggerHandlerRegistry {
 
-    private static final ListRegistry<ISourceTriggerHandler> REGISTRY =
+    private static final ListRegistry<SourceTriggerListener> REGISTRY =
             new ListRegistry<>("TriggerHandlerRegistry", null);
 
     private TriggerHandlerRegistry() {}
 
-    public static void register(ISourceTriggerHandler handler) {
+    public static void register(SourceTriggerListener handler) {
         REGISTRY.register(handler);
     }
 
-    public static List<ISourceTriggerHandler> getAll() {
+    public static List<SourceTriggerListener> getAll() {
         return REGISTRY.values();
     }
 

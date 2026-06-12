@@ -2,6 +2,48 @@
 
 <!-- markdownlint-disable MD013 -->
 
+## [ MariesLib 2.0.0 ] 2026-6-11
+
+Library purification release. MariesLib is now a domain-agnostic infrastructure library.
+All gameplay balance configuration has been removed from the library and moved to consuming mods.
+
+### Breaking Changes
+
+- **Config ownership**: All gameplay settings (memory, thresholds, decay, effects, modules, presets) removed from `config/marieslib.cfg`. Consuming mods must now own their balance configuration.
+- **`ModuleCache` → `FeatureFlagCache`**: Consuming mods call `FeatureFlagCache.sync(MarieModFeatureFlags)` after config changes.
+- **`IMarieLibConfig` → `MarieLibSettings`**: Library settings interface slimmed to scanner and debug only.
+- **`TrackingMemoryConfig` → `DiminishingReturnsConfig`**: Renamed for clarity.
+- **Handler renames**: `ValueDecayHandler` → `ValueDecayListener`, `ValueEffectsHandler` → `ValueEffectsListener`, `SleepBonusHandler` → `RestCycleListener`, `RecipeServerHandler` → `RecipeTriggerListener`, `TrackingPlayerEvents` → `PlayerTrackingLifecycle`, `ReloadHandler` → `ReloadGuardListener`, `HandlerSupport` → `DiminishingReturnsSupport`.
+- **`ISourceTriggerHandler` → `SourceTriggerListener`**: Interface renamed.
+- **Multi-mod registry**: `MarieModRegistry` replaces single-instance `MarieLibContext`.
+- **Config screen**: Library screen shows Overview, Scanner, Diagnostics, and Tools tabs. Presets tab removed (owned by consuming mods).
+- **Command namespace split**: All toolkit commands (`diagnostics`, `scan`, `scan_analysis`, `schema`, `reload`, `invalidatecache`, `repair_generated_datapack`, `debug cache/held/<player>`, `nbt`, `get_unassigned`, `report`, `value`, `set`, `reset`, `profile`) now register only under each consumer mod's namespace (e.g., `/nourished`). New library-only commands (`status`, `mods`, `api`, `registries`) are on `/marieslib` and `/marie`.
+- **Presets/Import-Export**: Path resolution uses consuming mod's modId. Delete stale `config/marieslib/presets/` files.
+- **Domain hardcoding removed**: No references to `nourished`, `nutrition`, `heavy_source`, `light_source` in library source.
+
+### Added
+
+- `MarieModRegistry` — multi-mod registration with `getAll()`, `getPrimary()`, `get(modId)`
+- `MarieModFeatureFlags` record — consuming mods supply feature flag snapshots
+- `FeatureFlagCache` — hot-path feature flag reads
+- `MarieLibSettings` — library-only settings interface (scanner + debug)
+- Framework-only config tabs: Overview (read-only status), Scanner, Diagnostics, Tools (library command cheat sheet)
+- `/marieslib` and `/marie` library-only commands: `status`, `mods`, `api`, `registries`
+- All toolkit commands register under consumer mod namespace (e.g., `/nourished scan`, `/nourished diagnostics`)
+
+### Migration Guide
+
+1. Move all gameplay config (modules, memory, thresholds, decay, effects, presets) to your mod's own config file.
+2. Implement `MarieLibContext.Builder.featureFlags(Supplier<MarieModFeatureFlags>)` and call `FeatureFlagCache.sync()` on load/save.
+3. Register your own `configScreenFactory` with full Cloth Config categories for your mod's settings (including presets if desired).
+4. Replace `IMarieLibConfig` references with `MarieLibSettings` (scanner/debug only) or `MarieLibContext` (gameplay methods).
+5. Replace `ModuleCache.enableX` field accesses with `FeatureFlagCache.enableX()` method calls.
+6. Delete stale `config/marieslib/presets/*.json` files.
+7. Rename imports: `TrackingMemoryConfig` → `DiminishingReturnsConfig`, handler classes per above.
+8. Update documentation: all toolkit commands (`diagnostics`, `scan`, `reload`, etc.) are now under your mod's namespace only (e.g., `/nourished diagnostics`). Use `/marieslib status` for library health.
+
+---
+
 ## [ MariesLib 1.0.0 ] 2026-6-10
 
 Initial release. MariesLib is the shared infrastructure library extracted from Nourished so

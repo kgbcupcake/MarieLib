@@ -1,21 +1,21 @@
 package dev.marie.MariesLib.api.impl;
 
 import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.api.MemoryView;
+import dev.marie.MariesLib.api.ApplicationHistoryView;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.List;
 
 /**
- * Null-object {@link MemoryView} returned when API queries receive a null player
+ * Null-object {@link ApplicationHistoryView} returned when API queries receive a null player
  * or when the context provider is not registered.
  */
 @ApiStatus.Internal
-public final class EmptyMemoryView implements MemoryView {
+public final class EmptyApplicationHistoryView implements ApplicationHistoryView {
 
-    public static final EmptyMemoryView INSTANCE = new EmptyMemoryView();
+    public static final EmptyApplicationHistoryView INSTANCE = new EmptyApplicationHistoryView();
 
-    private EmptyMemoryView() {}
+    private EmptyApplicationHistoryView() {}
 
     @Override
     public List<ResourceLocation> getRecentSources() {

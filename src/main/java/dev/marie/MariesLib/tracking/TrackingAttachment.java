@@ -1,8 +1,8 @@
 package dev.marie.MariesLib.tracking;
 
 import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.api.MemoryView;
-import dev.marie.MariesLib.api.impl.EmptyMemoryView;
+import dev.marie.MariesLib.api.ApplicationHistoryView;
+import dev.marie.MariesLib.api.impl.EmptyApplicationHistoryView;
 import dev.marie.MariesLib.core.IMarieLibConfig;
 import dev.marie.MariesLib.core.MarieLibContext;
 import dev.marie.MariesLib.core.MariesLib;
@@ -112,12 +112,12 @@ public final class TrackingAttachment {
         return value != null ? value : -1.0f;
     }
 
-    public static MemoryView getSourceMemoryView(Player player) {
+    public static ApplicationHistoryView getApplicationHistoryView(Player player) {
         AttachmentType<TrackingData> type = attachmentType();
         if (type == null) {
-            return EmptyMemoryView.INSTANCE;
+            return EmptyApplicationHistoryView.INSTANCE;
         }
         TrackingData data = player.getData(type);
-        return new TrackingDataMemoryView(data);
+        return new TrackingDataApplicationHistoryView(data);
     }
 }

@@ -1,8 +1,9 @@
 package dev.marie.MariesLib.client.config;
 
+import java.util.Optional;
+
 import dev.marie.MariesLib.config.LockRegistry;
 import dev.marie.MariesLib.config.MariesLibConfigHolder;
-import dev.marie.MariesLib.config.MariesLibConfigKeys;
 import dev.marie.MariesLib.core.MariesLib;
 import me.shedaniel.clothconfig2.api.AbstractConfigListEntry;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
@@ -26,6 +27,10 @@ final class ClothConfigHelper {
         return Component.translatable(key(suffix));
     }
 
+    private static Component[] tooltip(String labelSuffix) {
+        return new Component[]{Component.translatable(key(labelSuffix + ".desc"))};
+    }
+
     static boolean shouldShow(String lockKey) {
         return !LockRegistry.isLocked(lockKey);
     }
@@ -40,8 +45,7 @@ final class ClothConfigHelper {
         return true;
     }
 
-    static void addBool(
-            ConfigCategory category,
+    static AbstractConfigListEntry<?> buildBool(
             ConfigEntryBuilder entryBuilder,
             String lockKey,
             String labelSuffix,
@@ -49,70 +53,18 @@ final class ClothConfigHelper {
             boolean defaultValue,
             java.util.function.Consumer<Boolean> save) {
         if (!shouldShow(lockKey)) {
-            return;
+            return null;
         }
         AbstractConfigListEntry<?> entry = entryBuilder.startBooleanToggle(t(labelSuffix), current)
                 .setDefaultValue(defaultValue)
+                .setTooltip(Optional.of(tooltip(labelSuffix)))
                 .setSaveConsumer(v -> { if (isEditable(lockKey)) save.accept(v); })
                 .build();
         entry.setEditable(isEditable(lockKey));
-        category.addEntry(entry);
+        return entry;
     }
 
-    static void addInt(
-            ConfigCategory category,
-            ConfigEntryBuilder entryBuilder,
-            String lockKey,
-            String labelSuffix,
-            int current,
-            int defaultValue,
-            int min,
-            int max,
-            java.util.function.Consumer<Integer> save) {
-        if (!shouldShow(lockKey)) {
-            return;
-        }
-        var field = entryBuilder.startIntField(t(labelSuffix), current)
-                .setDefaultValue(defaultValue)
-                .setMin(min);
-        if (max < Integer.MAX_VALUE) {
-            field.setMax(max);
-        }
-        AbstractConfigListEntry<?> entry = field
-                .setSaveConsumer(v -> { if (isEditable(lockKey)) save.accept(v); })
-                .build();
-        entry.setEditable(isEditable(lockKey));
-        category.addEntry(entry);
-    }
-
-    static void addLong(
-            ConfigCategory category,
-            ConfigEntryBuilder entryBuilder,
-            String lockKey,
-            String labelSuffix,
-            long current,
-            long defaultValue,
-            long min,
-            long max,
-            java.util.function.Consumer<Long> save) {
-        if (!shouldShow(lockKey)) {
-            return;
-        }
-        var field = entryBuilder.startLongField(t(labelSuffix), current)
-                .setDefaultValue(defaultValue)
-                .setMin(min);
-        if (max < Long.MAX_VALUE / 2) {
-            field.setMax(max);
-        }
-        AbstractConfigListEntry<?> entry = field
-                .setSaveConsumer(v -> { if (isEditable(lockKey)) save.accept(v); })
-                .build();
-        entry.setEditable(isEditable(lockKey));
-        category.addEntry(entry);
-    }
-
-    static void addFloat(
-            ConfigCategory category,
+    static AbstractConfigListEntry<?> buildFloat(
             ConfigEntryBuilder entryBuilder,
             String lockKey,
             String labelSuffix,
@@ -122,23 +74,22 @@ final class ClothConfigHelper {
             float max,
             java.util.function.Consumer<Float> save) {
         if (!shouldShow(lockKey)) {
-            return;
+            return null;
         }
         var field = entryBuilder.startFloatField(t(labelSuffix), current)
                 .setDefaultValue(defaultValue)
-                .setMin(min);
+                .setMin(min)
+                .setTooltip(Optional.of(tooltip(labelSuffix)))
+                .setSaveConsumer(v -> { if (isEditable(lockKey)) save.accept(v); });
         if (max < Float.MAX_VALUE / 2f) {
             field.setMax(max);
         }
-        AbstractConfigListEntry<?> entry = field
-                .setSaveConsumer(v -> { if (isEditable(lockKey)) save.accept(v); })
-                .build();
+        AbstractConfigListEntry<?> entry = field.build();
         entry.setEditable(isEditable(lockKey));
-        category.addEntry(entry);
+        return entry;
     }
 
-    static void addDouble(
-            ConfigCategory category,
+    static AbstractConfigListEntry<?> buildDouble(
             ConfigEntryBuilder entryBuilder,
             String lockKey,
             String labelSuffix,
@@ -148,16 +99,17 @@ final class ClothConfigHelper {
             double max,
             java.util.function.Consumer<Double> save) {
         if (!shouldShow(lockKey)) {
-            return;
+            return null;
         }
         AbstractConfigListEntry<?> entry = entryBuilder.startDoubleField(t(labelSuffix), current)
                 .setDefaultValue(defaultValue)
                 .setMin(min)
                 .setMax(max)
+                .setTooltip(Optional.of(tooltip(labelSuffix)))
                 .setSaveConsumer(v -> { if (isEditable(lockKey)) save.accept(v); })
                 .build();
         entry.setEditable(isEditable(lockKey));
-        category.addEntry(entry);
+        return entry;
     }
 
     static MariesLibConfigHolder holder() {

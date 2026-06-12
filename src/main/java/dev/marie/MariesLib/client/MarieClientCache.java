@@ -2,7 +2,7 @@ package dev.marie.MariesLib.client;
 
 import dev.marie.MariesLib.core.IMarieLibConfig;
 import dev.marie.MariesLib.tracking.TrackingData;
-import dev.marie.MariesLib.tracking.TrackingMemoryConfig;
+import dev.marie.MariesLib.tracking.DiminishingReturnsConfig;
 import net.minecraft.util.Mth;
 
 import java.util.List;
@@ -62,7 +62,7 @@ public class MarieClientCache {
     /** Skip recording flashes on the first sync (login) so zeros-to-values does not flash every bar. */
     private static boolean firstClientSync = true;
 
-    private static TrackingMemoryConfig injectClientMemoryConfig() {
+    private static DiminishingReturnsConfig injectClientMemoryConfig() {
         return IMarieLibConfig.get().trackingMemoryConfig();
     }
 

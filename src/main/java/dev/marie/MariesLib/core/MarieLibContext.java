@@ -20,14 +20,16 @@ import dev.marie.MariesLib.api.ApiStatus;
 import dev.marie.MariesLib.api.ValueDefinition;
 import dev.marie.MariesLib.api.ValueSourceTrigger;
 import dev.marie.MariesLib.api.registry.ValueRegistry;
+import dev.marie.MariesLib.config.MariesLibConfigBridge;
 import dev.marie.MariesLib.config.PresetRegistry;
 import dev.marie.MariesLib.runtime.SourceValueRegistry;
 import dev.marie.MariesLib.util.MarieRegistryUtils;
 import dev.marie.MariesLib.scan.ResolutionStageHandler;
 import dev.marie.MariesLib.tracking.TrackingData;
-import dev.marie.MariesLib.tracking.TrackingMemoryConfig;
+import dev.marie.MariesLib.tracking.DiminishingReturnsConfig;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
@@ -42,7 +44,7 @@ import net.minecraft.world.level.Level;
  * safe lib-owned default. Use {@link MariesLibBootstrap#attach} for zero-config wiring.</p>
  */
 @ApiStatus.Stable
-public final class MarieLibContext implements IMarieLibConfig {
+public final class MarieLibContext implements MarieLibSettings, IMarieLibConfig {
 
     public record SourceDelta(float total, Map<String, Float> values) {}
 
@@ -55,7 +57,7 @@ public final class MarieLibContext implements IMarieLibConfig {
          *                    non-item triggers)
          * @param level       the current level
          * @param payload     the numeric payload from the trigger (consuming
-         *                    mod defines what this means — could be nutrition,
+         *                    mod defines what this means — could be energy,
          *                    EMC value, damage dealt, anything)
          * @param matchedBars the pre-resolved value bar weights for this item
          * @return a SourceDelta with total and per-value amounts
@@ -89,7 +91,7 @@ public final class MarieLibContext implements IMarieLibConfig {
     private final Function<Object, Object> exportScreenFactory;
     private final Function<Object, Object> importScreenFactory;
     private final Consumer<Map<String, Float>> onValuesDeltaReceived;
-    private final Supplier<TrackingMemoryConfig> clientMemoryConfigProvider;
+    private final Supplier<DiminishingReturnsConfig> clientMemoryConfigProvider;
     private final Supplier<JsonObject> configExporter;
     private final Consumer<JsonObject> configImporter;
     private final Supplier<PresetRegistry.PresetValues> currentConfigPresetValues;
@@ -106,7 +108,7 @@ public final class MarieLibContext implements IMarieLibConfig {
     private final BiPredicate<ServerPlayer, ValueSourceTrigger> lightSourceBlocker;
     private final DoubleSupplier multiValueInheritanceThreshold;
     private final ResolutionStageHandler[] runtimeResolverStages;
-    private final Supplier<TrackingMemoryConfig> trackingMemoryConfigProvider;
+    private final Supplier<DiminishingReturnsConfig> trackingMemoryConfigProvider;
     private final BiFunction<ItemStack, Level, Map<String, Float>> sourceValueResolver;
     private final SourceDeltaResolver sourceDeltaResolver;
     private final BiConsumer<ServerPlayer, TrackingData> effectApplier;
@@ -121,6 +123,8 @@ public final class MarieLibContext implements IMarieLibConfig {
     private final MarieLibDataProvider dataProvider;
     @Nullable
     private final MarieLibRegistrationDelegate registrationDelegate;
+    private final Runnable cacheInvalidatedHook;
+    private final Consumer<MinecraftServer> reloadBroadcastHook;
 
     private MarieLibContext(Builder builder) {
         this.modId = builder.modId;
@@ -176,10 +180,13 @@ public final class MarieLibContext implements IMarieLibConfig {
         this.syncOnJoin = builder.syncOnJoin;
         this.dataProvider = builder.dataProvider;
         this.registrationDelegate = builder.registrationDelegate;
+        this.cacheInvalidatedHook = builder.cacheInvalidatedHook;
+        this.reloadBroadcastHook = builder.reloadBroadcastHook;
     }
 
     public static void register(MarieLibContext context) {
         instance = context;
+        MarieModRegistry.register(context);
     }
 
     public static MarieLibContext get() {
@@ -230,62 +237,50 @@ public final class MarieLibContext implements IMarieLibConfig {
         return sourceItemFilter.get();
     }
 
-    @Override
     public long memoryWindowMinutes() {
         return memoryWindowMinutes.get();
     }
 
-    @Override
     public int memoryWindowCount() {
         return memoryWindowCount.get();
     }
 
-    @Override
     public long streakWindowMs() {
         return streakWindowMs.get();
     }
 
-    @Override
     public float streakWeight() {
         return streakWeight.get();
     }
 
-    @Override
     public float debtThreshold() {
         return debtThreshold.get();
     }
 
-    @Override
     public float debtDecayRate() {
         return debtDecayRate.get();
     }
 
-    @Override
     public float diminishingSteepness() {
         return diminishingSteepness.get();
     }
 
-    @Override
     public float diminishingMidpoint() {
         return diminishingMidpoint.get();
     }
 
-    @Override
     public boolean debugMemoryLogging() {
         return debugMemoryLogging.get();
     }
 
-    @Override
     public float excessThreshold() {
         return excessThreshold.get();
     }
 
-    @Override
     public float lowThreshold() {
         return lowThreshold.get();
     }
 
-    @Override
     public float criticalThreshold() {
         return criticalThreshold.get();
     }
@@ -310,21 +305,18 @@ public final class MarieLibContext implements IMarieLibConfig {
         onValuesDeltaReceived.accept(delta);
     }
 
-    public TrackingMemoryConfig clientMemoryConfigProvider() {
+    public DiminishingReturnsConfig clientMemoryConfigProvider() {
         return clientMemoryConfigProvider.get();
     }
 
-    @Override
     public JsonObject configExporter() {
         return configExporter.get();
     }
 
-    @Override
     public void configImporter(JsonObject json) {
         configImporter.accept(json);
     }
 
-    @Override
     public PresetRegistry.PresetValues currentConfigPresetValues() {
         return currentConfigPresetValues.get();
     }
@@ -333,7 +325,6 @@ public final class MarieLibContext implements IMarieLibConfig {
         ensureBuiltInPresetsOnDisk.run();
     }
 
-    @Override
     public void applyPresetValues(PresetRegistry.PresetValues values) {
         applyPresetValues.accept(values);
     }
@@ -366,12 +357,7 @@ public final class MarieLibContext implements IMarieLibConfig {
      * Resolves a named tag role to a full tag path for this mod's domain.
      * The consuming mod maps well-known role keys to their actual tag paths.
      *
-     * Built-in role keys used by MarieLib internally:
-     *   "source_override"  — items that bypass scanner classification
-     *   "heavy_source"     — items the pipeline treats as heavy
-     *   "light_source"     — items the pipeline treats as light
-     *
-     * The consuming mod may register any additional roles it needs.
+     * The consuming mod may register any role keys it needs (e.g. "source_override").
      * Returns null if the role is not mapped, which means no tag filtering
      * is applied for that role.
      */
@@ -410,10 +396,9 @@ public final class MarieLibContext implements IMarieLibConfig {
         return runtimeResolverStages;
     }
 
-    @Override
-    public TrackingMemoryConfig trackingMemoryConfig() {
-        TrackingMemoryConfig cfg = trackingMemoryConfigProvider.get();
-        return cfg != null ? cfg : defaultTrackingMemoryConfig();
+    public DiminishingReturnsConfig trackingMemoryConfig() {
+        DiminishingReturnsConfig cfg = trackingMemoryConfigProvider.get();
+        return cfg != null ? cfg : defaultDiminishingReturnsConfig();
     }
 
     public BiFunction<ItemStack, Level, Map<String, Float>> sourceValueResolver() {
@@ -432,18 +417,15 @@ public final class MarieLibContext implements IMarieLibConfig {
         return effectClearer;
     }
 
-    @Override
     public int decayIntervalTicks() {
         return decayIntervalTicks.get();
     }
 
-    @Override
     public float criticalThresholdFor(String valueKey) {
         ValueDefinition def = ValueRegistry.get(valueKey);
         return def != null ? def.getCriticalThreshold() : criticalThreshold();
     }
 
-    @Override
     public boolean showJoinMessage() {
         return showJoinMessage.get();
     }
@@ -462,6 +444,16 @@ public final class MarieLibContext implements IMarieLibConfig {
 
     public Consumer<ServerPlayer> syncOnJoin() {
         return syncOnJoin;
+    }
+
+    @ApiStatus.Experimental
+    public Runnable cacheInvalidatedHook() {
+        return cacheInvalidatedHook;
+    }
+
+    @ApiStatus.Experimental
+    public Consumer<MinecraftServer> reloadBroadcastHook() {
+        return reloadBroadcastHook;
     }
 
     @Nullable
@@ -493,8 +485,8 @@ public final class MarieLibContext implements IMarieLibConfig {
         return new Builder(modId);
     }
 
-    private static TrackingMemoryConfig defaultTrackingMemoryConfig() {
-        return new TrackingMemoryConfig(60L, 1.2, 3.0, 0.2, 0.5);
+    private static DiminishingReturnsConfig defaultDiminishingReturnsConfig() {
+        return new DiminishingReturnsConfig(60L, 1.2, 3.0, 0.2, 0.5);
     }
 
     private static Map<String, Float> defaultSourceValueResolver(ItemStack stack, Level level) {
@@ -580,14 +572,14 @@ public final class MarieLibContext implements IMarieLibConfig {
         private Function<Object, Object> exportScreenFactory = parent -> null;
         private Function<Object, Object> importScreenFactory = parent -> null;
         private Consumer<Map<String, Float>> onValuesDeltaReceived = delta -> {};
-        private Supplier<TrackingMemoryConfig> clientMemoryConfigProvider = MarieLibContext::defaultTrackingMemoryConfig;
-        private Supplier<JsonObject> configExporter = JsonObject::new;
-        private Consumer<JsonObject> configImporter = json -> {};
+        private Supplier<DiminishingReturnsConfig> clientMemoryConfigProvider = MarieLibContext::defaultDiminishingReturnsConfig;
+        private Supplier<JsonObject> configExporter = MariesLibConfigBridge::buildExportRoot;
+        private Consumer<JsonObject> configImporter = MariesLibConfigBridge::applyImport;
         private Supplier<PresetRegistry.PresetValues> currentConfigPresetValues = PresetRegistry.PresetValues::empty;
         private Runnable ensureBuiltInPresetsOnDisk = () -> {};
         private Consumer<PresetRegistry.PresetValues> applyPresetValues = values -> {};
         private Runnable enableAllEffectsForPresets = () -> {};
-        private Function<String, String> valueIconProvider = key -> "minecraft:apple";
+        private Function<String, String> valueIconProvider = key -> "minecraft:barrier";
         private BiFunction<ItemStack, Player, Map<String, Float>> tooltipValueResolver =
                 MarieLibContext::defaultTooltipValueResolver;
         private Supplier<TrackingData> clientTrackingDataProvider = TrackingData::new;
@@ -600,7 +592,7 @@ public final class MarieLibContext implements IMarieLibConfig {
                 (player, trigger) -> false;
         private DoubleSupplier multiValueInheritanceThreshold = () -> 0.20;
         private ResolutionStageHandler[] runtimeResolverStages = new ResolutionStageHandler[0];
-        private Supplier<TrackingMemoryConfig> trackingMemoryConfigProvider = MarieLibContext::defaultTrackingMemoryConfig;
+        private Supplier<DiminishingReturnsConfig> trackingMemoryConfigProvider = MarieLibContext::defaultDiminishingReturnsConfig;
         private BiFunction<ItemStack, Level, Map<String, Float>> sourceValueResolver =
                 MarieLibContext::defaultSourceValueResolver;
         private SourceDeltaResolver sourceDeltaResolver = MarieLibContext::defaultSourceDeltaResolver;
@@ -616,6 +608,8 @@ public final class MarieLibContext implements IMarieLibConfig {
         private MarieLibDataProvider dataProvider;
         @Nullable
         private MarieLibRegistrationDelegate registrationDelegate;
+        private Runnable cacheInvalidatedHook = () -> {};
+        private Consumer<MinecraftServer> reloadBroadcastHook = server -> {};
 
         private Builder(String modId) {
             this.modId = modId;
@@ -647,7 +641,7 @@ public final class MarieLibContext implements IMarieLibConfig {
         @ApiStatus.Stable
         public Builder importScreenFactory(Function<Object, Object> f) { this.importScreenFactory = f; return this; }
         public Builder onValuesDeltaReceived(Consumer<Map<String, Float>> c) { this.onValuesDeltaReceived = c; return this; }
-        public Builder clientMemoryConfigProvider(Supplier<TrackingMemoryConfig> s) { this.clientMemoryConfigProvider = s; return this; }
+        public Builder clientMemoryConfigProvider(Supplier<DiminishingReturnsConfig> s) { this.clientMemoryConfigProvider = s; return this; }
         public Builder configExporter(Supplier<JsonObject> s) { this.configExporter = s; return this; }
         public Builder configImporter(Consumer<JsonObject> c) { this.configImporter = c; return this; }
         public Builder currentConfigPresetValues(Supplier<PresetRegistry.PresetValues> s) { this.currentConfigPresetValues = s; return this; }
@@ -677,7 +671,7 @@ public final class MarieLibContext implements IMarieLibConfig {
         public Builder multiValueInheritanceThreshold(DoubleSupplier s) { this.multiValueInheritanceThreshold = s; return this; }
         @ApiStatus.Experimental
         public Builder runtimeResolverStages(ResolutionStageHandler[] stages) { this.runtimeResolverStages = stages; return this; }
-        public Builder trackingMemoryConfigProvider(Supplier<TrackingMemoryConfig> s) { this.trackingMemoryConfigProvider = s; return this; }
+        public Builder trackingMemoryConfigProvider(Supplier<DiminishingReturnsConfig> s) { this.trackingMemoryConfigProvider = s; return this; }
         @ApiStatus.Experimental
         public Builder sourceValueResolver(BiFunction<ItemStack, Level, Map<String, Float>> f) { this.sourceValueResolver = f; return this; }
         @ApiStatus.Experimental
@@ -697,6 +691,16 @@ public final class MarieLibContext implements IMarieLibConfig {
         public Builder trackingDeltaSyncer(BiConsumer<ServerPlayer, TrackingData> c) { this.trackingDeltaSyncer = c; return this; }
         @ApiStatus.Stable
         public Builder syncOnJoin(Consumer<ServerPlayer> c) { this.syncOnJoin = c; return this; }
+        @ApiStatus.Experimental
+        public Builder onCacheInvalidated(Runnable hook) {
+            this.cacheInvalidatedHook = hook != null ? hook : () -> {};
+            return this;
+        }
+        @ApiStatus.Experimental
+        public Builder onReloadBroadcast(Consumer<MinecraftServer> hook) {
+            this.reloadBroadcastHook = hook != null ? hook : server -> {};
+            return this;
+        }
         @ApiStatus.Stable
         public Builder dataProvider(MarieLibDataProvider p) { this.dataProvider = p; return this; }
         @Deprecated

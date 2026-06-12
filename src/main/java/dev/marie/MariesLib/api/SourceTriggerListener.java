@@ -14,7 +14,7 @@ import net.neoforged.bus.api.IEventBus;
  * <p>Register via {@link MarieAPI#registerTriggerHandler}.</p>
  */
 @ApiStatus.Stable
-public interface ISourceTriggerHandler {
+public interface SourceTriggerListener {
 
     /**
      * Called once during server-side event bus registration.

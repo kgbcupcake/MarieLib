@@ -111,10 +111,12 @@ tasks.named('processResources', ProcessResources).configure {
     }
 
     doLast {
+        def versionFile = file("${sourceSets.main.output.resourcesDir}/.gitversion-${mod_id}")
+        versionFile.parentFile.mkdirs()
         try {
-            file("${sourceSets.main.output.resourcesDir}/.gitversion-${mod_id}").text = 'git log "-1" "--format=%h"'.execute().in.text.trim()
+            versionFile.text = 'git log "-1" "--format=%h"'.execute(null, project.projectDir).in.text.trim()
         } catch (Exception ignored) {
-            file("${sourceSets.main.output.resourcesDir}/.gitversion-${mod_id}").text = 'unknown'
+            versionFile.text = 'unknown'
         }
     }
 }

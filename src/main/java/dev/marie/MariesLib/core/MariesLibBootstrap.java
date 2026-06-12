@@ -5,17 +5,17 @@ import java.util.function.Supplier;
 
 import dev.marie.MariesLib.color.ColorRegistry;
 import dev.marie.MariesLib.command.MarieCommand;
+import dev.marie.MariesLib.command.MariesLibCommand;
 import dev.marie.MariesLib.config.ModCompatRegistry;
-import dev.marie.MariesLib.config.ModuleCache;
 import dev.marie.MariesLib.config.PresetRegistry;
 import dev.marie.MariesLib.config.LockRegistry;
-import dev.marie.MariesLib.handler.RecipeServerHandler;
-import dev.marie.MariesLib.handler.ReloadHandler;
-import dev.marie.MariesLib.handler.SleepBonusHandler;
-import dev.marie.MariesLib.handler.TrackingPlayerEvents;
-import dev.marie.MariesLib.handler.ValueDecayHandler;
-import dev.marie.MariesLib.handler.ValueEffectsHandler;
-import dev.marie.MariesLib.api.ISourceTriggerHandler;
+import dev.marie.MariesLib.handler.RecipeTriggerListener;
+import dev.marie.MariesLib.handler.ReloadGuardListener;
+import dev.marie.MariesLib.handler.RestCycleListener;
+import dev.marie.MariesLib.handler.PlayerTrackingLifecycle;
+import dev.marie.MariesLib.handler.ValueDecayListener;
+import dev.marie.MariesLib.handler.ValueEffectsListener;
+import dev.marie.MariesLib.api.SourceTriggerListener;
 import dev.marie.MariesLib.registry.MarieApiRegistries;
 import dev.marie.MariesLib.runtime.TriggerHandlerRegistry;
 import dev.marie.MariesLib.registry.MarieAttributes;
@@ -98,7 +98,6 @@ public final class MariesLibBootstrap {
     private static void onCommonSetup(FMLCommonSetupEvent event) {
         event.enqueueWork(() -> {
             registerRegistries();
-            ModuleCache.refresh();
             IEventBus bus = attachedModEventBus;
             if (bus != null) {
                 registerHandlers(bus);
@@ -139,7 +138,6 @@ public final class MariesLibBootstrap {
         MarieAttributes.register(modEventBus);
         TrackingAttachment.register(modEventBus);
         registerRegistries();
-        ModuleCache.refresh();
         registerHandlers(modEventBus);
         RegistryLifecycleManager.loadAll();
         ModCompatRegistry.load();
@@ -167,15 +165,16 @@ public final class MariesLibBootstrap {
             return;
         }
         handlersRegistered = true;
-        NeoForge.EVENT_BUS.register(new ValueDecayHandler());
-        NeoForge.EVENT_BUS.register(new ValueEffectsHandler());
-        NeoForge.EVENT_BUS.register(new SleepBonusHandler());
-        NeoForge.EVENT_BUS.register(new TrackingPlayerEvents());
-        NeoForge.EVENT_BUS.register(new ReloadHandler());
-        NeoForge.EVENT_BUS.register(new RecipeServerHandler());
+        NeoForge.EVENT_BUS.register(new ValueDecayListener());
+        NeoForge.EVENT_BUS.register(new ValueEffectsListener());
+        NeoForge.EVENT_BUS.register(new RestCycleListener());
+        NeoForge.EVENT_BUS.register(new PlayerTrackingLifecycle());
+        NeoForge.EVENT_BUS.register(new ReloadGuardListener());
+        NeoForge.EVENT_BUS.register(new RecipeTriggerListener());
+        NeoForge.EVENT_BUS.register(new MariesLibCommand());
         NeoForge.EVENT_BUS.register(new MarieCommand());
         MarieApiRegistries.freezeModOnlyRegistriesAfterCommonSetup();
-        for (ISourceTriggerHandler handler : TriggerHandlerRegistry.getAll()) {
+        for (SourceTriggerListener handler : TriggerHandlerRegistry.getAll()) {
             handler.register(NeoForge.EVENT_BUS);
         }
     }

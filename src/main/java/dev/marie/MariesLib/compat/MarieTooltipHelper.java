@@ -12,7 +12,8 @@ import dev.marie.MariesLib.api.SourcePairSynergy;
 import dev.marie.MariesLib.api.MilestoneDefinition;
 import dev.marie.MariesLib.api.registry.MilestoneRegistry;
 import dev.marie.MariesLib.api.registry.SynergyRegistry;
-import dev.marie.MariesLib.config.ModuleCache;
+import dev.marie.MariesLib.client.MarieValueColors;
+import dev.marie.MariesLib.config.FeatureFlagCache;
 import dev.marie.MariesLib.core.IMarieLibConfig;
 import dev.marie.MariesLib.core.MarieLibContext;
 import dev.marie.MariesLib.tracking.TrackingData;
@@ -20,12 +21,10 @@ import dev.marie.MariesLib.util.MarieRegistryUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -142,14 +141,6 @@ public final class MarieTooltipHelper {
                     .withStyle(breakdown.finalMultiplier() < 1.0f ? ChatFormatting.GOLD : ChatFormatting.GREEN));
         }
 
-        if (decayEnabled() && sourceApplicationEnabled()) {
-            boolean bypassEligible =
-                    stackHasTagRole(stack, "light_source") && !stackHasTagRole(stack, "heavy_source");
-            if (bypassEligible) {
-                lines.add(Component.translatable(modId + ".tooltip.light_source").withStyle(ChatFormatting.GRAY));
-            }
-        }
-
         ResourceLocation thisItem = MarieRegistryUtils.itemKey(stack);
         if (synergiesEnabled()) {
             addSourceSynergyLine(lines, thisItem);
@@ -209,8 +200,7 @@ public final class MarieTooltipHelper {
         float projected = current + gain;
 
         if (beneficial) {
-            var def = MarieLibContext.get().valueDefinitionFor(key);
-            return def != null ? def.getColor() : 0xFFFFFFFF;
+            return MarieValueColors.baseColorArgb(key);
         }
         float excess = IMarieLibConfig.get().excessThreshold();
         float low = IMarieLibConfig.get().lowThreshold();
@@ -223,36 +213,19 @@ public final class MarieTooltipHelper {
     }
 
     private static boolean sourceTooltipsEnabled() {
-        return !ModuleCache.isInitialized() || ModuleCache.enableSourceTooltips;
+        return !FeatureFlagCache.isInitialized() || FeatureFlagCache.enableSourceTooltips();
     }
 
     private static boolean debugLoggingEnabled() {
-        return ModuleCache.isInitialized() && ModuleCache.enableDebugLogging;
-    }
-
-    private static boolean decayEnabled() {
-        return !ModuleCache.isInitialized() || ModuleCache.enableDecay;
-    }
-
-    private static boolean sourceApplicationEnabled() {
-        return !ModuleCache.isInitialized() || ModuleCache.enableSourceApplication;
+        return FeatureFlagCache.isInitialized() && FeatureFlagCache.enableDebugLogging();
     }
 
     private static boolean synergiesEnabled() {
-        return !ModuleCache.isInitialized() || ModuleCache.enableSynergies;
+        return !FeatureFlagCache.isInitialized() || FeatureFlagCache.enableSynergies();
     }
 
     private static boolean milestonesEnabled() {
-        return !ModuleCache.isInitialized() || ModuleCache.enableMilestones;
+        return !FeatureFlagCache.isInitialized() || FeatureFlagCache.enableMilestones();
     }
 
-    private static boolean stackHasTagRole(ItemStack stack, String role) {
-        String tagPath = MarieLibContext.get().resolveTagRole(role);
-        if (tagPath == null) {
-            return false;
-        }
-        TagKey<Item> tag = TagKey.create(Registries.ITEM,
-                ResourceLocation.fromNamespaceAndPath(MarieLibContext.get().modId(), tagPath));
-        return stack.is(tag);
-    }
 }

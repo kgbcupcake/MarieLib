@@ -1,6 +1,6 @@
 package dev.marie.MariesLib.client;
 
-import dev.marie.MariesLib.config.ModuleCache;
+import dev.marie.MariesLib.config.FeatureFlagCache;
 import dev.marie.MariesLib.core.MarieLibContext;
 import dev.marie.MariesLib.tracking.TrackingData;
 import net.minecraft.client.Minecraft;
@@ -51,7 +51,7 @@ public final class MarieToastManager {
 
         Minecraft mc = Minecraft.getInstance();
 
-        if (ModuleCache.enableEffects && ModuleCache.enableToasts && ModuleCache.enableCriticalToasts && mc.player != null) {
+        if (FeatureFlagCache.enableEffects() && FeatureFlagCache.enableToasts() && FeatureFlagCache.enableCriticalToasts() && mc.player != null) {
             float crit = ctx.criticalThreshold();
             float excess = ctx.excessThreshold();
             for (String key : keys) {

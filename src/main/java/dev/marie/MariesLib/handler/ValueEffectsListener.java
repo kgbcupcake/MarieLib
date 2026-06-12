@@ -2,7 +2,7 @@ package dev.marie.MariesLib.handler;
 
 import dev.marie.MariesLib.api.ApiStatus;
 import dev.marie.MariesLib.api.registry.EffectRegistry;
-import dev.marie.MariesLib.config.ModuleCache;
+import dev.marie.MariesLib.config.FeatureFlagCache;
 import dev.marie.MariesLib.core.MarieLibContext;
 import dev.marie.MariesLib.tracking.TrackingAttachment;
 import dev.marie.MariesLib.tracking.TrackingData;
@@ -13,7 +13,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 
 @ApiStatus.Internal
-public class ValueEffectsHandler {
+public class ValueEffectsListener {
 
     private static final int APPLY_INTERVAL_TICKS = 40;
 
@@ -21,11 +21,11 @@ public class ValueEffectsHandler {
     public void onPlayerTick(PlayerTickEvent.Post event) {
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
         if (player.level().getGameTime() % APPLY_INTERVAL_TICKS != 0) return;
-        if (ReloadHandler.isReloadInProgress()) return;
+        if (ReloadGuardListener.isReloadInProgress()) return;
         if (!TrackingAttachment.isRegistered()) return;
         if (!MarieLibContext.isRegistered()) return;
 
-        if (ModuleCache.enableEffects) {
+        if (FeatureFlagCache.enableEffects()) {
             TrackingData data = TrackingAttachment.getData(player);
             MarieLibContext.get().effectApplier().accept(player, data);
             for (String oldId : EffectRegistry.legacyCleanupEffectIds()) {

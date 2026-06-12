@@ -1,13 +1,13 @@
 package dev.marie.MariesLib.handler;
 
 import dev.marie.MariesLib.core.IMarieLibConfig;
-import dev.marie.MariesLib.tracking.TrackingMemoryConfig;
+import dev.marie.MariesLib.tracking.DiminishingReturnsConfig;
 
-final class HandlerSupport {
+final class DiminishingReturnsSupport {
 
-    private HandlerSupport() {}
+    private DiminishingReturnsSupport() {}
 
-    static TrackingMemoryConfig resolveMemoryConfig() {
+    static DiminishingReturnsConfig resolveMemoryConfig() {
         return IMarieLibConfig.get().trackingMemoryConfig();
     }
 

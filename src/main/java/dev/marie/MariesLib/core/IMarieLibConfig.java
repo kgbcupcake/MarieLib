@@ -4,27 +4,22 @@ import com.google.gson.JsonObject;
 
 import dev.marie.MariesLib.api.ApiStatus;
 import dev.marie.MariesLib.config.PresetRegistry;
-import dev.marie.MariesLib.tracking.TrackingMemoryConfig;
+import dev.marie.MariesLib.tracking.DiminishingReturnsConfig;
 
+/**
+ * @deprecated Use {@link MarieLibSettings} for scanner/debug settings,
+ * or {@link MarieLibContext#get()} for gameplay methods.
+ */
+@Deprecated
 @ApiStatus.Internal
-public interface IMarieLibConfig {
+public interface IMarieLibConfig extends MarieLibSettings {
 
     static IMarieLibConfig get() {
         if (MarieLibContext.isRegistered()) {
             return MarieLibContext.get();
         }
-        return MariesLibInternalContext.get();
+        return FallbackConfig.INSTANCE;
     }
-
-    String modId();
-
-    float scannerConfidenceSpreadThreshold();
-
-    float compositeRatioThreshold();
-
-    boolean scannerEnableRecipeInheritance();
-
-    boolean enableDebugLogging();
 
     long memoryWindowMinutes();
 
@@ -56,9 +51,7 @@ public interface IMarieLibConfig {
 
     boolean showJoinMessage();
 
-    double multiValueInheritanceThreshold();
-
-    TrackingMemoryConfig trackingMemoryConfig();
+    DiminishingReturnsConfig trackingMemoryConfig();
 
     JsonObject configExporter();
 

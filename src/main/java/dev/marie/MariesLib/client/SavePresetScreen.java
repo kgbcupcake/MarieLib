@@ -1,7 +1,6 @@
 package dev.marie.MariesLib.client;
 
-import dev.marie.MariesLib.client.config.MariesLibClothConfig;
-import dev.marie.MariesLib.config.MariesLibConfigHolder;
+import dev.marie.MariesLib.core.IMarieLibConfig;
 import dev.marie.MariesLib.config.PresetRegistry;
 import dev.marie.MariesLib.core.MariesLib;
 import net.minecraft.client.Minecraft;
@@ -68,12 +67,12 @@ public final class SavePresetScreen extends Screen {
         String author = mc.player != null ? mc.player.getGameProfile().getName() : "";
         String desc = descriptionBox.getValue().trim();
         try {
-            PresetRegistry.saveUserPreset(name, desc, author, MariesLibConfigHolder.get().toPresetValues());
+            PresetRegistry.saveUserPreset(name, desc, author, IMarieLibConfig.get().currentConfigPresetValues());
         } catch (Exception e) {
             MariesLib.LOGGER.warn("[SavePresetScreen] Failed to save preset", e);
             return;
         }
-        mc.setScreen(MariesLibClothConfig.create(reopenParent));
+        mc.setScreen(reopenParent);
     }
 
     @Override

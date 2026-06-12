@@ -14,7 +14,7 @@ public interface ValueSourceTrigger {
 
     /** The logical trigger category. */
     enum TriggerType {
-        ITEM_CONSUMED,   // Food/potion/item finish use
+        ITEM_CONSUMED,   // item use finished
         ITEM_CRAFTED,    // Player crafted an item
         BLOCK_BROKEN,    // Player broke a block
         ENTITY_KILLED,   // Player killed an entity
@@ -34,7 +34,7 @@ public interface ValueSourceTrigger {
 
     /**
      * Optional numeric payload.
-     * For ITEM_CONSUMED: nutrition (vanilla food points).
+     * For ITEM_CONSUMED: payload value from the triggering action.
      * For TRANSACTION: the transaction magnitude.
      * For others: 0.
      */
@@ -49,9 +49,9 @@ public interface ValueSourceTrigger {
 
     // ── Static factories ────────────────────────────────────────────
 
-    static ValueSourceTrigger itemConsumed(ResourceLocation itemId, double nutrition) {
+    static ValueSourceTrigger itemConsumed(ResourceLocation itemId, double payload) {
         return new SimpleValueSourceTrigger(
-                TriggerType.ITEM_CONSUMED, itemId.toString(), nutrition, "");
+                TriggerType.ITEM_CONSUMED, itemId.toString(), payload, "");
     }
 
     static ValueSourceTrigger itemCrafted(ResourceLocation itemId) {

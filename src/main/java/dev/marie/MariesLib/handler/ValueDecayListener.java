@@ -6,7 +6,7 @@ import dev.marie.MariesLib.api.MarieSeasonHook;
 import dev.marie.MariesLib.api.ValueDefinition;
 import dev.marie.MariesLib.api.registry.SeasonHookRegistry;
 import dev.marie.MariesLib.api.registry.ValueRegistry;
-import dev.marie.MariesLib.config.ModuleCache;
+import dev.marie.MariesLib.config.FeatureFlagCache;
 import dev.marie.MariesLib.core.IMarieLibConfig;
 import dev.marie.MariesLib.core.MarieLibContext;
 import dev.marie.MariesLib.tracking.TrackingAttachment;
@@ -18,17 +18,17 @@ import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 
 @ApiStatus.Internal
-public class ValueDecayHandler {
+public class ValueDecayListener {
 
     private static final java.util.concurrent.atomic.AtomicBoolean SNAPSHOT_WARN_ONCE =
             new java.util.concurrent.atomic.AtomicBoolean(false);
 
     @SubscribeEvent
     public void onPlayerTick(PlayerTickEvent.Post event) {
-        if (!ModuleCache.enableDecay) return;
-        if (ReloadHandler.isReloadInProgress()) return;
+        if (!FeatureFlagCache.enableDecay()) return;
+        if (ReloadGuardListener.isReloadInProgress()) return;
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
-        TrackingMemoryConfigOrSkip configOrSkip = resolveConfigOrSkip();
+        DiminishingReturnsConfigOrSkip configOrSkip = resolveConfigOrSkip();
         if (!TrackingAttachment.isRegistered()) return;
         TrackingData data = TrackingAttachment.getData(player);
         if (configOrSkip.skipDecay()) {
@@ -76,16 +76,16 @@ public class ValueDecayHandler {
     public void onServerStopped(net.neoforged.neoforge.event.server.ServerStoppedEvent event) {
         SNAPSHOT_WARN_ONCE.set(false);
         SourceApplicationPipeline.resetSnapshotWarnings();
-        HandlerSupport.resetMemoryConfigWarning();
+        DiminishingReturnsSupport.resetMemoryConfigWarning();
     }
 
-    private static TrackingMemoryConfigOrSkip resolveConfigOrSkip() {
-        return new TrackingMemoryConfigOrSkip(IMarieLibConfig.get().trackingMemoryConfig(), false);
+    private static DiminishingReturnsConfigOrSkip resolveConfigOrSkip() {
+        return new DiminishingReturnsConfigOrSkip(IMarieLibConfig.get().trackingMemoryConfig(), false);
     }
 
     private float applySeasonalDecayModifier(String valueKey, float baseRate) {
         var hooks = SeasonHookRegistry.getAll();
-        if (!ModuleCache.enableSeasonHooks || hooks.isEmpty()) {
+        if (!FeatureFlagCache.enableSeasonHooks() || hooks.isEmpty()) {
             return baseRate;
         }
         float rate = baseRate;
@@ -96,8 +96,8 @@ public class ValueDecayHandler {
         return rate;
     }
 
-    private record TrackingMemoryConfigOrSkip(
-            dev.marie.MariesLib.tracking.TrackingMemoryConfig config,
+    private record DiminishingReturnsConfigOrSkip(
+            dev.marie.MariesLib.tracking.DiminishingReturnsConfig config,
             boolean skipDecay
     ) {}
 }

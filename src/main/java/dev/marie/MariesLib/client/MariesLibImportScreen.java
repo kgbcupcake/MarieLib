@@ -69,7 +69,7 @@ public final class MariesLibImportScreen extends Screen {
         if (pendingRoot != null) {
             available.addAll(ImportExportManager.sectionsPresent(pendingRoot));
             for (ImportExportManager.Section section : available) {
-                Checkbox box = Checkbox.builder(Component.literal(section.jsonKey()), this.font)
+                Checkbox box = Checkbox.builder(section.label(), this.font)
                         .pos(this.width / 2 - 100, y)
                         .selected(true)
                         .build();

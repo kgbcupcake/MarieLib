@@ -14,7 +14,7 @@ import java.util.List;
  * variety, or implement diminishing-returns mechanics.</p>
  */
 @ApiStatus.Stable
-public interface MemoryView {
+public interface ApplicationHistoryView {
 
     /**
      * Returns an ordered list of recently consumed source identifiers,

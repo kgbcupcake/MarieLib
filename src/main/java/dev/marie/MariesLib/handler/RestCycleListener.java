@@ -3,7 +3,7 @@ package dev.marie.MariesLib.handler;
 import dev.marie.MariesLib.api.ApiStatus;
 import dev.marie.MariesLib.api.SleepBonusEvaluator;
 import dev.marie.MariesLib.api.registry.SleepBonusEvaluatorRegistry;
-import dev.marie.MariesLib.config.ModuleCache;
+import dev.marie.MariesLib.config.FeatureFlagCache;
 import dev.marie.MariesLib.core.MariesLib;
 import dev.marie.MariesLib.tracking.TrackingAttachment;
 import dev.marie.MariesLib.tracking.TrackingData;
@@ -16,12 +16,12 @@ import java.util.Collections;
 import java.util.Map;
 
 @ApiStatus.Internal
-public class SleepBonusHandler {
+public class RestCycleListener {
 
     @SubscribeEvent
     public void onWakeUp(PlayerWakeUpEvent event) {
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
-        if (!ModuleCache.enableSleepBonus) return;
+        if (!FeatureFlagCache.enableSleepBonus()) return;
         if (!TrackingAttachment.isRegistered()) return;
 
         var evaluators = SleepBonusEvaluatorRegistry.getAll();

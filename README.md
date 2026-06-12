@@ -4,10 +4,10 @@ I kept rebuilding the same plumbing in every Marie mod, like registries, compat 
 classification, caching, JSON helpers. It worked, but it was duplicated everywhere and painful
 to maintain.
 
-So I pulled it out into one library. **MariesLib** is the shared backbone behind mods like
-[Nourished](https://modrinth.com/mod/nourished). It handles the hard problems, auto-classifying
-thousands of items from modded content, three-tier compat with modpack overrides, player tracking
-with memory and decay, datapack tooling with validation, so consuming mods can focus on gameplay.
+So I pulled it out into one library. **MariesLib** is the shared backbone behind Marie mods.
+It handles the hard problems, auto-classifying thousands of items from modded content, three-tier
+compat with modpack overrides, player tracking with memory and decay, datapack tooling with
+validation, and more, so consuming mods can focus on gameplay.
 
 ---
 
@@ -23,13 +23,12 @@ Questions, suggestions, and development discussion are welcome.
 
 **Yes — if you use a Marie mod that depends on it.**
 
-Every Marie mod requires MariesLib as a **separate install**. [Nourished](https://modrinth.com/mod/nourished),
-for example, needs **MariesLib 1.0.0+** alongside it.
+Every Marie mod requires MariesLib as a **separate install**.
 
 Install both:
 
-- The Marie mod you want (e.g. Nourished)
-- MariesLib 1.0.0 or newer
+- The Marie mod you want
+- MariesLib 0.1.0-beta.1 or newer
 
 Most launchers resolve that dependency automatically. If a Marie mod fails to load, check that
 MariesLib is installed and up to date.
@@ -40,27 +39,23 @@ MariesLib is infrastructure, not a gameplay mod on its own. It powers the mods t
 
 ## The Scanner
 
-This is the auto-magic if everyone asks about.
+This is the auto-magic everyone asks about.
 
-Run the scanner and MariesLib analyzes **every source item** in your modpack — Farmer's Delight,
-Croptopia, Pam's HarvestCraft, Create, and hundreds more — then writes ready-to-use datapack files.
+Run the scanner and MariesLib analyzes **every source item** in your modpack — hundreds of mods,
+thousands of items — then writes ready-to-use datapack files.
 
-![Scanner Metrics](Assets/libs/scanner_metrics.png)
+The scanner handles massive item registries out of the box through:
 
-**4,625 foods classified.** 738 multi-nutrient items. 16% multi-nutrient rate. Zero ambiguous entries.
-
-Nourished never wrote classification rules for 90% of modded food — MariesLib figured it out through:
-
-- **Token stemming**: tomato/tomatoes/cherry_tomato all collapse to the same root
-- **Recipe inheritance**: if bread = grain, then toast = grain
-- **Multi-signal analysis**: item name + food properties + existing tags
+- **Token stemming**: variations of the same root word collapse to a single key
+- **Recipe inheritance**: if ingredient A = category X, then the crafted result inherits category X
+- **Multi-signal analysis**: item name + item properties + existing tags
 - **Confidence validation**: spread-based filtering, not hard thresholds
 
 The scanner outputs:
 
 - **Tag recommendations**: ready-to-paste JSON for `data/<modid>/tags/item/`
-- **Multi-nutrient reports**: items with secondary groups (e.g. "pizza = grains + proteins")
-- **Overlap matrices**: co-occurrence counts for multi-nutrient pairs
+- **Multi-value reports**: items with secondary value groups
+- **Overlap matrices**: co-occurrence counts for multi-value pairs
 - **Ambiguous item lists**: low-confidence hits flagged for manual review
 
 ---
@@ -68,35 +63,31 @@ The scanner outputs:
 ## Classification Traces
 
 Every classification decision is inspectable. See exactly which pipeline stage matched, what
-scores were considered, and why the final group was chosen.
+scores were considered, and why the final value group was chosen.
 
-![Classification Trace](Assets/libs/classification_trace.png)
+**Example trace** (a composite source item):
 
-**Ice Cream Sandwich** trace:
-
-- **Tag lookup** → dairy: 1.0000
-- **Runtime resolver** → proteins: 0.3286, fruits: 0.2571, grains: 0.4143
+- **Tag lookup** → value_a: 1.0000
+- **Runtime resolver** → value_b: 0.33, value_c: 0.26, value_d: 0.41
 - **Blend precedence** → **TAG wins** (tag data takes priority over runtime)
-- **Final group**: DAIRY, 100% confidence
-
-![Classification Path](Assets/libs/classification_path.png)
+- **Final group**: VALUE_A, 100% confidence
 
 The trace shows every stage:
 
-1. NUTRIENT_TAG_LOOKUP ✓ — matched 1 nutrient tag
-2. ITEM_DISCOVERY ✓ — item is edible
+1. TAG_LOOKUP ✓ — matched 1 value tag
+2. ITEM_DISCOVERY ✓ — item passes source filter
 3. RESOLVER_CACHE ✓ — cache hit
 4. SIGNAL_AGGREGATION ✓ — signals aggregated via COMPOSITE
-5. WINNER_SELECTION ✓ — grains selected (score=0.41)
+5. WINNER_SELECTION ✓ — value_d selected (score=0.41)
 6. CONFIDENCE ✓ — confidence above threshold (spread=5.80)
 7. TAG_RUNTIME_BLEND ✓ — tag and runtime results blended
 
 **Precedence decisions:**
 
-- dairy → TAG (tag data wins)
-- proteins → RUNTIME_SUPPLEMENT (runtime fills gaps)
-- grains → RUNTIME_SUPPLEMENT
-- fruits → RUNTIME_SUPPLEMENT
+- value_a → TAG (tag data wins)
+- value_b → RUNTIME_SUPPLEMENT (runtime fills gaps)
+- value_d → RUNTIME_SUPPLEMENT
+- value_c → RUNTIME_SUPPLEMENT
 
 Developer gold. You can debug exactly why any item resolved the way it did.
 
@@ -120,7 +111,7 @@ Later tiers merge into earlier entries rather than replacing them wholesale.
 ```json
 {
   "modId": "farmersdelight",
-  "category": "FOOD_MOD",
+  "category": "CONTENT_MOD",
   "providesSourceTags": true,
   "namespaces": ["farmersdelight"]
 }
@@ -141,11 +132,11 @@ MariesLib provides a complete player value tracking system with memory, decay, e
 
 **What consuming mods get:**
 
-- **Memory windows**: track recent consumption with configurable time/count windows
+- **Memory windows**: track recent source applications with configurable time/count windows
 - **Diminishing returns**: same-source penalty to encourage variety
 - **Debt tracking**: go negative, pay it back over time with decay
 - **Streaks**: bonus for sustained variety across time windows
-- **Source pair synergies**: combos like "apple + cheese = bonus"
+- **Source pair synergies**: combos like "source A + source B = bonus"
 - **Milestones**: cumulative goals with rewards
 - **Thresholds**: critical/low/excess with customizable effects
 - **Profiles**: different decay/threshold profiles per player or scenario
@@ -161,12 +152,12 @@ Marie mods built on MariesLib can toggle major features independently, like sour
 decay, effects, HUD, toasts, and more. Modpack authors can lock modules server-side through
 datapack module locks.
 
-**Module cache**: hot-path feature flags cached for performance
+**Feature flag cache**: hot-path feature flags cached for performance
 **Lock registry**: server-side locks prevent client config overrides
 
 ---
 
-## 🔧 Configurable to your server
+## Configurable to your server
 
 Everything ships with sensible defaults. Consuming mods expose the rest:
 
@@ -193,12 +184,12 @@ All Marie mods require MariesLib as a separate install.
 
 ---
 
-## 🌐 For mod developers
+## For mod developers
 
 MariesLib exposes a stable public API if you want to integrate with it:
 
 ```java
-float level = MarieAPI.getValueLevel(player, "proteins");
+float level = MarieAPI.getValueLevel(player, "value_a");
 MarieAPI.registerValue(definition);
 MarieAPI.registerCompatEntry(definition);
 MarieAPI.registerCustomEffect(thresholdEffect);
@@ -225,6 +216,11 @@ Addons can register custom values, source classifications, effects, compat entri
 through Java or KubeJS. Consuming mods can also ship datapack-only integrations without writing
 Java code.
 
+### Multi-mod registry
+
+MariesLib 2.0.0 introduces `MarieModRegistry` for multi-mod support. Multiple mods can register
+with MariesLib simultaneously, each with their own context, feature flags, and config screens.
+
 ### API stability
 
 `CompatDefinition` previously lived at `dev.maire.nourished.api.CompatDefinition` and has moved
@@ -233,7 +229,7 @@ Future breaking changes will be accompanied by a deprecation shim and changelog 
 
 ---
 
-## 📦 Datapack Support
+## Datapack Support
 
 Consuming mods can drive MariesLib through datapacks with zero Java code where loaders are available:
 
@@ -248,22 +244,12 @@ Consuming mods can drive MariesLib through datapacks with zero Java code where l
 
 - `values/`, `effects/`, `synergies/`, `source_synergies/`, `milestones/`, `tracking_profiles/`
 
-The scanner writes tag recommendations directly:
-
-![Multi-nutrient recommendations](Assets/libs/multi_nutrient_recommendations.png)
-
-**220 vegetables** with scores and dominant nutrients, ready to paste into
-`data/nourished/tags/item/nutrients/vegetables.json`.
-
-![Nutrient overlap matrix](Assets/libs/nutrient_overlap_matrix.png)
-
-**Co-occurrence matrix**: vegetables × proteins: 179, grains × proteins: 350. Shows which
-nutrient pairs appear together in multi-nutrient foods. Useful for designing synergies and
-understanding your modpack's food landscape.
+The scanner writes tag recommendations directly — multi-value items with scores and dominant
+values, ready to paste into your mod's tag JSON files.
 
 ---
 
-## 🟨 KubeJS Support
+## KubeJS Support
 
 KubeJS scripting support for value registration, source classifications, synergies, milestones,
 and event hooks — no Java required.
@@ -284,7 +270,7 @@ MarieEvents.onValueChanged(event => {
 
 ---
 
-## 🚧 Current Focus
+## Current Focus
 
 - Completing remaining datapack loaders
 - Expanding network sync infrastructure
@@ -312,6 +298,5 @@ LGPL-3.0-only
 ## Links
 
 - [Modrinth](https://modrinth.com/mod/marieslib)
-- [Nourished on Modrinth](https://modrinth.com/mod/nourished)
 - [GitHub](https://github.com/kgbcupcake)
 - [Changelog](CHANGELOG.md)

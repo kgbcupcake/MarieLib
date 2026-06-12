@@ -6,7 +6,6 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import dev.marie.MariesLib.classification.ClassificationTrace;
 import dev.marie.MariesLib.classification.ClassificationTraceFormatter;
 import dev.marie.MariesLib.classification.ClassificationTraceStep;
-import dev.marie.MariesLib.core.IMarieLibConfig;
 import dev.marie.MariesLib.core.MariesLib;
 import dev.marie.MariesLib.runtime.RuntimeResolver;
 import dev.marie.MariesLib.scan.CacheStats;
@@ -36,27 +35,27 @@ public final class MarieDebugCommand {
 
     private MarieDebugCommand() {}
 
-    public static LiteralArgumentBuilder<CommandSourceStack> registerHeld() {
+    public static LiteralArgumentBuilder<CommandSourceStack> registerHeld(String modId) {
         return Commands.literal("held")
                 .requires(s -> s.hasPermission(2))
-                .executes(MarieDebugCommand::debugHeld);
+                .executes(ctx -> debugHeld(ctx, modId));
     }
 
-    public static LiteralArgumentBuilder<CommandSourceStack> registerCache() {
+    public static LiteralArgumentBuilder<CommandSourceStack> registerCache(String modId) {
         return Commands.literal("cache")
                 .requires(s -> s.hasPermission(2))
-                .executes(MarieDebugCommand::executeDebugCache);
+                .executes(ctx -> executeDebugCache(ctx, modId));
     }
 
-    private static int executeDebugCache(CommandContext<CommandSourceStack> ctx) {
+    private static int executeDebugCache(CommandContext<CommandSourceStack> ctx, String modId) {
         CommandSourceStack source = ctx.getSource();
         CacheStats stats = RuntimeResolver.getInstance().getCacheStats();
-        sendCacheStatsFeedback(source, stats);
+        sendCacheStatsFeedback(source, stats, modId);
         return 1;
     }
 
-    private static void sendCacheStatsFeedback(CommandSourceStack source, CacheStats stats) {
-        source.sendSuccess(() -> Component.literal("[MarieLib Cache Stats]").withStyle(ChatFormatting.GOLD), false);
+    private static void sendCacheStatsFeedback(CommandSourceStack source, CacheStats stats, String modId) {
+        source.sendSuccess(() -> Component.literal("[" + modId + " Cache Stats]").withStyle(ChatFormatting.GOLD), false);
         sendCacheKeyValue(source, "Hits        ", String.valueOf(stats.hits()), ChatFormatting.WHITE);
         sendCacheKeyValue(source, "Misses      ", String.valueOf(stats.misses()), ChatFormatting.WHITE);
         sendHitRatioLine(source, stats);
@@ -131,7 +130,7 @@ public final class MarieDebugCommand {
         source.sendSuccess(() -> line, false);
     }
 
-    private static int debugHeld(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+    private static int debugHeld(CommandContext<CommandSourceStack> ctx, String modId) throws CommandSyntaxException {
         CommandSourceStack source = ctx.getSource();
         ServerPlayer player = source.getPlayerOrException();
         ItemStack stack = player.getMainHandItem();
@@ -160,7 +159,7 @@ public final class MarieDebugCommand {
                 + "\n\n---\n\n" + inspectorOutput;
 
         try {
-            Path dir = FMLPaths.CONFIGDIR.get().resolve(IMarieLibConfig.get().modId()).resolve(DEBUG_SUBDIR);
+            Path dir = FMLPaths.CONFIGDIR.get().resolve(modId).resolve(DEBUG_SUBDIR);
             Files.createDirectories(dir);
             Path file = dir.resolve("trace_dump.txt");
             Files.writeString(file, fullTrace);

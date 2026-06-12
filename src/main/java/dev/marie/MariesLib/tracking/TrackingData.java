@@ -238,7 +238,7 @@ public class TrackingData {
     public final LinkedHashMap<String, SourceMemoryEntry> sourceMemory = new LinkedHashMap<>();
 
     /** Server/client-injected config at runtime. Never serialized. */
-    private TrackingMemoryConfig memoryConfig = null;
+    private DiminishingReturnsConfig memoryConfig = null;
 
     public final HashMap<String, SourceMemoryEntry> categoryMemory = new HashMap<>();
     public final HashMap<String, SourceMemoryEntry> familyMemory = new HashMap<>();
@@ -281,7 +281,7 @@ public class TrackingData {
 
     /**
      * Baseline for every value bar on new {@link TrackingData} (new players / fresh attachment).
-     * Uses {@link TrackingMemoryConfig#startingValueFill()} (default {@code 0.5} = 50%) so typical
+     * Uses {@link DiminishingReturnsConfig#startingValueFill()} (default {@code 0.5} = 50%) so typical
      * {@code below}-threshold debuffs do not apply until decay or poor tracking pulls bars down.
      */
     private float startValueFill() {
@@ -475,7 +475,7 @@ public class TrackingData {
      * @param gameTimeMs       current game time in milliseconds
      */
     private void applyValueDebt(String dominantCategory, long gameTimeMs) {
-        TrackingMemoryConfig memCfg = config();
+        DiminishingReturnsConfig memCfg = config();
         long halfLifeMs = memCfg.memoryWindowMinutes() * 60_000L;
         
         float debtThreshold = configuredDebtThreshold();
@@ -526,7 +526,7 @@ public class TrackingData {
      * @return multiplier in [floor, noveltyBonus]
      */
     private float resolveMultiplier(float decayedCount) {
-        TrackingMemoryConfig memCfg = config();
+        DiminishingReturnsConfig memCfg = config();
         double floor = memCfg.diminishingFloor();
         double steepness = configuredDiminishingSteepness();
         double midpoint = configuredDiminishingMidpoint();
@@ -597,7 +597,7 @@ public class TrackingData {
      * @return blended multiplier in [floor, noveltyBonus]
      */
     public float computeBlendedMultiplier(String itemId, String dominantCategory, String familyKey, long gameTimeMs) {
-        TrackingMemoryConfig memCfg = config();
+        DiminishingReturnsConfig memCfg = config();
         long halfLifeMs = memCfg.memoryWindowMinutes() * 60_000L;
         double floor = memCfg.diminishingFloor();
         double noveltyBonus = memCfg.noveltyBonus();
@@ -681,7 +681,7 @@ public class TrackingData {
     public float getCategoryFatigue(String categoryKey, long gameTimeMs) {
         SourceMemoryEntry entry = categoryMemory.get(categoryKey);
         if (entry == null) return 1.0f;
-        TrackingMemoryConfig memCfg = config();
+        DiminishingReturnsConfig memCfg = config();
         long halfLifeMs = memCfg.memoryWindowMinutes() * 60_000L;
         float decayed = entry.decayedApplicationCount(halfLifeMs, gameTimeMs);
         // Use same logistic curve as resolveMultiplier — invert so 1.0 = fresh, 0.0 = saturated
@@ -748,7 +748,7 @@ public class TrackingData {
      * @return detailed breakdown record
      */
     public MultiplierBreakdown getMultiplierBreakdown(String sourceKey, String dominantCategory, String familyKey, long gameTimeMs) {
-        TrackingMemoryConfig memCfg = config();
+        DiminishingReturnsConfig memCfg = config();
         long halfLifeMs = memCfg.memoryWindowMinutes() * 60_000L;
         double noveltyBonus = memCfg.noveltyBonus();
 
@@ -809,15 +809,15 @@ public class TrackingData {
      * Set the memory config at a sync boundary (server-side) or on delta apply (client-side).
      * Called once per application/tick/sync — not on every method.
      */
-    public void setMemoryConfig(TrackingMemoryConfig cfg) {
+    public void setMemoryConfig(DiminishingReturnsConfig cfg) {
         this.memoryConfig = cfg;
     }
 
     /** Returns injected memory config. Must be set at a sync boundary before use. */
-    private TrackingMemoryConfig config() {
+    private DiminishingReturnsConfig config() {
         if (memoryConfig == null) {
             throw new IllegalStateException(
-                    "[MarieLib] TrackingMemoryConfig not injected. This indicates a missed injection site.");
+                    "[MarieLib] DiminishingReturnsConfig not injected. This indicates a missed injection site.");
         }
         return memoryConfig;
     }

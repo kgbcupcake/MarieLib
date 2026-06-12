@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -47,9 +46,6 @@ public final class AutoCompatDiscovery {
             for (var modInfo : ModList.get().getMods()) {
                 String modId = modInfo.getModId();
                 MariesLib.LOGGER.info("[MarieLib] AutoCompat checking: {}", modId);
-                if (modId != null && modId.toLowerCase(Locale.ROOT).contains("mama")) {
-                    MariesLib.LOGGER.info("[MarieLib] Loaded mod id containing 'mama': {}", modId);
-                }
                 if (VANILLA_MOD_IDS.contains(modId)) {
                     MariesLib.LOGGER.info("[MarieLib] AutoCompat skipping {} — reason: {}", modId, "vanilla/system mod");
                     continue;

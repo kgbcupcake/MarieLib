@@ -1,6 +1,6 @@
 package dev.marie.MariesLib.tracking;
 
-public record TrackingMemoryConfig(
+public record DiminishingReturnsConfig(
     long memoryWindowMinutes,
     double noveltyBonus,
     double noveltyDecayCap,

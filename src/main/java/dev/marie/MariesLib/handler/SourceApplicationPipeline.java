@@ -16,7 +16,7 @@ import dev.marie.MariesLib.api.ValueModifierEvent;
 import dev.marie.MariesLib.api.ValueSourceTrigger;
 import dev.marie.MariesLib.api.registry.AbsorptionModifierRegistry;
 import dev.marie.MariesLib.api.registry.SeasonHookRegistry;
-import dev.marie.MariesLib.config.ModuleCache;
+import dev.marie.MariesLib.config.FeatureFlagCache;
 import dev.marie.MariesLib.core.IMarieLibConfig;
 import dev.marie.MariesLib.core.MarieLibContext;
 import dev.marie.MariesLib.core.MariesLib;
@@ -28,11 +28,8 @@ import dev.marie.MariesLib.tracking.TrackingData;
 import dev.marie.MariesLib.registry.MarieAttributes;
 import dev.marie.MariesLib.util.MarieRegistryUtils;
 
-import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.tags.TagKey;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.common.NeoForge;
 
@@ -48,9 +45,16 @@ public final class SourceApplicationPipeline {
 
     public static void process(ServerPlayer player, ValueSourceTrigger trigger, ItemStack stack,
                              TrackingData tracking, long gameTimeMs) {
-        if (ReloadHandler.isReloadInProgress()) {
+        if (ReloadGuardListener.isReloadInProgress()) {
             return;
         }
+
+        var ctx = MarieLibContext.get();
+        MariesLib.LOGGER.info("[DEBUG] Pipeline firing for {} — resolver returned: {}",
+                stack != null ? stack.getItem().getDescriptionId() : "null",
+                stack != null && !stack.isEmpty()
+                        ? ctx.sourceValueResolver().apply(stack, player.level())
+                        : Map.of());
 
         MarieEvents.SourceTriggerEvent triggerEvent =
                 new MarieEvents.SourceTriggerEvent(player, trigger);
@@ -59,18 +63,17 @@ public final class SourceApplicationPipeline {
             return;
         }
 
-        var ctx = MarieLibContext.get();
-        if (ModuleCache.enableBlockHeavySources
+        if (FeatureFlagCache.enableBlockHeavySources()
                 && ctx.isHeavySourceBlocked(player, trigger)) {
             return;
         }
-        if (ModuleCache.enableBlockLightSource
+        if (FeatureFlagCache.enableBlockLightSource()
                 && ctx.isLightSourceBlocked(player, trigger)) {
             return;
         }
-        TrackingMemoryConfigOrNull config = resolveMemoryConfig();
+        DiminishingReturnsConfigOrNull config = resolveMemoryConfig();
         tracking.setMemoryConfig(config.config());
-        boolean debugApplyLog = ModuleCache.enableDebugLogging;
+        boolean debugApplyLog = FeatureFlagCache.enableDebugLogging();
         Map<String, Float> valuesBefore = debugApplyLog ? snapshotValues(tracking) : Map.of();
 
         String sourceKey = trigger.sourceId();
@@ -124,7 +127,7 @@ public final class SourceApplicationPipeline {
                 ? tracking.getMultiplierBreakdown(sourceKey, dominantCategory, familyKey, gameTimeMs)
                 : null;
 
-        if (ModuleCache.enableTotalTracking) {
+        if (FeatureFlagCache.enableTotalTracking()) {
             MariesLib.LOGGER.debug("[MarieLib] total: adding {} * {} for {}",
                     totalAdded, multiplier,
                     stack != null ? stack.getItem().getDescriptionId() : trigger.sourceId());
@@ -208,8 +211,8 @@ public final class SourceApplicationPipeline {
                 tracking);
     }
 
-    private static TrackingMemoryConfigOrNull resolveMemoryConfig() {
-        return new TrackingMemoryConfigOrNull(IMarieLibConfig.get().trackingMemoryConfig(), false);
+    private static DiminishingReturnsConfigOrNull resolveMemoryConfig() {
+        return new DiminishingReturnsConfigOrNull(IMarieLibConfig.get().trackingMemoryConfig(), false);
     }
 
     private static Map<String, Float> snapshotValues(TrackingData tracking) {
@@ -275,26 +278,11 @@ public final class SourceApplicationPipeline {
         root.add("values_before", MarieDebugLogger.floatMapToJson(valuesBefore));
         root.add("values_after", MarieDebugLogger.floatMapToJson(valuesAfter));
 
-        boolean lightBypass = stack != null
-                && stackHasTagRole(stack, "light_source")
-                && !stackHasTagRole(stack, "heavy_source");
-        root.addProperty("light_snack_bypass_eligible", lightBypass);
-
         root.addProperty("game_time_ms", gameTimeMs);
         root.addProperty("game_time_ticks", player.level().getGameTime());
         root.addProperty("dimension", player.level().dimension().location().toString());
 
         MarieDebugLogger.submitSourceLog(root);
-    }
-
-    private static boolean stackHasTagRole(ItemStack stack, String role) {
-        String tagPath = MarieLibContext.get().resolveTagRole(role);
-        if (tagPath == null) {
-            return false;
-        }
-        TagKey<Item> tag = TagKey.create(Registries.ITEM,
-                ResourceLocation.fromNamespaceAndPath(IMarieLibConfig.get().modId(), tagPath));
-        return stack.is(tag);
     }
 
     private static JsonObject buildMultiplierBreakdownJson(TrackingData.MultiplierBreakdown b) {
@@ -342,7 +330,7 @@ public final class SourceApplicationPipeline {
 
     private static float applySeasonalAbsorption(ServerPlayer player, String valueKey, float baseAmount) {
         var hooks = SeasonHookRegistry.getAll();
-        if (!ModuleCache.enableSeasonHooks || hooks.isEmpty()) {
+        if (!FeatureFlagCache.enableSeasonHooks() || hooks.isEmpty()) {
             return baseAmount;
         }
         float amount = baseAmount;
@@ -363,7 +351,7 @@ public final class SourceApplicationPipeline {
 
     private static float applyAbsorptionModifiers(ServerPlayer player, String valueKey, float baseAmount) {
         var modifiers = AbsorptionModifierRegistry.getAll();
-        if (!ModuleCache.enableAbsorptionModifiers || modifiers.isEmpty()) {
+        if (!FeatureFlagCache.enableAbsorptionModifiers() || modifiers.isEmpty()) {
             return baseAmount;
         }
         float amount = baseAmount;
@@ -387,8 +375,8 @@ public final class SourceApplicationPipeline {
         THRESHOLD_WARN_ONCE.set(false);
     }
 
-    private record TrackingMemoryConfigOrNull(
-            dev.marie.MariesLib.tracking.TrackingMemoryConfig config,
+    private record DiminishingReturnsConfigOrNull(
+            dev.marie.MariesLib.tracking.DiminishingReturnsConfig config,
             boolean wasNullProvider
     ) {}
 }

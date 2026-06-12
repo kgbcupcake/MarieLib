@@ -3,7 +3,7 @@ package dev.marie.MariesLib.api;
 import dev.marie.MariesLib.api.ApiStatus;
 import dev.marie.MariesLib.api.MarieAPIState;
 import dev.marie.MariesLib.api.MarieAPIVersion;
-import dev.marie.MariesLib.api.impl.EmptyMemoryView;
+import dev.marie.MariesLib.api.impl.EmptyApplicationHistoryView;
 import dev.marie.MariesLib.compat.CompatDefinition;
 import dev.marie.MariesLib.api.registry.AbsorptionModifierRegistry;
 import dev.marie.MariesLib.api.registry.ProfileRegistry;
@@ -14,7 +14,6 @@ import dev.marie.MariesLib.api.registry.SleepBonusEvaluatorRegistry;
 import dev.marie.MariesLib.api.registry.SourcePropertySignalRegistry;
 import dev.marie.MariesLib.api.registry.SynergyRegistry;
 import dev.marie.MariesLib.api.registry.ValueRegistry;
-import dev.marie.MariesLib.config.ModuleCache;
 import dev.marie.MariesLib.core.IMarieLibConfig;
 import dev.marie.MariesLib.core.MarieLibContext;
 import dev.marie.MariesLib.core.MarieLibDataProvider;
@@ -28,6 +27,9 @@ import dev.marie.MariesLib.util.MarieRegistryUtils;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+
+import javax.annotation.Nullable;
 import net.neoforged.neoforge.common.NeoForge;
 
 import java.util.Collections;
@@ -59,14 +61,14 @@ public final class MarieAPI {
     // ───────────────────────────────────────────────────────────────
 
     /**
-     * Returns the total total count for the given player based on their
+     * Returns the aggregate level for the given player based on their
      * current value levels and recent source consumption.
      *
      * @param player the player to query
-     * @return the player's current total value
+     * @return the player's current aggregate level
      * @throws IllegalStateException if the value system is not initialized
      */
-    public static float getTotal(Player player) {
+    public static float getAggregateLevel(Player player) {
         if (player == null) {
             return 0f;
         }
@@ -74,7 +76,7 @@ public final class MarieAPI {
         if (provider == null) {
             return 0f;
         }
-        return provider.getTotal(player);
+        return provider.getAggregateLevel(player);
     }
 
     /**
@@ -101,28 +103,28 @@ public final class MarieAPI {
      * exposing recent applying history and variety information.
      *
      * @param player the player to query
-     * @return a {@link MemoryView} for the given player
+     * @return an {@link ApplicationHistoryView} for the given player
      * @throws IllegalStateException if the value system is not initialized
      */
-    public static MemoryView getSourceMemory(Player player) {
+    public static ApplicationHistoryView getApplicationHistory(Player player) {
         if (player == null) {
-            return EmptyMemoryView.INSTANCE;
+            return EmptyApplicationHistoryView.INSTANCE;
         }
         MarieLibDataProvider provider = MarieLibContext.get().dataProvider();
         if (provider == null) {
-            return EmptyMemoryView.INSTANCE;
+            return EmptyApplicationHistoryView.INSTANCE;
         }
-        return provider.getSourceMemoryView(player);
+        return provider.getApplicationHistoryView(player);
     }
     /**
-     * Alias for {@link #getTotal(Player)}.
+     * Alias for {@link #getAggregateLevel(Player)}.
      *
      * @param player the player to query
-     * @return the player's current total value
+     * @return the player's current aggregate level
      */
     @ApiStatus.Stable
     public static float getTotalCount(Player player) {
-        return getTotal(player);
+        return getAggregateLevel(player);
     }
 
     /**
@@ -142,9 +144,9 @@ public final class MarieAPI {
             }
         }
         return new MariePlayerData(
-                getTotal(player),
+                getAggregateLevel(player),
                 Collections.unmodifiableMap(values),
-                getSourceMemory(player)
+                getApplicationHistory(player)
         );
     }
 
@@ -496,9 +498,9 @@ public final class MarieAPI {
     }
 
     /**
-     * Registers a consuming-mod trigger handler. MarieLib will call
-     * {@link ISourceTriggerHandler#register(IEventBus)} during
-     * server event bus setup so the handler can subscribe its own
+     * Registers a consuming-mod trigger listener. MarieLib will call
+     * {@link SourceTriggerListener#register(IEventBus)} during
+     * server event bus setup so the listener can subscribe its own
      * NeoForge event listeners.
      *
      * <p>This is optional — consuming mods may instead call
@@ -506,7 +508,7 @@ public final class MarieAPI {
      * without using this registration.</p>
      */
     @ApiStatus.Stable
-    public static void registerTriggerHandler(ISourceTriggerHandler handler) {
+    public static void registerTriggerHandler(SourceTriggerListener handler) {
         MarieAPIState.assertRegistrationAllowed("registerTriggerHandler");
         if (handler == null) {
             throw new IllegalArgumentException("handler cannot be null");
@@ -551,12 +553,26 @@ public final class MarieAPI {
      */
     @ApiStatus.Stable
     public static void fireSourceTrigger(ServerPlayer player, ValueSourceTrigger trigger) {
+        fireSourceTrigger(player, trigger, null);
+    }
+
+    /**
+     * Fires the value pipeline for a custom trigger on a player.
+     * For {@link ValueSourceTrigger.TriggerType#ITEM_CONSUMED}, pass the consumed stack so
+     * classification lookup can run.
+     *
+     * @param player  the server-side player receiving the value
+     * @param trigger the trigger describing the source action
+     * @param stack   the item stack for item-based triggers, or {@code null} otherwise
+     */
+    @ApiStatus.Stable
+    public static void fireSourceTrigger(ServerPlayer player, ValueSourceTrigger trigger, @Nullable ItemStack stack) {
         if (player == null || trigger == null) return;
         if (!TrackingAttachment.isRegistered()) return;
         TrackingData tracking = TrackingAttachment.getData(player);
         long gameTimeMs = player.level().getGameTime() * 50L;
         tracking.tickTime(gameTimeMs);
         tracking.tick();
-        SourceApplicationPipeline.process(player, trigger, null, tracking, gameTimeMs);
+        SourceApplicationPipeline.process(player, trigger, stack, tracking, gameTimeMs);
     }
 }

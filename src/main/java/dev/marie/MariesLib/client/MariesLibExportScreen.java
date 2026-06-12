@@ -36,7 +36,7 @@ public final class MariesLibExportScreen extends Screen {
     protected void init() {
         int y = 40;
         for (ImportExportManager.Section section : ImportExportManager.Section.values()) {
-            Checkbox box = Checkbox.builder(Component.literal(section.jsonKey()), this.font)
+            Checkbox box = Checkbox.builder(section.label(), this.font)
                     .pos(this.width / 2 - 100, y)
                     .selected(true)
                     .build();

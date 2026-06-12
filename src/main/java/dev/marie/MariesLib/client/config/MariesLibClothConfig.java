@@ -1,15 +1,13 @@
 package dev.marie.MariesLib.client.config;
 
-import dev.marie.MariesLib.client.ImportExportButtonsWidget;
-import dev.marie.MariesLib.client.PresetsWidget;
 import dev.marie.MariesLib.config.MariesLibConfigIO;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
 import net.minecraft.client.gui.screens.Screen;
 
 /**
- * Builds the MariesLib config screen. All entries read and write {@code config/marieslib.cfg}
- * (and related paths under {@code config/marieslib/}).
+ * Builds the MariesLib Cloth Config screen with framework-only tabs:
+ * Overview, Scanner, Diagnostics, and Tools.
  */
 public final class MariesLibClothConfig {
 
@@ -23,17 +21,10 @@ public final class MariesLibClothConfig {
 
         ConfigEntryBuilder entryBuilder = builder.entryBuilder();
 
-        ClothCategoryModules.build(builder, entryBuilder);
-        ClothCategoryHandlers.build(builder, entryBuilder);
-        ClothCategoryScanner.build(builder, entryBuilder);
-        ClothCategoryMemory.build(builder, entryBuilder);
-        ClothCategoryThresholds.build(builder, entryBuilder);
-        ClothCategoryClient.build(builder, entryBuilder);
-        ClothCategoryDebug.build(builder, entryBuilder);
-
-        var presets = ClothConfigHelper.category(builder, "presets");
-        presets.addEntry(new PresetsWidget(parent));
-        presets.addEntry(new ImportExportButtonsWidget(parent));
+        ClothCategoryOverview.build(builder, entryBuilder);
+        ClothCategoryScanner.build(builder, entryBuilder, parent);
+        ClothCategoryDiagnostics.build(builder, entryBuilder);
+        ClothCategoryTools.build(builder, entryBuilder);
 
         return builder.build();
     }

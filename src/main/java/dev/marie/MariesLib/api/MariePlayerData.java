@@ -15,5 +15,5 @@ import java.util.Map;
  * @param sourceMemory read-only view of the player's source memory state
  */
 @ApiStatus.Stable
-public record MariePlayerData(float total, Map<String, Float> values, MemoryView sourceMemory) {
+public record MariePlayerData(float total, Map<String, Float> values, ApplicationHistoryView sourceMemory) {
 }

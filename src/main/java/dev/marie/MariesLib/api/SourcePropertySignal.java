@@ -12,14 +12,14 @@ import net.minecraft.world.item.ItemStack;
  *
  * <p>Pluggable item property signal for the scanner.
  * The consuming mod decides what "property" means — it could be
- * EMC value, nutrition, block hardness, entity type, anything.</p>
+ * EMC value, block hardness, entity type, anything.</p>
  */
 @ApiStatus.Stable
 public interface SourcePropertySignal {
 
     /**
      * A unique identifier for this signal, used in traces and reports.
-     * Example: "nourished:nutrition", "emcmod:emc_value"
+     * Example: "examplemod:signal_weight", "emcmod:emc_value"
      */
     String signalId();
 

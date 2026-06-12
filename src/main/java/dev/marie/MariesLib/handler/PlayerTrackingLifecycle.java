@@ -1,7 +1,7 @@
 package dev.marie.MariesLib.handler;
 
 import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.config.ModuleCache;
+import dev.marie.MariesLib.config.FeatureFlagCache;
 import dev.marie.MariesLib.core.IMarieLibConfig;
 import dev.marie.MariesLib.core.MarieLibContext;
 import dev.marie.MariesLib.tracking.TrackingAttachment;
@@ -11,7 +11,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.server.ServerStoppedEvent;
 
 @ApiStatus.Internal
-public class TrackingPlayerEvents {
+public class PlayerTrackingLifecycle {
 
     @SubscribeEvent
     public void onPlayerJoin(net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerLoggedInEvent event) {
@@ -20,13 +20,13 @@ public class TrackingPlayerEvents {
         TrackingData tracking = TrackingAttachment.getData(player);
         tracking.tick();
         TrackingAttachment.setData(player, tracking);
-        tracking.setMemoryConfig(HandlerSupport.resolveMemoryConfig());
+        tracking.setMemoryConfig(DiminishingReturnsSupport.resolveMemoryConfig());
         if (MarieLibContext.isRegistered()) {
             MarieLibContext.get().syncOnJoin().accept(player);
-            if (ModuleCache.enableEffects) {
+            if (FeatureFlagCache.enableEffects()) {
                 MarieLibContext.get().effectApplier().accept(player, tracking);
             }
-            if (IMarieLibConfig.get().showJoinMessage()) {
+            if (MarieLibContext.get().showJoinMessage()) {
                 player.sendSystemMessage(MarieLibContext.get().joinMessageLine1());
                 player.sendSystemMessage(MarieLibContext.get().joinMessageLine2());
             }
@@ -40,10 +40,10 @@ public class TrackingPlayerEvents {
         TrackingData tracking = TrackingAttachment.getData(player);
         tracking.tick();
         TrackingAttachment.setData(player, tracking);
-        tracking.setMemoryConfig(HandlerSupport.resolveMemoryConfig());
+        tracking.setMemoryConfig(DiminishingReturnsSupport.resolveMemoryConfig());
         if (MarieLibContext.isRegistered()) {
             MarieLibContext.get().syncOnJoin().accept(player);
-            if (ModuleCache.enableEffects) {
+            if (FeatureFlagCache.enableEffects()) {
                 MarieLibContext.get().effectApplier().accept(player, tracking);
             }
         }
@@ -51,7 +51,7 @@ public class TrackingPlayerEvents {
 
     @SubscribeEvent
     public void onServerStopped(net.neoforged.neoforge.event.server.ServerStoppedEvent event) {
-        HandlerSupport.resetMemoryConfigWarning();
+        DiminishingReturnsSupport.resetMemoryConfigWarning();
     }
 
     @SubscribeEvent
@@ -61,7 +61,7 @@ public class TrackingPlayerEvents {
         TrackingData tracking = TrackingAttachment.getData(player);
         if (MarieLibContext.isRegistered()) {
             MarieLibContext.get().trackingDeltaSyncer().accept(player, tracking);
-            if (ModuleCache.enableEffects) {
+            if (FeatureFlagCache.enableEffects()) {
                 MarieLibContext.get().effectApplier().accept(player, tracking);
             }
         }

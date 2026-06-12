@@ -2,11 +2,9 @@ package dev.marie.MariesLib.config;
 
 import com.google.gson.JsonObject;
 
-import dev.marie.MariesLib.api.registry.ValueRegistry;
-import dev.marie.MariesLib.color.ColorRegistry;
-
 /**
  * Builds import/export JSON sections from {@link MariesLibConfigHolder}.
+ * Only scanner and diagnostics settings are exported.
  */
 public final class MariesLibConfigBridge {
 
@@ -16,36 +14,27 @@ public final class MariesLibConfigBridge {
         MariesLibConfigHolder h = MariesLibConfigHolder.get();
         JsonObject root = new JsonObject();
 
-        JsonObject general = new JsonObject();
-        general.addProperty("showJoinMessage", h.showJoinMessage);
-        general.addProperty("memoryWindowMinutes", h.memoryWindowMinutes);
-        general.addProperty("memoryWindowCount", h.memoryWindowCount);
-        root.add("general", general);
+        JsonObject scanner = new JsonObject();
+        scanner.addProperty("confidenceSpreadThreshold", h.scannerConfidenceSpreadThreshold);
+        scanner.addProperty("compositeRatioThreshold", h.compositeRatioThreshold);
+        scanner.addProperty("enableRecipeInheritance", h.scannerEnableRecipeInheritance);
+        scanner.addProperty("multiValueInheritanceThreshold", h.multiValueInheritanceThreshold);
+        JsonObject mult = new JsonObject();
+        mult.addProperty("communityTag", h.multCommunityTag);
+        mult.addProperty("namespace", h.multNamespace);
+        mult.addProperty("suffix", h.multSuffix);
+        mult.addProperty("keyword", h.multKeyword);
+        mult.addProperty("archetype", h.multArchetype);
+        mult.addProperty("recipeInheritance", h.multRecipeInheritance);
+        mult.addProperty("namespacePeer", h.multNamespacePeer);
+        mult.addProperty("secondarySuffix", h.multSecondarySuffix);
+        mult.addProperty("namespacePeerAverageWeight", h.multNamespacePeerAverageWeight);
+        scanner.add("multipliers", mult);
+        root.add("scanner", scanner);
 
-        JsonObject thresholds = new JsonObject();
-        thresholds.addProperty("excessThreshold", h.excessThreshold);
-        thresholds.addProperty("lowThreshold", h.lowThreshold);
-        thresholds.addProperty("criticalThreshold", h.criticalThreshold);
-        thresholds.addProperty("decayIntervalTicks", h.decayIntervalTicks);
-        thresholds.addProperty("defaultDecayRate", h.defaultDecayRate);
-        root.add("thresholds", thresholds);
-
-        JsonObject effects = new JsonObject();
-        effects.addProperty("defaultEffectDurationTicks", h.defaultEffectDurationTicks);
-        effects.addProperty("enableEffects", h.enableEffects);
-        root.add("effects", effects);
-
-        JsonObject valueColors = new JsonObject();
-        for (String key : ValueRegistry.getAll().stream().map(v -> v.getId()).toList()) {
-            ColorRegistry.getArgb(key).ifPresent(argb ->
-                    valueColors.addProperty(key, String.format("0x%08X", argb)));
-        }
-        root.add("valueColors", valueColors);
-
-        JsonObject sourceValues = new JsonObject();
-        root.add("sourceValues", sourceValues);
-
-        root.add("modules", MariesLibConfigIO.holderToJson(h).getAsJsonObject("modules"));
+        JsonObject debug = new JsonObject();
+        debug.addProperty("enableDebugLogging", h.enableDebugLogging);
+        root.add("debug", debug);
 
         return root;
     }
@@ -53,52 +42,41 @@ public final class MariesLibConfigBridge {
     public static void applyImport(JsonObject root) {
         MariesLibConfigHolder h = MariesLibConfigHolder.get();
 
-        if (root.has("general") && root.get("general").isJsonObject()) {
-            JsonObject general = root.getAsJsonObject("general");
-            if (general.has("showJoinMessage")) {
-                h.showJoinMessage = general.get("showJoinMessage").getAsBoolean();
+        if (root.has("scanner") && root.get("scanner").isJsonObject()) {
+            JsonObject scanner = root.getAsJsonObject("scanner");
+            if (scanner.has("confidenceSpreadThreshold")) {
+                h.scannerConfidenceSpreadThreshold = scanner.get("confidenceSpreadThreshold").getAsFloat();
             }
-            if (general.has("memoryWindowMinutes")) {
-                h.memoryWindowMinutes = general.get("memoryWindowMinutes").getAsLong();
+            if (scanner.has("compositeRatioThreshold")) {
+                h.compositeRatioThreshold = scanner.get("compositeRatioThreshold").getAsFloat();
             }
-            if (general.has("memoryWindowCount")) {
-                h.memoryWindowCount = general.get("memoryWindowCount").getAsInt();
+            if (scanner.has("enableRecipeInheritance")) {
+                h.scannerEnableRecipeInheritance = scanner.get("enableRecipeInheritance").getAsBoolean();
             }
-        }
-
-        if (root.has("thresholds") && root.get("thresholds").isJsonObject()) {
-            JsonObject thresholds = root.getAsJsonObject("thresholds");
-            if (thresholds.has("excessThreshold")) {
-                h.excessThreshold = thresholds.get("excessThreshold").getAsFloat();
+            if (scanner.has("multiValueInheritanceThreshold")) {
+                h.multiValueInheritanceThreshold = scanner.get("multiValueInheritanceThreshold").getAsDouble();
             }
-            if (thresholds.has("lowThreshold")) {
-                h.lowThreshold = thresholds.get("lowThreshold").getAsFloat();
-            }
-            if (thresholds.has("criticalThreshold")) {
-                h.criticalThreshold = thresholds.get("criticalThreshold").getAsFloat();
-            }
-            if (thresholds.has("decayIntervalTicks")) {
-                h.decayIntervalTicks = thresholds.get("decayIntervalTicks").getAsInt();
-            }
-            if (thresholds.has("defaultDecayRate")) {
-                h.defaultDecayRate = thresholds.get("defaultDecayRate").getAsFloat();
+            if (scanner.has("multipliers") && scanner.get("multipliers").isJsonObject()) {
+                JsonObject mult = scanner.getAsJsonObject("multipliers");
+                if (mult.has("communityTag")) h.multCommunityTag = mult.get("communityTag").getAsFloat();
+                if (mult.has("namespace")) h.multNamespace = mult.get("namespace").getAsFloat();
+                if (mult.has("suffix")) h.multSuffix = mult.get("suffix").getAsFloat();
+                if (mult.has("keyword")) h.multKeyword = mult.get("keyword").getAsFloat();
+                if (mult.has("archetype")) h.multArchetype = mult.get("archetype").getAsFloat();
+                if (mult.has("recipeInheritance")) h.multRecipeInheritance = mult.get("recipeInheritance").getAsFloat();
+                if (mult.has("namespacePeer")) h.multNamespacePeer = mult.get("namespacePeer").getAsFloat();
+                if (mult.has("secondarySuffix")) h.multSecondarySuffix = mult.get("secondarySuffix").getAsFloat();
+                if (mult.has("namespacePeerAverageWeight")) {
+                    h.multNamespacePeerAverageWeight = mult.get("namespacePeerAverageWeight").getAsFloat();
+                }
             }
         }
 
-        if (root.has("effects") && root.get("effects").isJsonObject()) {
-            JsonObject effects = root.getAsJsonObject("effects");
-            if (effects.has("defaultEffectDurationTicks")) {
-                h.defaultEffectDurationTicks = effects.get("defaultEffectDurationTicks").getAsInt();
+        if (root.has("debug") && root.get("debug").isJsonObject()) {
+            JsonObject debug = root.getAsJsonObject("debug");
+            if (debug.has("enableDebugLogging")) {
+                h.enableDebugLogging = debug.get("enableDebugLogging").getAsBoolean();
             }
-            if (effects.has("enableEffects")) {
-                h.enableEffects = effects.get("enableEffects").getAsBoolean();
-            }
-        }
-
-        if (root.has("modules") && root.get("modules").isJsonObject()) {
-            JsonObject wrapper = new JsonObject();
-            wrapper.add("modules", root.get("modules"));
-            MariesLibConfigIO.readIntoHolder(wrapper, h);
         }
 
         MariesLibConfigIO.save();

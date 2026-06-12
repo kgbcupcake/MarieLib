@@ -4,8 +4,9 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 
-import dev.marie.MariesLib.core.IMarieLibConfig;
+import dev.marie.MariesLib.config.MariesLibConfigBridge;
 import dev.marie.MariesLib.core.MariesLib;
+import net.minecraft.network.chat.Component;
 import net.neoforged.fml.loading.FMLPaths;
 
 import java.io.ByteArrayInputStream;
@@ -30,23 +31,20 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 /**
- * Serializes and restores bundled settings for file export and share codes.
+ * Serializes and restores MariesLib scanner/diagnostics settings for file export and share codes.
  */
 public final class ImportExportManager {
 
     public static final int SCHEMA_VERSION = 1;
+    private static final String SHARE_PREFIX = "MARIESLIBCF1:";
 
     private static final Gson GSON_COMPACT = new GsonBuilder().create();
     private static final Gson GSON_PRETTY = new GsonBuilder().setPrettyPrinting().create();
     private static final DateTimeFormatter FILE_TS = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
 
     public enum Section {
-        GENERAL("general"),
-        THRESHOLDS("thresholds"),
-        EFFECTS("effects"),
-        VALUE_COLORS("valueColors"),
-        SOURCE_VALUES("sourceValues"),
-        MODULES("modules");
+        SCANNER("scanner"),
+        DEBUG("debug");
 
         private final String jsonKey;
 
@@ -56,6 +54,10 @@ public final class ImportExportManager {
 
         public String jsonKey() {
             return jsonKey;
+        }
+
+        public Component label() {
+            return Component.translatable("config." + MariesLib.MOD_ID + ".importExport.section." + jsonKey);
         }
 
         public static Section fromJsonKey(String key) {
@@ -71,7 +73,7 @@ public final class ImportExportManager {
     private ImportExportManager() {}
 
     public static String sharePrefix() {
-        return MariesLib.MOD_ID.toUpperCase(Locale.ROOT) + "CF1:";
+        return SHARE_PREFIX;
     }
 
     public static Path exportsDirectory() {
@@ -89,7 +91,7 @@ public final class ImportExportManager {
     }
 
     public static JsonObject buildExportRoot(Set<Section> sections) {
-        JsonObject full = IMarieLibConfig.get().configExporter();
+        JsonObject full = MariesLibConfigBridge.buildExportRoot();
         JsonObject root = new JsonObject();
         root.addProperty("schemaVersion", SCHEMA_VERSION);
         for (Section s : sections) {
@@ -156,8 +158,7 @@ public final class ImportExportManager {
                 filtered.add(s.jsonKey(), root.get(s.jsonKey()));
             }
         }
-        IMarieLibConfig.get().configImporter(filtered);
-        MarieValueColors.clearOverrides();
+        MariesLibConfigBridge.applyImport(filtered);
     }
 
     public static List<Path> listExportJsonFiles() throws IOException {

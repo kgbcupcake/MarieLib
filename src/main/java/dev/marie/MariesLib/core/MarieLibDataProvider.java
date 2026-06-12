@@ -1,7 +1,7 @@
 package dev.marie.MariesLib.core;
 
 import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.api.MemoryView;
+import dev.marie.MariesLib.api.ApplicationHistoryView;
 import net.minecraft.world.entity.player.Player;
 
 /**
@@ -11,11 +11,11 @@ import net.minecraft.world.entity.player.Player;
 @ApiStatus.Stable
 public interface MarieLibDataProvider {
 
-    float getTotal(Player player);
+    float getAggregateLevel(Player player);
 
     float getValueLevel(Player player, String valueKey);
 
-    MemoryView getSourceMemoryView(Player player);
+    ApplicationHistoryView getApplicationHistoryView(Player player);
 
     void modifyValue(Player player, String valueKey, float delta);
 }

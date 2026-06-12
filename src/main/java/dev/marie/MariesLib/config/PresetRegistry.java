@@ -6,6 +6,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import dev.marie.MariesLib.core.MarieLibContext;
+import dev.marie.MariesLib.core.MarieModRegistry;
 import dev.marie.MariesLib.core.MariesLib;
 import net.neoforged.fml.loading.FMLPaths;
 
@@ -93,7 +94,10 @@ public final class PresetRegistry {
     private PresetRegistry() {}
 
     public static Path presetsDirectory() {
-        return FMLPaths.CONFIGDIR.get().resolve(MariesLib.MOD_ID).resolve("presets");
+        String modId = MarieModRegistry.isRegistered()
+                ? MarieModRegistry.getPrimary().modId()
+                : MariesLib.MOD_ID;
+        return FMLPaths.CONFIGDIR.get().resolve(modId).resolve("presets");
     }
 
     /**
@@ -180,9 +184,9 @@ public final class PresetRegistry {
     }
 
     public static void applyPresetValues(PresetValues v) {
-        MariesLibConfigHolder.get().applyPresetValues(v);
-        MariesLibConfigIO.save();
-        ModuleCache.refresh();
+        if (MarieLibContext.isRegistered()) {
+            MarieLibContext.get().applyPresetValues(v);
+        }
     }
 
     public static void applyPreset(ParsedPreset preset) {
