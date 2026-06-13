@@ -163,6 +163,7 @@ public final class MarieAPI {
      */
     @ApiStatus.Stable
     public static void modifyValue(Player player, String valueKey, float delta) {
+        MarieRegistryUtils.requireValueKey(valueKey, "MarieAPI.modifyValue");
         MarieLibDataProvider provider = MarieLibContext.get().dataProvider();
         if (provider == null) {
             return;
