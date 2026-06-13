@@ -15,21 +15,21 @@ logoBlur = false
 [[mixins]]
 config = "marieslib.mixins.json"
 
-[[dependencies.${mod_id}]]
+[[dependencies.marieslib]]
 modId = "neoforge"
 type = "required"
 versionRange = "${neo_version_range}"
 ordering = "NONE"
 side = "BOTH"
 
-[[dependencies.${mod_id}]]
+[[dependencies.marieslib]]
 modId = "minecraft"
 type = "required"
 versionRange = "${minecraft_version_range}"
 ordering = "NONE"
 side = "BOTH"
 
-[[dependencies.${mod_id}]]
+[[dependencies.marieslib]]
 modId = "cloth_config"
 type = "optional"
 versionRange = "[15.0.0,)"
