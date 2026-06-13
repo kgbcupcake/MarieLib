@@ -14,10 +14,6 @@ import net.neoforged.fml.ModList;
 @ApiStatus.Internal
 public final class MarieEmiPlugin implements EmiPlugin {
 
-    public static void bootstrap() {
-        // Intentionally empty. Called reflectively from client init to keep optional class loading safe.
-    }
-
     @Override
     public void register(EmiRegistry registry) {
         if (!ModList.get().isLoaded("emi")) {

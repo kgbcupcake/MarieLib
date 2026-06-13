@@ -68,6 +68,7 @@ public final class SynergyDefinition {
      * @param id the unique identifier for this synergy (e.g. "synergy_id")
      * @return a new {@link Builder} instance
      */
+    @ApiStatus.Stable
     public static Builder builder(String id) {
         return new Builder(id);
     }
@@ -77,6 +78,7 @@ public final class SynergyDefinition {
      *
      * @return the synergy id string
      */
+    @ApiStatus.Stable
     public String getId() {
         return id;
     }
@@ -86,6 +88,7 @@ public final class SynergyDefinition {
      *
      * @return the first value key
      */
+    @ApiStatus.Stable
     public String getValueKeyA() {
         return valueKeyA;
     }
@@ -95,6 +98,7 @@ public final class SynergyDefinition {
      *
      * @return the {@link LevelCondition} for value A
      */
+    @ApiStatus.Stable
     public LevelCondition getConditionA() {
         return conditionA;
     }
@@ -104,6 +108,7 @@ public final class SynergyDefinition {
      *
      * @return the second value key
      */
+    @ApiStatus.Stable
     public String getValueKeyB() {
         return valueKeyB;
     }
@@ -113,6 +118,7 @@ public final class SynergyDefinition {
      *
      * @return the {@link LevelCondition} for value B
      */
+    @ApiStatus.Stable
     public LevelCondition getConditionB() {
         return conditionB;
     }
@@ -124,6 +130,7 @@ public final class SynergyDefinition {
      * @return the effect's {@link ResourceLocation}, or {@code null}
      */
     @Nullable
+    @ApiStatus.Stable
     public ResourceLocation getBonusEffectId() {
         return bonusEffectId;
     }
@@ -133,6 +140,7 @@ public final class SynergyDefinition {
      *
      * @return the effect amplifier (0-indexed)
      */
+    @ApiStatus.Stable
     public int getEffectAmplifier() {
         return effectAmplifier;
     }
@@ -142,6 +150,7 @@ public final class SynergyDefinition {
      *
      * @return the effect duration in ticks
      */
+    @ApiStatus.Stable
     public int getEffectDuration() {
         return effectDuration;
     }
@@ -151,6 +160,7 @@ public final class SynergyDefinition {
      *
      * @return {@code true} if this is a penalty synergy
      */
+    @ApiStatus.Stable
     public boolean isPenalty() {
         return isPenalty;
     }
@@ -183,6 +193,7 @@ public final class SynergyDefinition {
          * @param condition   the level condition required
          * @return this builder for chaining
          */
+        @ApiStatus.Stable
         public Builder valueA(String valueKey, LevelCondition condition) {
             this.valueKeyA = valueKey;
             this.conditionA = condition;
@@ -196,6 +207,7 @@ public final class SynergyDefinition {
          * @param condition   the level condition required
          * @return this builder for chaining
          */
+        @ApiStatus.Stable
         public Builder valueB(String valueKey, LevelCondition condition) {
             this.valueKeyB = valueKey;
             this.conditionB = condition;
@@ -208,6 +220,7 @@ public final class SynergyDefinition {
          * @param effectId the effect's {@link ResourceLocation}
          * @return this builder for chaining
          */
+        @ApiStatus.Stable
         public Builder bonusEffect(ResourceLocation effectId) {
             this.bonusEffectId = effectId;
             return this;
@@ -219,6 +232,7 @@ public final class SynergyDefinition {
          * @param amplifier the effect amplifier (0-indexed)
          * @return this builder for chaining
          */
+        @ApiStatus.Stable
         public Builder effectAmplifier(int amplifier) {
             this.effectAmplifier = amplifier;
             return this;
@@ -230,6 +244,7 @@ public final class SynergyDefinition {
          * @param duration the effect duration in game ticks
          * @return this builder for chaining
          */
+        @ApiStatus.Stable
         public Builder effectDuration(int duration) {
             this.effectDuration = duration;
             return this;
@@ -241,6 +256,7 @@ public final class SynergyDefinition {
          * @param penalty {@code true} if this synergy applies a penalty
          * @return this builder for chaining
          */
+        @ApiStatus.Stable
         public Builder penalty(boolean penalty) {
             this.isPenalty = penalty;
             return this;
@@ -252,6 +268,7 @@ public final class SynergyDefinition {
          * @return the constructed definition
          * @throws IllegalStateException if required fields are missing or invalid
          */
+        @ApiStatus.Stable
         public SynergyDefinition build() {
             if (id == null) {
                 throw new IllegalStateException("id is required");

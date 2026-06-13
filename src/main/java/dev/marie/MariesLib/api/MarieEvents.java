@@ -13,6 +13,7 @@ import net.neoforged.bus.api.ICancellableEvent;
  * <p>Subscribe to these events via {@code @SubscribeEvent} on the NeoForge event bus
  * to react to value changes, critical states, and source consumption.</p>
  */
+@ApiStatus.Stable
 public final class MarieEvents {
 
     private MarieEvents() {}
@@ -40,6 +41,7 @@ public final class MarieEvents {
          * @param oldValue    the previous value level
          * @param newValue    the new value level
          */
+        @ApiStatus.Stable
         public ValueChangedEvent(Player player, String valueKey, float oldValue, float newValue) {
             this.player = player;
             this.valueKey = valueKey;
@@ -52,6 +54,7 @@ public final class MarieEvents {
          *
          * @return the affected player
          */
+        @ApiStatus.Stable
         public Player getPlayer() {
             return player;
         }
@@ -61,6 +64,7 @@ public final class MarieEvents {
          *
          * @return the value identifier string
          */
+        @ApiStatus.Stable
         public String getValueKey() {
             return valueKey;
         }
@@ -70,6 +74,7 @@ public final class MarieEvents {
          *
          * @return the old value as a normalized float
          */
+        @ApiStatus.Stable
         public float getOldValue() {
             return oldValue;
         }
@@ -79,6 +84,7 @@ public final class MarieEvents {
          *
          * @return the new value as a normalized float
          */
+        @ApiStatus.Stable
         public float getNewValue() {
             return newValue;
         }
@@ -102,6 +108,7 @@ public final class MarieEvents {
          * @param player      the player whose value became critical
          * @param valueKey the key of the value that crossed the critical threshold
          */
+        @ApiStatus.Stable
         public ValueCriticalEvent(Player player, String valueKey) {
             this.player = player;
             this.valueKey = valueKey;
@@ -112,6 +119,7 @@ public final class MarieEvents {
          *
          * @return the affected player
          */
+        @ApiStatus.Stable
         public Player getPlayer() {
             return player;
         }
@@ -121,6 +129,7 @@ public final class MarieEvents {
          *
          * @return the value identifier string
          */
+        @ApiStatus.Stable
         public String getValueKey() {
             return valueKey;
         }
@@ -144,6 +153,7 @@ public final class MarieEvents {
          * @param player      the player whose value became excessive
          * @param valueKey the key of the value that crossed the excess threshold
          */
+        @ApiStatus.Stable
         public ValueExcessEvent(Player player, String valueKey) {
             this.player = player;
             this.valueKey = valueKey;
@@ -154,6 +164,7 @@ public final class MarieEvents {
          *
          * @return the affected player
          */
+        @ApiStatus.Stable
         public Player getPlayer() {
             return player;
         }
@@ -163,6 +174,7 @@ public final class MarieEvents {
          *
          * @return the value identifier string
          */
+        @ApiStatus.Stable
         public String getValueKey() {
             return valueKey;
         }
@@ -178,12 +190,15 @@ public final class MarieEvents {
         private final Player player;
         private final ValueSourceTrigger trigger;
 
+        @ApiStatus.Stable
         public SourceTriggerEvent(Player player, ValueSourceTrigger trigger) {
             this.player = player;
             this.trigger = trigger;
         }
 
+        @ApiStatus.Stable
         public Player getPlayer() { return player; }
+        @ApiStatus.Stable
         public ValueSourceTrigger getTrigger() { return trigger; }
     }
 
@@ -209,6 +224,7 @@ public final class MarieEvents {
          * @param valueKey the primary value gained from this source
          * @param amount      the amount of value gained
          */
+        @ApiStatus.Stable
         public SourceAppliedEvent(Player player, ResourceLocation sourceId, String valueKey, float amount) {
             this.player = player;
             this.sourceId = sourceId;
@@ -221,6 +237,7 @@ public final class MarieEvents {
          *
          * @return the player
          */
+        @ApiStatus.Stable
         public Player getPlayer() {
             return player;
         }
@@ -230,6 +247,7 @@ public final class MarieEvents {
          *
          * @return the source's {@link ResourceLocation}
          */
+        @ApiStatus.Stable
         public ResourceLocation getSourceId() {
             return sourceId;
         }
@@ -239,6 +257,7 @@ public final class MarieEvents {
          *
          * @return the value identifier string
          */
+        @ApiStatus.Stable
         public String getValueKey() {
             return valueKey;
         }
@@ -248,6 +267,7 @@ public final class MarieEvents {
          *
          * @return the value gain amount
          */
+        @ApiStatus.Stable
         public float getAmount() {
             return amount;
         }

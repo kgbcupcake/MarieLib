@@ -163,6 +163,7 @@ public final class MarieAPI {
      */
     @ApiStatus.Stable
     public static void modifyValue(Player player, String valueKey, float delta) {
+        MarieRegistryUtils.requireValueKey(valueKey, "MarieAPI.modifyValue");
         MarieLibDataProvider provider = MarieLibContext.get().dataProvider();
         if (provider == null) {
             return;
@@ -202,8 +203,16 @@ public final class MarieAPI {
         if (delegate == null) {
             throw new IllegalStateException("MarieLib registration delegate not configured");
         }
-        if (delegate.getValueKeys().contains(definition.getId())) {
-            throw new IllegalArgumentException("Value already registered: " + definition.getId());
+        if (definition == null) {
+            throw new IllegalArgumentException("registerValue: definition must not be null");
+        }
+        String id = definition.getId();
+        if (!dev.marie.MariesLib.util.MarieValidation.sanitizeModId(id)) {
+            throw new IllegalArgumentException(
+                    "registerValue: value id must match [a-z0-9_]{1,64}, got: '" + id + "'");
+        }
+        if (delegate.getValueKeys().contains(id)) {
+            throw new IllegalArgumentException("Value already registered: " + id);
         }
         delegate.registerValue(definition);
         ValueRegistry.register(definition);

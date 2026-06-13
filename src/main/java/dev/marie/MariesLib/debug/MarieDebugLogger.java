@@ -101,7 +101,9 @@ public final class MarieDebugLogger {
     }
 
     private static Path debugDir() throws IOException {
-        Path dir = FMLPaths.GAMEDIR.get().resolve("config").resolve(IMarieLibConfig.get().modId()).resolve("debug");
+        Path base = FMLPaths.GAMEDIR.get().resolve("config");
+        Path dir = base.resolve(IMarieLibConfig.get().modId()).resolve("debug");
+        dev.marie.MariesLib.util.MarieValidation.assertPathUnder(dir, base, "MarieDebugLogger.debugDir");
         Files.createDirectories(dir);
         return dir;
     }

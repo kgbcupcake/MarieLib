@@ -32,6 +32,7 @@ import dev.marie.MariesLib.util.MarieRegistryUtils;
 
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.common.NeoForge;
 
@@ -52,11 +53,6 @@ public final class SourceApplicationPipeline {
         }
 
         var ctx = MarieLibContext.get();
-        MariesLib.LOGGER.info("[DEBUG] Pipeline firing for {} — resolver returned: {}",
-                stack != null ? stack.getItem().getDescriptionId() : "null",
-                stack != null && !stack.isEmpty()
-                        ? ctx.sourceValueResolver().apply(stack, player.level())
-                        : Map.of());
 
         MarieEvents.SourceTriggerEvent triggerEvent =
                 new MarieEvents.SourceTriggerEvent(player, trigger);
@@ -85,9 +81,18 @@ public final class SourceApplicationPipeline {
         float totalAdded;
         Map<String, Float> valueDeltas;
         Map<String, Float> matchedBars;
-        ResourceLocation sourceResourceId = stack != null
-                ? MarieRegistryUtils.itemKey(stack)
-                : ResourceLocation.parse(trigger.sourceId());
+        ResourceLocation sourceResourceId;
+        if (stack != null) {
+            sourceResourceId = MarieRegistryUtils.itemKey(stack);
+        } else {
+            try {
+                sourceResourceId = ResourceLocation.parse(trigger.sourceId());
+            } catch (Exception e) {
+                MariesLib.LOGGER.warn("[MarieLib] Invalid sourceId in trigger: '{}' — skipping pipeline",
+                        trigger.sourceId());
+                return;
+            }
+        }
         if (override != null) {
             totalAdded = override.total();
             valueDeltas = new HashMap<>(override.values());
@@ -217,6 +222,63 @@ public final class SourceApplicationPipeline {
                 player.getName().getString(),
                 stack != null ? stack.getItem().getDescriptionId() : trigger.sourceId(),
                 tracking);
+    }
+
+    /**
+     * Applies an absolute value write (commands, KubeJS force-set, etc.).
+     * Fires {@link MarieEvents.ValueChangedEvent} and threshold crossings when the level changes.
+     *
+     * @return {@code true} if the stored level changed
+     */
+    @ApiStatus.Internal
+    public static boolean writeDirectValue(
+            ServerPlayer player, TrackingData tracking, String key, float newValue) {
+        if (ReloadGuardListener.isReloadInProgress()) {
+            return false;
+        }
+        if (!tracking.values.containsKey(key)) {
+            return false;
+        }
+        float oldValue = tracking.values.getOrDefault(key, 0f);
+        float clamped = Mth.clamp(newValue, 0f, 1f);
+        if (Float.isNaN(clamped)) {
+            clamped = 0f;
+        }
+        if (oldValue == clamped) {
+            return false;
+        }
+        tracking.lastValues.put(key, oldValue);
+        tracking.values.put(key, clamped);
+        NeoForge.EVENT_BUS.post(new MarieEvents.ValueChangedEvent(player, key, oldValue, clamped));
+        checkThresholdCrossings(player, tracking);
+        tracking.lastValues.put(key, clamped);
+        return true;
+    }
+
+    /**
+     * Applies a direct delta write ({@link dev.marie.MariesLib.api.MarieAPI#modifyValue}).
+     *
+     * @return {@code true} if the stored level changed
+     */
+    @ApiStatus.Internal
+    public static boolean applyDirectDelta(
+            ServerPlayer player, TrackingData tracking, String key, float delta) {
+        if (!tracking.values.containsKey(key)) {
+            return false;
+        }
+        float oldValue = tracking.values.get(key);
+        return writeDirectValue(player, tracking, key, Mth.clamp(oldValue + delta, 0f, 1f));
+    }
+
+    @ApiStatus.Internal
+    public static void finalizeDirectWrite(ServerPlayer player, TrackingData tracking) {
+        TrackingAttachment.setData(player, tracking);
+        if (!MarieLibContext.isRegistered()) {
+            return;
+        }
+        var ctx = MarieLibContext.get();
+        ctx.trackingDeltaSyncer().accept(player, tracking);
+        ctx.effectApplier().accept(player, tracking);
     }
 
     private static DiminishingReturnsConfigOrNull resolveMemoryConfig() {

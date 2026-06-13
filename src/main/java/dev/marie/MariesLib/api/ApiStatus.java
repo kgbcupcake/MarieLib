@@ -13,6 +13,7 @@ import java.lang.annotation.Target;
  * <p>Apply these annotations to types, methods, and fields to communicate
  * backwards-compatibility guarantees to downstream mod authors.</p>
  */
+@ApiStatus.Stable
 public final class ApiStatus {
 
     private ApiStatus() {}

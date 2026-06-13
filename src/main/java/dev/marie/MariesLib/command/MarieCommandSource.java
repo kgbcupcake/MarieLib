@@ -1,5 +1,6 @@
 package dev.marie.MariesLib.command;
 
+import dev.marie.MariesLib.api.ApiStatus;
 import dev.marie.MariesLib.api.ReportProvider;
 import dev.marie.MariesLib.api.ValueDefinition;
 import dev.marie.MariesLib.api.registry.ReportProviderRegistry;
@@ -18,6 +19,7 @@ import java.util.List;
 /**
  * Shared formatting and permission utilities for MarieLib commands.
  */
+@ApiStatus.Internal
 public final class MarieCommandSource {
 
     private static final int BAR_WIDTH = 8;

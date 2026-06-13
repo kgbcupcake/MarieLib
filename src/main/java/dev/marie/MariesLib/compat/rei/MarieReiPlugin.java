@@ -12,10 +12,6 @@ import net.neoforged.fml.ModList;
 @ApiStatus.Internal
 public final class MarieReiPlugin implements REIClientPlugin {
 
-    public static void bootstrap() {
-        // Intentionally empty. Called reflectively from client init to keep optional class loading safe.
-    }
-
     @Override
     public void registerEntryRenderers(EntryRendererRegistry registry) {
         if (!ModList.get().isLoaded("roughlyenoughitems")) {

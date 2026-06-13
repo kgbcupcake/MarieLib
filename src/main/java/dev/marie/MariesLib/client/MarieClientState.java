@@ -1,11 +1,13 @@
 package dev.marie.MariesLib.client;
 
+import dev.marie.MariesLib.api.ApiStatus;
 import dev.marie.MariesLib.network.SyncState;
 
 /**
  * Client-only runtime mirror of server-authoritative config.
  * Never access on a dedicated server — guarded by isReady() at all call sites.
  */
+@ApiStatus.Internal
 public final class MarieClientState {
 
     private static volatile Object snapshot = null;

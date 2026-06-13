@@ -1,5 +1,6 @@
 package dev.marie.MariesLib.runtime;
 
+import dev.marie.MariesLib.api.ApiStatus;
 import dev.marie.MariesLib.core.IMarieLibConfig;
 
 import java.util.LinkedHashMap;
@@ -9,6 +10,7 @@ import java.util.Map;
  * Shared multi-value recipe inheritance filtering used by the runtime resolver
  * and the source scanner.
  */
+@ApiStatus.Internal
 public final class MultiValueInheritance {
 
     private static final float DEFAULT_THRESHOLD = 0.20f;

@@ -38,6 +38,9 @@ public final class MarieToastManager {
     }
 
     private static void processValueUpdate(Map<String, Float> nextValues) {
+        if (!MarieLibContext.isRegistered()) {
+            return;
+        }
         List<String> keys = TrackingData.barOrder();
         MarieLibContext ctx = MarieLibContext.get();
 

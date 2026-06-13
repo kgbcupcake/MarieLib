@@ -31,17 +31,19 @@ import java.util.Set;
  * SCHEMA CHANGE: legacy attachment removed in this version. Existing player saves will reset tracking data.
  * Acceptable for alpha.
  */
-@ApiStatus.Internal
+@ApiStatus.Experimental
 public class TrackingData {
 
     private static java.util.function.Supplier<? extends TrackingData> instanceFactory = TrackingData::new;
 
     /** Configure instance factory before attachment registration (consuming mod subclass support). */
+    @ApiStatus.Experimental
     public static void setInstanceFactory(java.util.function.Supplier<? extends TrackingData> factory) {
         instanceFactory = factory;
     }
 
     /** Creates a new instance via the configured factory. */
+    @ApiStatus.Experimental
     public static TrackingData createNew() {
         return instanceFactory.get();
     }
@@ -58,6 +60,7 @@ public class TrackingData {
     );
 
     /** Display / bar order — delegates to the registry so it stays in sync. */
+    @ApiStatus.Experimental
     public static List<String> barOrder() {
         return MarieLibContext.isRegistered() ? MarieLibContext.get().valueKeys() : List.of();
     }
@@ -102,11 +105,13 @@ public class TrackingData {
 
     private static final Decoder<TrackingData> DECODER = new Decoder<>() {
         @Override
+        @ApiStatus.Experimental
         public <T> DataResult<Pair<TrackingData, T>> decode(DynamicOps<T> ops, T input) {
             return decodeData(ops, input).map(d -> Pair.of(d, input));
         }
     };
 
+    @ApiStatus.Experimental
     public static final Codec<TrackingData> CODEC = Codec.of(TrackingData::encode, DECODER);
 
     private static <T> DataResult<T> encode(TrackingData data, DynamicOps<T> ops, T prefix) {
@@ -149,7 +154,12 @@ public class TrackingData {
             Codec.unboundedMap(Codec.STRING, SourceMemoryEntry.CODEC)
                     .parse(ops, sourceMemoryVal)
                     .result()
-                    .ifPresent(m -> data.sourceMemory.putAll(m));
+                    .ifPresent(m -> {
+                        if (m.size() > 512) {
+                            MariesLib.LOGGER.warn("[TrackingData] source_memory exceeded cap ({} entries) — truncating to 512", m.size());
+                        }
+                        m.entrySet().stream().limit(512).forEach(e -> data.sourceMemory.put(e.getKey(), e.getValue()));
+                    });
         }
 
         // New maps with empty fallback for old saves
@@ -158,7 +168,12 @@ public class TrackingData {
             Codec.unboundedMap(Codec.STRING, SourceMemoryEntry.CODEC)
                     .parse(ops, categoryMemoryVal)
                     .result()
-                    .ifPresent(m -> data.categoryMemory.putAll(m));
+                    .ifPresent(m -> {
+                        if (m.size() > 256) {
+                            MariesLib.LOGGER.warn("[TrackingData] category_memory exceeded cap ({} entries) — truncating to 256", m.size());
+                        }
+                        m.entrySet().stream().limit(256).forEach(e -> data.categoryMemory.put(e.getKey(), e.getValue()));
+                    });
         }
 
         T familyMemoryVal = map.get("family_memory");
@@ -166,7 +181,12 @@ public class TrackingData {
             Codec.unboundedMap(Codec.STRING, SourceMemoryEntry.CODEC)
                     .parse(ops, familyMemoryVal)
                     .result()
-                    .ifPresent(m -> data.familyMemory.putAll(m));
+                    .ifPresent(m -> {
+                        if (m.size() > 256) {
+                            MariesLib.LOGGER.warn("[TrackingData] family_memory exceeded cap ({} entries) — truncating to 256", m.size());
+                        }
+                        m.entrySet().stream().limit(256).forEach(e -> data.familyMemory.put(e.getKey(), e.getValue()));
+                    });
         }
 
         data.lastTickTime = decodeLong(ops, map, "last_tick_time", 0L);
@@ -229,23 +249,32 @@ public class TrackingData {
 
     // ── Fields ────────────────────────────────────────────────────────────────
 
+    @ApiStatus.Experimental
     public float total;
+    @ApiStatus.Experimental
     public float maxTotal = 2000f;
+    @ApiStatus.Experimental
     public final LinkedHashMap<String, Float> values     = new LinkedHashMap<>();
+    @ApiStatus.Experimental
     public final LinkedHashMap<String, Float> lastValues = new LinkedHashMap<>();
 
     // Source memory maps
+    @ApiStatus.Experimental
     public final LinkedHashMap<String, SourceMemoryEntry> sourceMemory = new LinkedHashMap<>();
 
     /** Server/client-injected config at runtime. Never serialized. */
     private DiminishingReturnsConfig memoryConfig = null;
 
+    @ApiStatus.Experimental
     public final HashMap<String, SourceMemoryEntry> categoryMemory = new HashMap<>();
+    @ApiStatus.Experimental
     public final HashMap<String, SourceMemoryEntry> familyMemory = new HashMap<>();
 
     /** Last known game time in ms, used for decay calculations */
+    @ApiStatus.Experimental
     public long lastTickTime = 0L;
 
+    @ApiStatus.Experimental
     public TrackingData() {
         float start = startValueFill();
         for (String key : barOrder()) {
@@ -257,7 +286,7 @@ public class TrackingData {
     /**
      * Deep-copies mutable maps and scalars for thread-safe handoff (e.g. client cache publish).
      */
-    @ApiStatus.Internal
+    @ApiStatus.Experimental
     public static TrackingData copySnapshot(TrackingData src) {
         TrackingData d = instanceFactory.get();
         d.total = src.total;
@@ -298,6 +327,7 @@ public class TrackingData {
      * Snapshot current values into {@link #lastValues}. Call on the server before applying
      * source deltas so trends compare the previous application state to the new state.
      */
+    @ApiStatus.Experimental
     public void tick() {
         lastValues.clear();
         lastValues.putAll(values);
@@ -309,14 +339,17 @@ public class TrackingData {
      * {@code player.level().getGameTime() * 50L} to keep time
      * anchored to game ticks rather than wall-clock time.
      */
+    @ApiStatus.Experimental
     public void tickTime(long gameTimeMs) {
         this.lastTickTime = gameTimeMs;
     }
 
+    @ApiStatus.Experimental
     public void addTotal(float amount) {
         total = Math.max(0f, total + amount);
     }
 
+    @ApiStatus.Experimental
     public void addValue(String key, float amount) {
         if (!values.containsKey(key)) return;
         float newValue = Mth.clamp(values.get(key) + amount, 0f, 1f);
@@ -328,6 +361,7 @@ public class TrackingData {
     }
 
     /** Balance score in [0, 1]: higher when all bars are closer to each other. */
+    @ApiStatus.Experimental
     public float getBalanceScore() {
         List<String> keys = barOrder();
         float sum = 0f;
@@ -344,6 +378,7 @@ public class TrackingData {
     }
 
     /** Override in consuming mod to produce network sync payload. */
+    @ApiStatus.Experimental
     public Object toDeltaPayload() {
         throw new UnsupportedOperationException("Override in consuming mod");
     }
@@ -367,6 +402,7 @@ public class TrackingData {
      * @param gameTimeMs       current game time in milliseconds
      * @return blended multiplier to apply to tracking deltas
      */
+    @ApiStatus.Experimental
     public float recordSource(String sourceKey, String dominantCategory, String familyKey, long gameTimeMs) {
         
         int maxCount = configuredMemoryWindowCount();
@@ -444,6 +480,7 @@ public class TrackingData {
      * @param sourceKey the source key
      * @return multiplier to apply
      */
+    @ApiStatus.Experimental
     public float recordSource(String sourceKey) {
         return recordSource(sourceKey, null, null, resolveCurrentTime(0L));
     }
@@ -452,6 +489,7 @@ public class TrackingData {
      * Peek the multiplier that would apply if this source were applied next next.
      * Used for tooltip display.
      */
+    @ApiStatus.Experimental
     public float peekMultiplier(String sourceKey) {
         long halfLifeMs = config().memoryWindowMinutes() * 60_000L;
         long gameTimeMs = resolveCurrentTime(0L);
@@ -562,6 +600,7 @@ public class TrackingData {
      * @param currentTimeMs current game time in ms
      * @return novelty score in [0, 1]
      */
+    @ApiStatus.Experimental
     public float resolveNoveltyScore(String itemId, long halfLifeMs, long currentTimeMs) {
         SourceMemoryEntry entry = sourceMemory.get(itemId);
         if (entry == null) {
@@ -596,6 +635,7 @@ public class TrackingData {
      * @param gameTimeMs       current game time in milliseconds
      * @return blended multiplier in [floor, noveltyBonus]
      */
+    @ApiStatus.Experimental
     public float computeBlendedMultiplier(String itemId, String dominantCategory, String familyKey, long gameTimeMs) {
         DiminishingReturnsConfig memCfg = config();
         long halfLifeMs = memCfg.memoryWindowMinutes() * 60_000L;
@@ -651,6 +691,7 @@ public class TrackingData {
         return (float) Math.max(floor, Math.min(noveltyBonus, blendedMultiplier));
     }
 
+    @ApiStatus.Experimental
     public SourceMemoryEntry getMemoryEntry(String itemId) {
         return sourceMemory.get(itemId);
     }
@@ -667,6 +708,7 @@ public class TrackingData {
      * @param gameTimeMs       current game time in ms
      * @return the multiplier that would apply
      */
+    @ApiStatus.Experimental
     public float peekMultiplier(String sourceKey, String dominantCategory, String familyKey, long gameTimeMs) {
         return computeBlendedMultiplier(sourceKey, dominantCategory, familyKey, gameTimeMs);
     }
@@ -678,6 +720,7 @@ public class TrackingData {
      * @param gameTimeMs  current game time in ms
      * @return fatigue level
      */
+    @ApiStatus.Experimental
     public float getCategoryFatigue(String categoryKey, long gameTimeMs) {
         SourceMemoryEntry entry = categoryMemory.get(categoryKey);
         if (entry == null) return 1.0f;
@@ -699,6 +742,7 @@ public class TrackingData {
      * @param gameTimeMs current game time in ms
      * @return novelty score in [0, 1]
      */
+    @ApiStatus.Experimental
     public float getNoveltyScore(String itemId, long gameTimeMs) {
         long halfLifeMs = config().memoryWindowMinutes() * 60_000L;
         return resolveNoveltyScore(itemId, halfLifeMs, gameTimeMs);
@@ -711,6 +755,7 @@ public class TrackingData {
      * @param gameTimeMs current game time in ms
      * @return list of family keys sorted by fatigue (most fatigued first)
      */
+    @ApiStatus.Experimental
     public List<String> getMostFatiguedFamilies(int n, long gameTimeMs) {
         long halfLifeMs = config().memoryWindowMinutes() * 60_000L;
 
@@ -730,6 +775,7 @@ public class TrackingData {
      * @param n number of categories to return
      * @return list of category keys sorted by bar value (lowest first)
      */
+    @ApiStatus.Experimental
     public List<String> getMostNeglectedCategories(int n) {
         return values.entrySet().stream()
                 .sorted(Comparator.comparingDouble(e -> effectiveWellnessValue(e.getKey(), e.getValue())))
@@ -747,6 +793,7 @@ public class TrackingData {
      * @param gameTimeMs       current game time in ms
      * @return detailed breakdown record
      */
+    @ApiStatus.Experimental
     public MultiplierBreakdown getMultiplierBreakdown(String sourceKey, String dominantCategory, String familyKey, long gameTimeMs) {
         DiminishingReturnsConfig memCfg = config();
         long halfLifeMs = memCfg.memoryWindowMinutes() * 60_000L;
@@ -809,6 +856,7 @@ public class TrackingData {
      * Set the memory config at a sync boundary (server-side) or on delta apply (client-side).
      * Called once per application/tick/sync — not on every method.
      */
+    @ApiStatus.Experimental
     public void setMemoryConfig(DiminishingReturnsConfig cfg) {
         this.memoryConfig = cfg;
     }
@@ -826,6 +874,7 @@ public class TrackingData {
      * Detailed breakdown of how the multiplier was calculated.
      * Useful for debugging and advanced tooltips.
      */
+    @ApiStatus.Experimental
     public record MultiplierBreakdown(
             float itemContribution,
             float categoryContribution,

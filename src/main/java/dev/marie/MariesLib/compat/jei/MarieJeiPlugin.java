@@ -10,10 +10,6 @@ import net.minecraft.resources.ResourceLocation;
 @ApiStatus.Internal
 public final class MarieJeiPlugin implements IModPlugin {
 
-    public static void bootstrap() {
-        // Intentionally empty. Called reflectively from client init to keep optional class loading safe.
-    }
-
     @Override
     public ResourceLocation getPluginUid() {
         return ResourceLocation.fromNamespaceAndPath(MariesLib.MOD_ID, "jei_plugin");

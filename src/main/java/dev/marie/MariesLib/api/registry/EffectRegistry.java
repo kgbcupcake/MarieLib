@@ -12,7 +12,6 @@ import java.util.Set;
 /**
  * Internal storage for threshold effects registered via the public API.
  */
-@ApiStatus.Stable
 public final class EffectRegistry {
 
     private static final class Core extends AbstractRegistry<String, ThresholdEffect> {

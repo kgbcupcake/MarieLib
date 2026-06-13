@@ -54,6 +54,7 @@ public final class TagRecommendationWriter {
         Map<String, List<ClassificationResult>> byCategory = groupByDominant(confident);
 
         Path outputDir = FMLPaths.CONFIGDIR.get().resolve(MarieLibContext.get().modId());
+        dev.marie.MariesLib.util.MarieValidation.assertPathUnder(outputDir, FMLPaths.CONFIGDIR.get(), "TagRecommendationWriter.writeRecommendations");
         Files.createDirectories(outputDir);
 
         writeRecommendationsJson(byCategory, spreadThreshold, outputDir.resolve("tag_recommendations.json"));

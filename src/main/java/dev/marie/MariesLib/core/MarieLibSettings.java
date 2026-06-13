@@ -9,6 +9,7 @@ import dev.marie.MariesLib.api.ApiStatus;
 @ApiStatus.Stable
 public interface MarieLibSettings {
 
+    @ApiStatus.Stable
     static MarieLibSettings get() {
         if (MarieLibContext.isRegistered()) {
             return MarieLibContext.get();

@@ -6,7 +6,11 @@ import java.util.function.Supplier;
 import dev.marie.MariesLib.color.ColorRegistry;
 import dev.marie.MariesLib.command.MarieCommand;
 import dev.marie.MariesLib.command.MariesLibCommand;
+import dev.marie.MariesLib.compat.AutoCompatDiscovery;
+import dev.marie.MariesLib.compat.ModCompat;
 import dev.marie.MariesLib.config.ModCompatRegistry;
+import dev.marie.MariesLib.config.FeatureFlagCache;
+import dev.marie.MariesLib.config.MarieModFeatureFlags;
 import dev.marie.MariesLib.config.PresetRegistry;
 import dev.marie.MariesLib.config.LockRegistry;
 import dev.marie.MariesLib.handler.RecipeTriggerListener;
@@ -84,6 +88,7 @@ public final class MariesLibBootstrap {
 
         MarieLibContext ctx = MarieLibContext.builder(modId).build();
         MarieLibContext.register(ctx);
+        FeatureFlagCache.sync(MarieModFeatureFlags.disabled());
 
         MarieAttributes.register(modEventBus);
         TrackingAttachment.register(modEventBus);
@@ -108,6 +113,8 @@ public final class MariesLibBootstrap {
 
     private static void onLoadComplete(FMLLoadCompleteEvent event) {
         ModCompatRegistry.load();
+        ModCompat.initialize();
+        AutoCompatDiscovery.discover();
     }
 
     public static void setConfigScreenFactory(Supplier<Object> factory) {
@@ -145,6 +152,7 @@ public final class MariesLibBootstrap {
         registerHandlers(modEventBus);
         RegistryLifecycleManager.loadAll();
         ModCompatRegistry.load();
+        FeatureFlagCache.sync(MarieModFeatureFlags.disabled());
         MariesLib.LOGGER.info("[MariesLib] Bootstrap complete with owned config");
     }
 
@@ -159,7 +167,7 @@ public final class MariesLibBootstrap {
                 SourceOverrideRegistry::reload, SourceOverrideRegistry::loadFromDatapack);
         RegistryLifecycleManager.registerRegistry("SourceValueRegistry", SourceValueRegistry::load,
                 SourceValueRegistry::reload, SourceValueRegistry::loadFromDatapack);
-        RegistryLifecycleManager.registerRegistry("PresetRegistry", PresetRegistry::reload, PresetRegistry::reload);
+        RegistryLifecycleManager.registerRegistry("PresetRegistry", PresetRegistry::reload, PresetRegistry::reload, null);
     }
 
     private static boolean handlersRegistered;

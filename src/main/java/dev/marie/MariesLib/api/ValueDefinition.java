@@ -55,6 +55,7 @@ public final class ValueDefinition {
      * @param id the unique internal key for this value (e.g. "value_a")
      * @return a new {@link Builder} instance
      */
+    @ApiStatus.Stable
     public static Builder builder(String id) {
         return new Builder(id);
     }
@@ -64,6 +65,7 @@ public final class ValueDefinition {
      *
      * @return the value key string
      */
+    @ApiStatus.Stable
     public String getId() {
         return id;
     }
@@ -73,6 +75,7 @@ public final class ValueDefinition {
      *
      * @return the display name string
      */
+    @ApiStatus.Stable
     public String getDisplayName() {
         return displayName;
     }
@@ -82,6 +85,7 @@ public final class ValueDefinition {
      *
      * @return the color as a packed ARGB integer
      */
+    @ApiStatus.Stable
     public int getColor() {
         return color;
     }
@@ -91,6 +95,7 @@ public final class ValueDefinition {
      *
      * @return the decay rate per tick (e.g. 0.001 means 0.1% per tick)
      */
+    @ApiStatus.Stable
     public float getDefaultDecayRate() {
         return defaultDecayRate;
     }
@@ -100,6 +105,7 @@ public final class ValueDefinition {
      *
      * @return the critical threshold as a normalized float (0.0 to 1.0)
      */
+    @ApiStatus.Stable
     public float getCriticalThreshold() {
         return criticalThreshold;
     }
@@ -109,6 +115,7 @@ public final class ValueDefinition {
      *
      * @return the low threshold as a normalized float (0.0 to 1.0)
      */
+    @ApiStatus.Stable
     public float getLowThreshold() {
         return lowThreshold;
     }
@@ -118,6 +125,7 @@ public final class ValueDefinition {
      *
      * @return the excess threshold as a normalized float (0.0 to 1.0)
      */
+    @ApiStatus.Stable
     public float getExcessThreshold() {
         return excessThreshold;
     }
@@ -129,6 +137,7 @@ public final class ValueDefinition {
      * @return the custom {@link ValueRenderer}, or {@code null}
      */
     @Nullable
+    @ApiStatus.Stable
     public ValueRenderer getCustomRenderer() {
         return customRenderer;
     }
@@ -139,6 +148,7 @@ public final class ValueDefinition {
      *
      * @return {@code true} if high values are good, {@code false} if high values are bad
      */
+    @ApiStatus.Stable
     public boolean isBeneficial() {
         return beneficial;
     }
@@ -148,6 +158,7 @@ public final class ValueDefinition {
      *
      * @return the amount scale (default 1.0)
      */
+    @ApiStatus.Stable
     public double getAmountScale() {
         return amountScale;
     }
@@ -180,6 +191,7 @@ public final class ValueDefinition {
          * @param displayName the display name (e.g. "Value A")
          * @return this builder for chaining
          */
+        @ApiStatus.Stable
         public Builder displayName(String displayName) {
             this.displayName = displayName;
             return this;
@@ -191,6 +203,7 @@ public final class ValueDefinition {
          * @param color the packed ARGB color integer
          * @return this builder for chaining
          */
+        @ApiStatus.Stable
         public Builder color(int color) {
             this.color = color;
             return this;
@@ -202,6 +215,7 @@ public final class ValueDefinition {
          * @param rate the decay rate (must be non-negative)
          * @return this builder for chaining
          */
+        @ApiStatus.Stable
         public Builder defaultDecayRate(float rate) {
             this.defaultDecayRate = rate;
             return this;
@@ -213,6 +227,7 @@ public final class ValueDefinition {
          * @param threshold the critical threshold (0.0 to 1.0)
          * @return this builder for chaining
          */
+        @ApiStatus.Stable
         public Builder criticalThreshold(float threshold) {
             this.criticalThreshold = threshold;
             return this;
@@ -224,6 +239,7 @@ public final class ValueDefinition {
          * @param threshold the low threshold (0.0 to 1.0)
          * @return this builder for chaining
          */
+        @ApiStatus.Stable
         public Builder lowThreshold(float threshold) {
             this.lowThreshold = threshold;
             return this;
@@ -235,6 +251,7 @@ public final class ValueDefinition {
          * @param threshold the excess threshold (0.0 to 1.0)
          * @return this builder for chaining
          */
+        @ApiStatus.Stable
         public Builder excessThreshold(float threshold) {
             this.excessThreshold = threshold;
             return this;
@@ -246,6 +263,7 @@ public final class ValueDefinition {
          * @param renderer the custom {@link ValueRenderer} implementation, or {@code null} for default
          * @return this builder for chaining
          */
+        @ApiStatus.Stable
         public Builder customRenderer(@Nullable ValueRenderer renderer) {
             this.customRenderer = renderer;
             return this;
@@ -259,12 +277,14 @@ public final class ValueDefinition {
          * @param beneficial {@code true} if high values are good, {@code false} if high values are bad
          * @return this builder for chaining
          */
+        @ApiStatus.Stable
         public Builder beneficial(boolean beneficial) {
             this.beneficial = beneficial;
             return this;
         }
 
         /** How many raw source amount units equal a full bar (1.0). Default 1.0. */
+        @ApiStatus.Stable
         public Builder amountScale(double scale) {
             this.amountScale = scale;
             return this;
@@ -276,6 +296,7 @@ public final class ValueDefinition {
          * @return the constructed definition
          * @throws IllegalStateException if required fields are missing or invalid
          */
+        @ApiStatus.Stable
         public ValueDefinition build() {
             if (id == null) {
                 throw new IllegalStateException("id is required");

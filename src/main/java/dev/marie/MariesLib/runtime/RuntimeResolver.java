@@ -73,6 +73,9 @@ public final class RuntimeResolver {
     }
 
     public Map<String, Float> resolve(ItemStack stack, @Nullable RecipeManager recipeManager) {
+        if (!MarieLibContext.isRegistered()) {
+            return Map.of();
+        }
         if (stack.isEmpty() || stack.getItem() == null) return Map.of();
 
         List<String> valueKeys = MarieLibContext.get().valueKeys();
@@ -95,6 +98,9 @@ public final class RuntimeResolver {
     }
 
     public @Nullable ResolutionResult resolveWithResult(ItemStack stack, @Nullable RecipeManager recipeManager) {
+        if (!MarieLibContext.isRegistered()) {
+            return null;
+        }
         if (stack.isEmpty() || stack.getItem() == null) return null;
 
         List<String> valueKeys = MarieLibContext.get().valueKeys();
@@ -117,6 +123,9 @@ public final class RuntimeResolver {
     }
 
     public @Nullable ClassificationTrace resolveWithTrace(ItemStack stack, @Nullable RecipeManager recipeManager) {
+        if (!MarieLibContext.isRegistered()) {
+            return null;
+        }
         if (stack.isEmpty() || stack.getItem() == null) return null;
 
         List<String> valueKeys = MarieLibContext.get().valueKeys();
@@ -257,6 +266,11 @@ public final class RuntimeResolver {
     ResolutionResult resolveUncached(ItemStack stack, ResourceLocation itemId,
                                      @Nullable RecipeManager recipeManager,
                                      @Nullable List<ClassificationTraceStep> traceOut) {
+        if (!MarieLibContext.isRegistered()) {
+            return new ResolutionResult(
+                    Map.of(), Map.of(), List.of(), Map.of(), Map.of(),
+                    false, 0f, RuntimeCascadeStage.HARD_FALLBACK, "context_not_registered");
+        }
         if (ScannerSpecRegistry.get().excludedItems().contains(itemId.toString())) {
             return new ResolutionResult(
                     Map.of(), Map.of(), List.of(), Map.of(), Map.of(),
