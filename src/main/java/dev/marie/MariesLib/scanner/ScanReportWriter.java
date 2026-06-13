@@ -46,6 +46,7 @@ public final class ScanReportWriter {
             @Nullable ScanCache.ScanDiff diff
     ) throws IOException {
         Path outputDir = FMLPaths.CONFIGDIR.get().resolve(MarieLibContext.get().modId());
+        dev.marie.MariesLib.util.MarieValidation.assertPathUnder(outputDir, FMLPaths.CONFIGDIR.get(), "ScanReportWriter.writeReports");
         Files.createDirectories(outputDir);
 
         writeTextReport(results, summary, diff, outputDir.resolve("unassigned_sources_report.txt"));

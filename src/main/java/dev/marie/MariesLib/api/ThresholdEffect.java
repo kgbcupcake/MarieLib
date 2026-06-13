@@ -56,6 +56,7 @@ public final class ThresholdEffect {
      *
      * @return a new {@link Builder} instance
      */
+    @ApiStatus.Stable
     public static Builder builder() {
         return new Builder();
     }
@@ -65,6 +66,7 @@ public final class ThresholdEffect {
      *
      * @return the value identifier string (e.g. "value_a")
      */
+    @ApiStatus.Stable
     public String getValueKey() {
         return valueKey;
     }
@@ -74,6 +76,7 @@ public final class ThresholdEffect {
      *
      * @return the threshold as a normalized float (0.0 to 1.0)
      */
+    @ApiStatus.Stable
     public float getThreshold() {
         return threshold;
     }
@@ -83,6 +86,7 @@ public final class ThresholdEffect {
      *
      * @return the {@link ThresholdType} enum value
      */
+    @ApiStatus.Stable
     public ThresholdType getThresholdType() {
         return thresholdType;
     }
@@ -92,6 +96,7 @@ public final class ThresholdEffect {
      *
      * @return the effect's {@link ResourceLocation}
      */
+    @ApiStatus.Stable
     public ResourceLocation getEffectId() {
         return effectId;
     }
@@ -101,6 +106,7 @@ public final class ThresholdEffect {
      *
      * @return the effect amplifier
      */
+    @ApiStatus.Stable
     public int getAmplifier() {
         return amplifier;
     }
@@ -110,6 +116,7 @@ public final class ThresholdEffect {
      *
      * @return the effect duration in game ticks
      */
+    @ApiStatus.Stable
     public int getDuration() {
         return duration;
     }
@@ -135,6 +142,7 @@ public final class ThresholdEffect {
          * @param valueKey the value identifier (e.g. "value_a")
          * @return this builder for chaining
          */
+        @ApiStatus.Stable
         public Builder valueKey(String valueKey) {
             this.valueKey = valueKey;
             return this;
@@ -146,6 +154,7 @@ public final class ThresholdEffect {
          * @param threshold the activation threshold (0.0 to 1.0)
          * @return this builder for chaining
          */
+        @ApiStatus.Stable
         public Builder threshold(float threshold) {
             this.threshold = threshold;
             return this;
@@ -157,6 +166,7 @@ public final class ThresholdEffect {
          * @param type the {@link ThresholdType} enum value
          * @return this builder for chaining
          */
+        @ApiStatus.Stable
         public Builder thresholdType(ThresholdType type) {
             this.thresholdType = type;
             return this;
@@ -168,6 +178,7 @@ public final class ThresholdEffect {
          * @param effectId the effect's {@link ResourceLocation}
          * @return this builder for chaining
          */
+        @ApiStatus.Stable
         public Builder effectId(ResourceLocation effectId) {
             this.effectId = effectId;
             return this;
@@ -179,6 +190,7 @@ public final class ThresholdEffect {
          * @param amplifier the effect amplifier (0-indexed)
          * @return this builder for chaining
          */
+        @ApiStatus.Stable
         public Builder amplifier(int amplifier) {
             this.amplifier = amplifier;
             return this;
@@ -190,6 +202,7 @@ public final class ThresholdEffect {
          * @param duration the effect duration in ticks
          * @return this builder for chaining
          */
+        @ApiStatus.Stable
         public Builder duration(int duration) {
             this.duration = duration;
             return this;
@@ -201,6 +214,7 @@ public final class ThresholdEffect {
          * @return the constructed definition
          * @throws IllegalStateException if required fields are missing or invalid
          */
+        @ApiStatus.Stable
         public ThresholdEffect build() {
             if (valueKey == null) {
                 throw new IllegalStateException("valueKey is required");

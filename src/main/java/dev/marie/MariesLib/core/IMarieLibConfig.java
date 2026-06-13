@@ -14,7 +14,7 @@ import dev.marie.MariesLib.tracking.DiminishingReturnsConfig;
 @ApiStatus.Internal
 public interface IMarieLibConfig extends MarieLibSettings {
 
-    @ApiStatus.Stable
+    @ApiStatus.Internal
     static IMarieLibConfig get() {
         if (MarieLibContext.isRegistered()) {
             return MarieLibContext.get();

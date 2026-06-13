@@ -52,6 +52,7 @@ public final class ProfileDefinition {
      * @param id the unique internal key for this profile (e.g. "profile_a")
      * @return a new {@link Builder} instance
      */
+    @ApiStatus.Stable
     public static Builder builder(String id) {
         return new Builder(id);
     }
@@ -61,6 +62,7 @@ public final class ProfileDefinition {
      *
      * @return the profile key string
      */
+    @ApiStatus.Stable
     public String getId() {
         return id;
     }
@@ -70,6 +72,7 @@ public final class ProfileDefinition {
      *
      * @return the display name (e.g. "Profile A")
      */
+    @ApiStatus.Stable
     public String getDisplayName() {
         return displayName;
     }
@@ -80,6 +83,7 @@ public final class ProfileDefinition {
      *
      * @return an unmodifiable map of value key to threshold value
      */
+    @ApiStatus.Stable
     public Map<String, Float> getCustomThresholds() {
         return customThresholds;
     }
@@ -89,6 +93,7 @@ public final class ProfileDefinition {
      *
      * @return an unmodifiable map of value key to decay rate override
      */
+    @ApiStatus.Stable
     public Map<String, Float> getCustomDecayRates() {
         return customDecayRates;
     }
@@ -99,6 +104,7 @@ public final class ProfileDefinition {
      *
      * @return an unmodifiable list of effect {@link ResourceLocation} identifiers
      */
+    @ApiStatus.Stable
     public List<ResourceLocation> getBonusEffects() {
         return bonusEffects;
     }
@@ -109,6 +115,7 @@ public final class ProfileDefinition {
      * @return the profile description, or {@code null} if not set
      */
     @Nullable
+    @ApiStatus.Stable
     public String getDescription() {
         return description;
     }
@@ -137,6 +144,7 @@ public final class ProfileDefinition {
          * @param displayName the display name
          * @return this builder for chaining
          */
+        @ApiStatus.Stable
         public Builder displayName(String displayName) {
             this.displayName = displayName;
             return this;
@@ -149,6 +157,7 @@ public final class ProfileDefinition {
          * @param threshold   the threshold value (0.0 to 1.0)
          * @return this builder for chaining
          */
+        @ApiStatus.Stable
         public Builder customThreshold(String valueKey, float threshold) {
             this.customThresholds.put(valueKey, threshold);
             return this;
@@ -161,6 +170,7 @@ public final class ProfileDefinition {
          * @param decayRate   the decay rate per tick
          * @return this builder for chaining
          */
+        @ApiStatus.Stable
         public Builder customDecayRate(String valueKey, float decayRate) {
             this.customDecayRates.put(valueKey, decayRate);
             return this;
@@ -172,6 +182,7 @@ public final class ProfileDefinition {
          * @param effectId the effect's {@link ResourceLocation}
          * @return this builder for chaining
          */
+        @ApiStatus.Stable
         public Builder addBonusEffect(ResourceLocation effectId) {
             this.bonusEffects.add(effectId);
             return this;
@@ -183,6 +194,7 @@ public final class ProfileDefinition {
          * @param description a brief text description
          * @return this builder for chaining
          */
+        @ApiStatus.Stable
         public Builder description(String description) {
             this.description = description;
             return this;
@@ -194,6 +206,7 @@ public final class ProfileDefinition {
          * @return the constructed definition
          * @throws IllegalStateException if required fields are missing or invalid
          */
+        @ApiStatus.Stable
         public ProfileDefinition build() {
             if (id == null) {
                 throw new IllegalStateException("id is required");

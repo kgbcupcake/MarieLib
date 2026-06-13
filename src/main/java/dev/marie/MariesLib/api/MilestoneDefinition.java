@@ -53,6 +53,7 @@ public final class MilestoneDefinition {
      * @param id the unique identifier for this milestone (e.g. "milestone_id")
      * @return a new {@link Builder} instance
      */
+    @ApiStatus.Stable
     public static Builder builder(String id) {
         return new Builder(id);
     }
@@ -62,6 +63,7 @@ public final class MilestoneDefinition {
      *
      * @return the milestone id string
      */
+    @ApiStatus.Stable
     public String getId() {
         return id;
     }
@@ -71,6 +73,7 @@ public final class MilestoneDefinition {
      *
      * @return the value identifier string
      */
+    @ApiStatus.Stable
     public String getValueKey() {
         return valueKey;
     }
@@ -80,6 +83,7 @@ public final class MilestoneDefinition {
      *
      * @return the cumulative goal value
      */
+    @ApiStatus.Stable
     public float getCumulativeGoal() {
         return cumulativeGoal;
     }
@@ -91,6 +95,7 @@ public final class MilestoneDefinition {
      * @return the reward effect's {@link ResourceLocation}, or {@code null}
      */
     @Nullable
+    @ApiStatus.Stable
     public ResourceLocation getRewardEffectId() {
         return rewardEffectId;
     }
@@ -100,6 +105,7 @@ public final class MilestoneDefinition {
      *
      * @return the effect amplifier (0-indexed)
      */
+    @ApiStatus.Stable
     public int getRewardAmplifier() {
         return rewardAmplifier;
     }
@@ -109,6 +115,7 @@ public final class MilestoneDefinition {
      *
      * @return the reward duration in ticks
      */
+    @ApiStatus.Stable
     public int getRewardDuration() {
         return rewardDuration;
     }
@@ -120,6 +127,7 @@ public final class MilestoneDefinition {
      * @return the advancement's {@link ResourceLocation}, or {@code null}
      */
     @Nullable
+    @ApiStatus.Stable
     public ResourceLocation getAdvancementId() {
         return advancementId;
     }
@@ -150,6 +158,7 @@ public final class MilestoneDefinition {
          * @param valueKey the value identifier (e.g. "value_a")
          * @return this builder for chaining
          */
+        @ApiStatus.Stable
         public Builder valueKey(String valueKey) {
             this.valueKey = valueKey;
             return this;
@@ -161,6 +170,7 @@ public final class MilestoneDefinition {
          * @param goal the cumulative goal value
          * @return this builder for chaining
          */
+        @ApiStatus.Stable
         public Builder cumulativeGoal(float goal) {
             this.cumulativeGoal = goal;
             return this;
@@ -172,6 +182,7 @@ public final class MilestoneDefinition {
          * @param effectId the reward effect's {@link ResourceLocation}
          * @return this builder for chaining
          */
+        @ApiStatus.Stable
         public Builder rewardEffect(ResourceLocation effectId) {
             this.rewardEffectId = effectId;
             return this;
@@ -183,6 +194,7 @@ public final class MilestoneDefinition {
          * @param amplifier the effect amplifier (0-indexed)
          * @return this builder for chaining
          */
+        @ApiStatus.Stable
         public Builder rewardAmplifier(int amplifier) {
             this.rewardAmplifier = amplifier;
             return this;
@@ -194,6 +206,7 @@ public final class MilestoneDefinition {
          * @param duration the duration in game ticks
          * @return this builder for chaining
          */
+        @ApiStatus.Stable
         public Builder rewardDuration(int duration) {
             this.rewardDuration = duration;
             return this;
@@ -205,6 +218,7 @@ public final class MilestoneDefinition {
          * @param advancementId the advancement's {@link ResourceLocation}
          * @return this builder for chaining
          */
+        @ApiStatus.Stable
         public Builder advancement(ResourceLocation advancementId) {
             this.advancementId = advancementId;
             return this;
@@ -216,6 +230,7 @@ public final class MilestoneDefinition {
          * @return the constructed definition
          * @throws IllegalStateException if required fields are missing or invalid
          */
+        @ApiStatus.Stable
         public MilestoneDefinition build() {
             if (id == null) {
                 throw new IllegalStateException("id is required");

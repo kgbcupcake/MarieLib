@@ -3,11 +3,13 @@ package dev.marie.MariesLib.tracking;
 import dev.marie.MariesLib.api.ApiStatus;
 import dev.marie.MariesLib.api.ApplicationHistoryView;
 import dev.marie.MariesLib.core.IMarieLibConfig;
+import dev.marie.MariesLib.core.MariesLib;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Concrete implementation of {@link ApplicationHistoryView} backed by a player's {@link TrackingData}.
@@ -30,7 +32,15 @@ public final class TrackingDataApplicationHistoryView implements ApplicationHist
                 .filter(e -> !e.getValue().isEffectivelyExpired(halfLifeMs, gameTimeMs, 0.1f))
                 .sorted(Comparator.<Map.Entry<String, SourceMemoryEntry>, Long>comparing(
                         e -> e.getValue().lastAppliedTick()).reversed())
-                .map(e -> ResourceLocation.parse(e.getKey()))
+                .map(e -> {
+                    try {
+                        return ResourceLocation.parse(e.getKey());
+                    } catch (Exception ex) {
+                        MariesLib.LOGGER.warn("[MarieLib] Dropping invalid source key in history: '{}'", e.getKey());
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
                 .toList();
     }
 

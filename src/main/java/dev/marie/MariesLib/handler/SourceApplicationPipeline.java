@@ -53,11 +53,6 @@ public final class SourceApplicationPipeline {
         }
 
         var ctx = MarieLibContext.get();
-        MariesLib.LOGGER.info("[DEBUG] Pipeline firing for {} — resolver returned: {}",
-                stack != null ? stack.getItem().getDescriptionId() : "null",
-                stack != null && !stack.isEmpty()
-                        ? ctx.sourceValueResolver().apply(stack, player.level())
-                        : Map.of());
 
         MarieEvents.SourceTriggerEvent triggerEvent =
                 new MarieEvents.SourceTriggerEvent(player, trigger);
@@ -86,9 +81,18 @@ public final class SourceApplicationPipeline {
         float totalAdded;
         Map<String, Float> valueDeltas;
         Map<String, Float> matchedBars;
-        ResourceLocation sourceResourceId = stack != null
-                ? MarieRegistryUtils.itemKey(stack)
-                : ResourceLocation.parse(trigger.sourceId());
+        ResourceLocation sourceResourceId;
+        if (stack != null) {
+            sourceResourceId = MarieRegistryUtils.itemKey(stack);
+        } else {
+            try {
+                sourceResourceId = ResourceLocation.parse(trigger.sourceId());
+            } catch (Exception e) {
+                MariesLib.LOGGER.warn("[MarieLib] Invalid sourceId in trigger: '{}' — skipping pipeline",
+                        trigger.sourceId());
+                return;
+            }
+        }
         if (override != null) {
             totalAdded = override.total();
             valueDeltas = new HashMap<>(override.values());
@@ -230,6 +234,9 @@ public final class SourceApplicationPipeline {
     public static boolean writeDirectValue(
             ServerPlayer player, TrackingData tracking, String key, float newValue) {
         if (ReloadGuardListener.isReloadInProgress()) {
+            return false;
+        }
+        if (!tracking.values.containsKey(key)) {
             return false;
         }
         float oldValue = tracking.values.getOrDefault(key, 0f);

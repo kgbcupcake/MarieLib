@@ -1,5 +1,6 @@
 package dev.marie.MariesLib.runtime;
 
+import dev.marie.MariesLib.api.ApiStatus;
 import dev.marie.MariesLib.scan.ResolutionStage;
 import dev.marie.MariesLib.scan.RuntimeCascadeStage;
 
@@ -15,6 +16,7 @@ import java.util.TreeMap;
  * <p>All map keys are sorted (TreeMap) and floats formatted via {@code Locale.ROOT} for deterministic,
  * human-readable output stable between runs.</p>
  */
+@ApiStatus.Internal
 public record ResolutionTrace(
         String itemId,
         Map<String, Float> tagDerivedRaw,

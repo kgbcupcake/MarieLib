@@ -8,6 +8,7 @@ import com.google.gson.JsonObject;
 import dev.marie.MariesLib.api.ApiStatus;
 import dev.marie.MariesLib.core.MariesLib;
 import dev.marie.MariesLib.core.MarieLibContext;
+import dev.marie.MariesLib.util.MarieValidation;
 import net.neoforged.fml.loading.FMLPaths;
 
 import javax.annotation.Nullable;
@@ -337,6 +338,7 @@ final class MultiValueAnalysisWriter {
             }
 
             Path tagFile = tagsDir.resolve(value + ".json");
+            MarieValidation.assertPathUnder(tagFile, tagsDir, "MultiValueAnalysisWriter.writeDatapack");
             JsonObject tagObj = new JsonObject();
             tagObj.addProperty("replace", false);
             JsonArray values = new JsonArray();

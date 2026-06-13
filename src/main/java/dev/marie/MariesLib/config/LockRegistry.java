@@ -6,6 +6,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
+import dev.marie.MariesLib.core.IMarieLibConfig;
 import dev.marie.MariesLib.core.MariesLib;
 import dev.marie.MariesLib.data.DatapackSchema;
 import dev.marie.MariesLib.registry.AbstractRegistry;
@@ -93,7 +94,7 @@ public class LockRegistry {
     }
 
     public static void load() {
-        Path configDir = FMLPaths.CONFIGDIR.get().resolve(MariesLib.MOD_ID);
+        Path configDir = FMLPaths.CONFIGDIR.get().resolve(IMarieLibConfig.get().modId());
         Path file = configDir.resolve("locks.json");
 
         try {

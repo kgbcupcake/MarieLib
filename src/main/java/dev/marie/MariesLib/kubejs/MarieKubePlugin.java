@@ -8,7 +8,6 @@ import dev.latvian.mods.kubejs.script.ScriptType;
 import dev.marie.MariesLib.api.ApiStatus;
 import dev.marie.MariesLib.kubejs.bindings.MarieKubeBindings;
 import dev.marie.MariesLib.kubejs.bindings.MarieKubeServerBindings;
-import dev.marie.MariesLib.kubejs.internal.KubeEventBridge;
 import dev.marie.MariesLib.kubejs.internal.KubeGuard;
 
 /**
@@ -38,6 +37,5 @@ public class MarieKubePlugin implements KubeJSPlugin {
     @Override
     public void afterScriptsLoaded(ScriptManager manager) {
         KubeGuard.invalidateCache();
-        KubeEventBridge.register();
     }
 }

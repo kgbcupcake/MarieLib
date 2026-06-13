@@ -14,6 +14,7 @@ import dev.marie.MariesLib.api.ThresholdEffect;
 import dev.marie.MariesLib.api.ValueDefinition;
 import dev.marie.MariesLib.compat.CompatDefinition;
 import dev.marie.MariesLib.core.MariesLib;
+import dev.marie.MariesLib.registry.MarieApiRegistries;
 import dev.marie.MariesLib.util.MarieRegistryUtils;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -82,6 +83,7 @@ public final class MarieDataLoader extends SimpleJsonResourceReloadListener {
             DatapackDiagnostics diagnostics = DatapackDiagnostics.getInstance();
             diagnostics.clear();
 
+            MarieApiRegistries.onDatapackApplyBegin();
             callbacks.onApplyBegin();
 
             Set<ResourceLocation> nextValues = new LinkedHashSet<>();
@@ -259,6 +261,7 @@ public final class MarieDataLoader extends SimpleJsonResourceReloadListener {
             }
         }
 
+            MarieApiRegistries.onDatapackApplyEnd();
             callbacks.onApplyEnd();
 
             loadedValues = Collections.unmodifiableSet(nextValues);
@@ -364,6 +367,7 @@ public final class MarieDataLoader extends SimpleJsonResourceReloadListener {
     private void registerSourceClassification(ResourceLocation fileId, JsonObject json) {
         String valueKey = getRequiredString(json, DatapackSchema.KEY_VALUE_KEY);
         float amount = getRequiredFloat(json, DatapackSchema.KEY_AMOUNT);
+        MarieRegistryUtils.requireValueKey(valueKey, "MarieDataLoader.registerSourceClassification");
 
         if (json.has(DatapackSchema.KEY_ITEM)) {
             ResourceLocation itemId = ResourceLocation.parse(getRequiredString(json, DatapackSchema.KEY_ITEM));
@@ -395,28 +399,28 @@ public final class MarieDataLoader extends SimpleJsonResourceReloadListener {
     }
 
     private static ThresholdEffect parseEffect(ResourceLocation fileId, JsonObject json) {
-        // TODO: implement when EffectDefinition is moved to MarieLib
-        return null;
+        throw new UnsupportedOperationException(
+                "parseEffect not yet implemented — datapack entry at " + fileId + " will be skipped");
     }
 
     private static SynergyDefinition parseSynergy(ResourceLocation fileId, JsonObject json) {
-        // TODO: implement when ValueSynergyDefinition is moved to MarieLib
-        return null;
+        throw new UnsupportedOperationException(
+                "parseSynergy not yet implemented — datapack entry at " + fileId + " will be skipped");
     }
 
     private static SourcePairSynergy parseSourcePairSynergy(ResourceLocation fileId, JsonObject json) {
-        // TODO: implement when SourcePairSynergy datapack parsing is moved to MarieLib
-        return null;
+        throw new UnsupportedOperationException(
+                "parseSourcePairSynergy not yet implemented — datapack entry at " + fileId + " will be skipped");
     }
 
     private static MilestoneDefinition parseMilestone(ResourceLocation fileId, JsonObject json) {
-        // TODO: implement when ValueMilestoneDefinition is moved to MarieLib
-        return null;
+        throw new UnsupportedOperationException(
+                "parseMilestone not yet implemented — datapack entry at " + fileId + " will be skipped");
     }
 
     private static ProfileDefinition parseTrackingProfile(ResourceLocation fileId, JsonObject json) {
-        // TODO: implement when TrackingProfileDefinition is moved to MarieLib
-        return null;
+        throw new UnsupportedOperationException(
+                "parseTrackingProfile not yet implemented — datapack entry at " + fileId + " will be skipped");
     }
 
     private static CompatDefinition parseCompat(ResourceLocation fileId, JsonObject json) throws Exception {

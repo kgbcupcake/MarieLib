@@ -43,6 +43,7 @@ public final class SourcePairSynergy {
      * @param id the unique identifier for this source synergy (e.g. "source_pair_id")
      * @return a new {@link Builder} instance
      */
+    @ApiStatus.Stable
     public static Builder builder(String id) {
         return new Builder(id);
     }
@@ -52,6 +53,7 @@ public final class SourcePairSynergy {
      *
      * @return the synergy id string
      */
+    @ApiStatus.Stable
     public String getId() {
         return id;
     }
@@ -61,6 +63,7 @@ public final class SourcePairSynergy {
      *
      * @return the {@link ResourceLocation} of source A
      */
+    @ApiStatus.Stable
     public ResourceLocation getSourceA() {
         return sourceA;
     }
@@ -70,6 +73,7 @@ public final class SourcePairSynergy {
      *
      * @return the {@link ResourceLocation} of source B
      */
+    @ApiStatus.Stable
     public ResourceLocation getSourceB() {
         return sourceB;
     }
@@ -80,6 +84,7 @@ public final class SourcePairSynergy {
      *
      * @return the time window in ticks (20 ticks = 1 second)
      */
+    @ApiStatus.Stable
     public int getTimeWindowTicks() {
         return timeWindowTicks;
     }
@@ -90,6 +95,7 @@ public final class SourcePairSynergy {
      *
      * @return the bonus value key (e.g. "value_a")
      */
+    @ApiStatus.Stable
     public String getBonusValueKey() {
         return bonusValueKey;
     }
@@ -99,6 +105,7 @@ public final class SourcePairSynergy {
      *
      * @return the bonus amount as a float
      */
+    @ApiStatus.Stable
     public float getBonusAmount() {
         return bonusAmount;
     }
@@ -126,6 +133,7 @@ public final class SourcePairSynergy {
          * @param sourceA the {@link ResourceLocation} of the first source
          * @return this builder for chaining
          */
+        @ApiStatus.Stable
         public Builder sourceA(ResourceLocation sourceA) {
             this.sourceA = sourceA;
             return this;
@@ -137,6 +145,7 @@ public final class SourcePairSynergy {
          * @param sourceB the {@link ResourceLocation} of the second source
          * @return this builder for chaining
          */
+        @ApiStatus.Stable
         public Builder sourceB(ResourceLocation sourceB) {
             this.sourceB = sourceB;
             return this;
@@ -149,6 +158,7 @@ public final class SourcePairSynergy {
          * @param ticks the time window in game ticks (20 ticks = 1 second)
          * @return this builder for chaining
          */
+        @ApiStatus.Stable
         public Builder timeWindowTicks(int ticks) {
             this.timeWindowTicks = ticks;
             return this;
@@ -160,6 +170,7 @@ public final class SourcePairSynergy {
          * @param valueKey the bonus value key (e.g. "value_a")
          * @return this builder for chaining
          */
+        @ApiStatus.Stable
         public Builder bonusValueKey(String valueKey) {
             this.bonusValueKey = valueKey;
             return this;
@@ -171,6 +182,7 @@ public final class SourcePairSynergy {
          * @param amount the bonus amount
          * @return this builder for chaining
          */
+        @ApiStatus.Stable
         public Builder bonusAmount(float amount) {
             this.bonusAmount = amount;
             return this;
@@ -182,6 +194,7 @@ public final class SourcePairSynergy {
          * @return the constructed definition
          * @throws IllegalStateException if required fields are missing or invalid
          */
+        @ApiStatus.Stable
         public SourcePairSynergy build() {
             if (id == null) {
                 throw new IllegalStateException("id is required");

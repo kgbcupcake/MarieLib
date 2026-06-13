@@ -26,6 +26,7 @@ import dev.marie.MariesLib.config.PresetRegistry;
 import dev.marie.MariesLib.tracking.AttachmentTrackingDataProvider;
 import dev.marie.MariesLib.runtime.SourceValueRegistry;
 import dev.marie.MariesLib.util.MarieRegistryUtils;
+import dev.marie.MariesLib.util.MarieValidation;
 import dev.marie.MariesLib.scan.ResolutionStageHandler;
 import dev.marie.MariesLib.tracking.TrackingData;
 import dev.marie.MariesLib.tracking.DiminishingReturnsConfig;
@@ -45,12 +46,13 @@ import net.minecraft.world.level.Level;
  * <p>Only {@link Builder#build()} requires {@code modId}; every other builder field has a
  * safe lib-owned default. Use {@link MariesLibBootstrap#attach} for zero-config wiring.</p>
  */
+@ApiStatus.Internal
 public final class MarieLibContext implements MarieLibSettings, IMarieLibConfig {
 
     @ApiStatus.Internal
     public record SourceDelta(float total, Map<String, Float> values) {}
 
-    @ApiStatus.Internal
+    @ApiStatus.Experimental
     @FunctionalInterface
     public interface SourceDeltaResolver {
         /**
@@ -727,6 +729,7 @@ public final class MarieLibContext implements MarieLibSettings, IMarieLibConfig 
         public Builder valueIconProvider(Function<String, String> f) { this.valueIconProvider = f; return this; }
         @ApiStatus.Experimental
         public Builder tooltipValueResolver(BiFunction<ItemStack, Player, Map<String, Float>> f) { this.tooltipValueResolver = f; return this; }
+        @ApiStatus.Experimental
         public Builder clientTrackingDataProvider(Supplier<TrackingData> s) { this.clientTrackingDataProvider = s; return this; }
         public Builder sourceFamilyResolver(Function<ResourceLocation, String> f) { this.sourceFamilyResolver = f; return this; }
         @ApiStatus.Experimental
@@ -790,6 +793,10 @@ public final class MarieLibContext implements MarieLibSettings, IMarieLibConfig 
 
         @ApiStatus.Stable
         public MarieLibContext build() {
+            if (!MarieValidation.sanitizeModId(modId)) {
+                throw new IllegalArgumentException(
+                        "modId must match [a-z0-9_]{1,64}, got: '" + modId + "'");
+            }
             return new MarieLibContext(this);
         }
     }
