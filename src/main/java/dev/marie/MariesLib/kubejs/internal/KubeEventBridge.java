@@ -4,6 +4,7 @@ import dev.latvian.mods.kubejs.script.ScriptsLoadedEvent;
 import dev.marie.MariesLib.api.ApiStatus;
 import dev.marie.MariesLib.api.MarieEvents;
 import dev.marie.MariesLib.kubejs.MarieKubeEvents;
+import dev.marie.MariesLib.kubejs.events.MarieMilestoneTriggeredEvent;
 import dev.marie.MariesLib.kubejs.events.MarieSourceConsumedEvent;
 import dev.marie.MariesLib.kubejs.events.MarieValueChangedEvent;
 import dev.marie.MariesLib.kubejs.events.MarieValueCriticalEvent;
@@ -29,6 +30,7 @@ public final class KubeEventBridge {
         NeoForge.EVENT_BUS.addListener(KubeEventBridge::onValueCritical);
         NeoForge.EVENT_BUS.addListener(KubeEventBridge::onValueExcess);
         NeoForge.EVENT_BUS.addListener(KubeEventBridge::onSourceConsumed);
+        NeoForge.EVENT_BUS.addListener(KubeEventBridge::onMilestoneTriggered);
         NeoForge.EVENT_BUS.addListener(KubeEventBridge::onScriptReload);
     }
 
@@ -58,6 +60,13 @@ public final class KubeEventBridge {
             return;
         }
         MarieKubeEvents.SOURCE_CONSUMED.post(new MarieSourceConsumedEvent(event));
+    }
+
+    private static void onMilestoneTriggered(MarieEvents.MilestoneTriggeredEvent event) {
+        if (!KubeGuard.hasListeners(MarieKubeEvents.MILESTONE_TRIGGERED_ID)) {
+            return;
+        }
+        MarieKubeEvents.MILESTONE_TRIGGERED.post(new MarieMilestoneTriggeredEvent(event));
     }
 
     private static void onScriptReload(ScriptsLoadedEvent event) {

@@ -272,4 +272,80 @@ public final class MarieEvents {
             return amount;
         }
     }
+
+    /**
+     * Fired when a player reaches a cumulative intake milestone for the first time.
+     *
+     * <p>This event is fired after completion is recorded and configured rewards are applied.
+     * Not cancellable.</p>
+     */
+    @ApiStatus.Stable
+    public static class MilestoneTriggeredEvent extends Event {
+
+        private final Player player;
+        private final MilestoneDefinition milestone;
+        private final String valueKey;
+        private final float cumulativeIntake;
+
+        /**
+         * Constructs a new milestone triggered event.
+         *
+         * @param player           the player who completed the milestone
+         * @param milestone        the milestone definition that was completed
+         * @param valueKey         the value key whose cumulative intake triggered the milestone
+         * @param cumulativeIntake the player's cumulative intake for {@code valueKey} after this application
+         */
+        @ApiStatus.Stable
+        public MilestoneTriggeredEvent(
+                Player player,
+                MilestoneDefinition milestone,
+                String valueKey,
+                float cumulativeIntake
+        ) {
+            this.player = player;
+            this.milestone = milestone;
+            this.valueKey = valueKey;
+            this.cumulativeIntake = cumulativeIntake;
+        }
+
+        /**
+         * Returns the player who completed the milestone.
+         *
+         * @return the affected player
+         */
+        @ApiStatus.Stable
+        public Player getPlayer() {
+            return player;
+        }
+
+        /**
+         * Returns the milestone definition that was completed.
+         *
+         * @return the milestone
+         */
+        @ApiStatus.Stable
+        public MilestoneDefinition getMilestone() {
+            return milestone;
+        }
+
+        /**
+         * Returns the value key whose cumulative intake triggered the milestone.
+         *
+         * @return the value identifier string
+         */
+        @ApiStatus.Stable
+        public String getValueKey() {
+            return valueKey;
+        }
+
+        /**
+         * Returns the player's cumulative intake for {@link #getValueKey()} after this application.
+         *
+         * @return the cumulative intake total
+         */
+        @ApiStatus.Stable
+        public float getCumulativeIntake() {
+            return cumulativeIntake;
+        }
+    }
 }

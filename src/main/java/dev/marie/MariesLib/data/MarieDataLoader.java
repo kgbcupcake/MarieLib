@@ -414,8 +414,24 @@ public final class MarieDataLoader extends SimpleJsonResourceReloadListener {
     }
 
     private static MilestoneDefinition parseMilestone(ResourceLocation fileId, JsonObject json) {
-        throw new UnsupportedOperationException(
-                "parseMilestone not yet implemented — datapack entry at " + fileId + " will be skipped");
+        MilestoneDefinition.Builder builder = MilestoneDefinition.builder(fileId.getPath());
+        builder.valueKey(getRequiredString(json, DatapackSchema.KEY_VALUE_KEY));
+        builder.cumulativeGoal(getRequiredFloat(json, DatapackSchema.KEY_CUMULATIVE_GOAL));
+        if (json.has(DatapackSchema.KEY_REWARD_EFFECT_ID)) {
+            builder.rewardEffect(ResourceLocation.parse(
+                    json.get(DatapackSchema.KEY_REWARD_EFFECT_ID).getAsString()));
+        }
+        if (json.has(DatapackSchema.KEY_AMPLIFIER)) {
+            builder.rewardAmplifier(json.get(DatapackSchema.KEY_AMPLIFIER).getAsInt());
+        }
+        if (json.has(DatapackSchema.KEY_REWARD_DURATION)) {
+            builder.rewardDuration(json.get(DatapackSchema.KEY_REWARD_DURATION).getAsInt());
+        }
+        if (json.has(DatapackSchema.KEY_ADVANCEMENT_ID)) {
+            builder.advancement(ResourceLocation.parse(
+                    json.get(DatapackSchema.KEY_ADVANCEMENT_ID).getAsString()));
+        }
+        return builder.build();
     }
 
     private static ProfileDefinition parseTrackingProfile(ResourceLocation fileId, JsonObject json) {

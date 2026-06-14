@@ -4,6 +4,7 @@ import dev.latvian.mods.kubejs.event.EventGroup;
 import dev.latvian.mods.kubejs.event.EventHandler;
 import dev.marie.MariesLib.api.ApiStatus;
 import dev.marie.MariesLib.kubejs.events.MarieDecayTickEvent;
+import dev.marie.MariesLib.kubejs.events.MarieMilestoneTriggeredEvent;
 import dev.marie.MariesLib.kubejs.events.MariePlayerSyncedEvent;
 import dev.marie.MariesLib.kubejs.events.MarieSourceConsumedEvent;
 import dev.marie.MariesLib.kubejs.events.MarieValueChangedEvent;
@@ -23,6 +24,7 @@ public final class MarieKubeEvents {
     public static final String VALUE_CRITICAL_ID = "MarieEvents.valueCritical";
     public static final String VALUE_EXCESS_ID = "MarieEvents.valueExcess";
     public static final String SOURCE_CONSUMED_ID = "MarieEvents.sourceConsumed";
+    public static final String MILESTONE_TRIGGERED_ID = "MarieEvents.milestoneTriggered";
     public static final String VALUE_DELTA_MODIFIER_ID = "MarieEvents.valueDeltaModifier";
     public static final String DECAY_TICK_ID = "MarieEvents.decayTick";
     public static final String PLAYER_SYNCED_ID = "MarieEvents.playerSynced";
@@ -37,6 +39,8 @@ public final class MarieKubeEvents {
             GROUP.server("valueExcess", () -> MarieValueExcessEvent.class);
     public static final EventHandler SOURCE_CONSUMED =
             GROUP.server("sourceConsumed", () -> MarieSourceConsumedEvent.class);
+    public static final EventHandler MILESTONE_TRIGGERED =
+            GROUP.server("milestoneTriggered", () -> MarieMilestoneTriggeredEvent.class);
     public static final EventHandler VALUE_DELTA_MODIFIER =
             GROUP.server("valueDeltaModifier", () -> MarieValueDeltaModifierEvent.class);
     public static final EventHandler DECAY_TICK =
@@ -53,6 +57,7 @@ public final class MarieKubeEvents {
             case VALUE_CRITICAL_ID -> VALUE_CRITICAL;
             case VALUE_EXCESS_ID -> VALUE_EXCESS;
             case SOURCE_CONSUMED_ID -> SOURCE_CONSUMED;
+            case MILESTONE_TRIGGERED_ID -> MILESTONE_TRIGGERED;
             case VALUE_DELTA_MODIFIER_ID -> VALUE_DELTA_MODIFIER;
             case DECAY_TICK_ID -> DECAY_TICK;
             case PLAYER_SYNCED_ID -> PLAYER_SYNCED;

@@ -24,6 +24,7 @@ import dev.marie.MariesLib.core.MariesLib;
 import dev.marie.MariesLib.debug.MarieDebugLogger;
 import dev.marie.MariesLib.runtime.SourceOverrideRegistry;
 import dev.marie.MariesLib.runtime.SourceTriggerRegistry;
+import dev.marie.MariesLib.tracking.MilestoneTracker;
 import dev.marie.MariesLib.tracking.TrackingAttachment;
 import dev.marie.MariesLib.tracking.TrackingData;
 import dev.marie.MariesLib.registry.MarieAttributes;
@@ -189,6 +190,7 @@ public final class SourceApplicationPipeline {
 
                 NeoForge.EVENT_BUS.post(new MarieEvents.SourceAppliedEvent(
                         player, sourceResourceId, key, finalDelta));
+                MilestoneTracker.onValueApplied(player, key, finalDelta);
             }
         }
 

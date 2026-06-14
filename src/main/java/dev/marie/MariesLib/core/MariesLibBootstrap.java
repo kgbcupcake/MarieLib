@@ -28,6 +28,9 @@ import dev.marie.MariesLib.runtime.SourceOverrideRegistry;
 import dev.marie.MariesLib.runtime.SourceValueRegistry;
 import dev.marie.MariesLib.scanner.ScannerSpecRegistry;
 import dev.marie.MariesLib.api.ApiStatus;
+import dev.marie.MariesLib.data.MarieDataManager;
+import dev.marie.MariesLib.data.MarieDatapackCallbacks;
+import dev.marie.MariesLib.tracking.MilestoneProgressAttachment;
 import dev.marie.MariesLib.tracking.TrackingAttachment;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
@@ -88,10 +91,12 @@ public final class MariesLibBootstrap {
 
         MarieLibContext ctx = MarieLibContext.builder(modId).build();
         MarieLibContext.register(ctx);
+        MarieDataManager.setCallbacks(MarieDatapackCallbacks.INSTANCE);
         FeatureFlagCache.sync(MarieModFeatureFlags.disabled());
 
         MarieAttributes.register(modEventBus);
         TrackingAttachment.register(modEventBus);
+        MilestoneProgressAttachment.register(modEventBus);
 
         attachedModEventBus = modEventBus;
         modEventBus.addListener(MariesLibBootstrap::onCommonSetup);
@@ -148,6 +153,7 @@ public final class MariesLibBootstrap {
     public static void bootstrap(IEventBus modEventBus) {
         MarieAttributes.register(modEventBus);
         TrackingAttachment.register(modEventBus);
+        MilestoneProgressAttachment.register(modEventBus);
         registerRegistries();
         registerHandlers(modEventBus);
         RegistryLifecycleManager.loadAll();
