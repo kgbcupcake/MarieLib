@@ -103,6 +103,9 @@ public final class MarieKubeBindings {
         if (spec.containsKey("rewardDuration")) {
             builder.rewardDuration(asInt(spec.get("rewardDuration")));
         }
+        if (spec.containsKey("advancementId")) {
+            builder.advancement(ResourceLocation.parse(requireString(spec, "advancementId")));
+        }
         MarieAPI.registerMilestone(builder.build());
     }
 
