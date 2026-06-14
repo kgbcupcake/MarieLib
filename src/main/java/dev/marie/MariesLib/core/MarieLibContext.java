@@ -30,6 +30,7 @@ import dev.marie.MariesLib.util.MarieValidation;
 import dev.marie.MariesLib.scan.ResolutionStageHandler;
 import dev.marie.MariesLib.tracking.TrackingData;
 import dev.marie.MariesLib.tracking.DiminishingReturnsConfig;
+import dev.marie.MariesLib.tracking.DeathNutritionBehavior;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
@@ -124,6 +125,9 @@ public final class MarieLibContext implements MarieLibSettings, IMarieLibConfig 
     private final Supplier<Component> joinMessageLine2;
     private final BiConsumer<ServerPlayer, TrackingData> trackingDeltaSyncer;
     private final Consumer<ServerPlayer> syncOnJoin;
+    private final Supplier<DeathNutritionBehavior> deathNutritionBehavior;
+    @Nullable
+    private final BiConsumer<ServerPlayer, TrackingData> deathNutritionHandler;
     @Nullable
     private final MarieLibDataProvider dataProvider;
     @Nullable
@@ -184,6 +188,8 @@ public final class MarieLibContext implements MarieLibSettings, IMarieLibConfig 
         this.joinMessageLine2 = builder.joinMessageLine2;
         this.trackingDeltaSyncer = builder.trackingDeltaSyncer;
         this.syncOnJoin = builder.syncOnJoin;
+        this.deathNutritionBehavior = builder.deathNutritionBehavior;
+        this.deathNutritionHandler = builder.deathNutritionHandler;
         this.dataProvider = builder.dataProvider != null
                 ? builder.dataProvider
                 : new AttachmentTrackingDataProvider();
@@ -511,6 +517,25 @@ public final class MarieLibContext implements MarieLibSettings, IMarieLibConfig 
         return syncOnJoin;
     }
 
+    /**
+     * Default death respawn policy when {@link #deathNutritionHandler()} is not set.
+     */
+    @ApiStatus.Stable
+    public Supplier<DeathNutritionBehavior> deathNutritionBehavior() {
+        return deathNutritionBehavior;
+    }
+
+    /**
+     * Optional override for death respawn tracking adjustments. When non-null, replaces
+     * {@link #deathNutritionBehavior()} entirely. The consumer should mutate {@code tracking}
+     * in place; sync runs afterward via {@link #syncOnJoin()}.
+     */
+    @Nullable
+    @ApiStatus.Stable
+    public BiConsumer<ServerPlayer, TrackingData> deathNutritionHandler() {
+        return deathNutritionHandler;
+    }
+
     @ApiStatus.Experimental
     public Runnable cacheInvalidatedHook() {
         return cacheInvalidatedHook;
@@ -682,6 +707,9 @@ public final class MarieLibContext implements MarieLibSettings, IMarieLibConfig 
         private Supplier<Component> joinMessageLine2 = Component::empty;
         private BiConsumer<ServerPlayer, TrackingData> trackingDeltaSyncer = (p, d) -> {};
         private Consumer<ServerPlayer> syncOnJoin = p -> {};
+        private Supplier<DeathNutritionBehavior> deathNutritionBehavior = () -> DeathNutritionBehavior.PRESERVE;
+        @Nullable
+        private BiConsumer<ServerPlayer, TrackingData> deathNutritionHandler = null;
         @Nullable
         private MarieLibDataProvider dataProvider;
         @Nullable
@@ -766,6 +794,24 @@ public final class MarieLibContext implements MarieLibSettings, IMarieLibConfig 
         public Builder trackingDeltaSyncer(BiConsumer<ServerPlayer, TrackingData> c) { this.trackingDeltaSyncer = c; return this; }
         @ApiStatus.Experimental
         public Builder syncOnJoin(Consumer<ServerPlayer> c) { this.syncOnJoin = c; return this; }
+        /**
+         * Death respawn policy when {@link #deathNutritionHandler(BiConsumer)} is not set.
+         * Default: {@link DeathNutritionBehavior#PRESERVE}.
+         */
+        @ApiStatus.Stable
+        public Builder deathNutritionBehavior(Supplier<DeathNutritionBehavior> s) {
+            this.deathNutritionBehavior = s != null ? s : () -> DeathNutritionBehavior.PRESERVE;
+            return this;
+        }
+        /**
+         * Fully replaces {@link #deathNutritionBehavior(Supplier)} when set. Use for mod-specific
+         * death handling (e.g. resetting auxiliary attachments) before diet sync on respawn.
+         */
+        @ApiStatus.Stable
+        public Builder deathNutritionHandler(@Nullable BiConsumer<ServerPlayer, TrackingData> handler) {
+            this.deathNutritionHandler = handler;
+            return this;
+        }
         @ApiStatus.Experimental
         public Builder onCacheInvalidated(Runnable hook) {
             this.cacheInvalidatedHook = hook != null ? hook : () -> {};
