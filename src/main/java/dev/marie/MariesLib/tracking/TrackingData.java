@@ -314,11 +314,7 @@ public class TrackingData {
      * {@code below}-threshold debuffs do not apply until decay or poor tracking pulls bars down.
      */
     private float startValueFill() {
-        try {
-            return Mth.clamp((float) config().startingValueFill(), 0f, 1f);
-        } catch (IllegalStateException ignored) {
-            return 0.5f;
-        }
+        return TrackingResetSupport.resolveInitialBarFill();
     }
 
     // ── Mutation ──────────────────────────────────────────────────────────────

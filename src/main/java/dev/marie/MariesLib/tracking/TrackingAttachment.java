@@ -40,6 +40,7 @@ public final class TrackingAttachment {
         TRACKING = attachmentTypes.register(ATTACHMENT_ID, () ->
                 AttachmentType.builder(TrackingData::createNew)
                         .serialize(TrackingData.CODEC)
+                        .copyOnDeath()
                         .build()
         );
         attachmentTypes.register(modEventBus);

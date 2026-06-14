@@ -5,8 +5,10 @@ import dev.marie.MariesLib.config.FeatureFlagCache;
 import dev.marie.MariesLib.core.IMarieLibConfig;
 import dev.marie.MariesLib.core.MarieLibContext;
 import dev.marie.MariesLib.core.KubeIntegration;
+import dev.marie.MariesLib.tracking.DiminishingReturnsConfig;
 import dev.marie.MariesLib.tracking.TrackingAttachment;
 import dev.marie.MariesLib.tracking.TrackingData;
+import dev.marie.MariesLib.tracking.TrackingResetSupport;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.server.ServerStoppedEvent;
@@ -43,6 +45,7 @@ public class PlayerTrackingLifecycle {
         tracking.tick();
         TrackingAttachment.setData(player, tracking);
         tracking.setMemoryConfig(DiminishingReturnsSupport.resolveMemoryConfig());
+        TrackingResetSupport.applyDeathNutritionOnRespawn(player, tracking);
         if (MarieLibContext.isRegistered()) {
             MarieLibContext.get().syncOnJoin().accept(player);
             KubeIntegration.firePlayerSynced(player);

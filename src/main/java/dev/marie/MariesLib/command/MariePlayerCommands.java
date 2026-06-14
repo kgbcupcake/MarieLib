@@ -11,10 +11,10 @@ import dev.marie.MariesLib.api.ValueDefinition;
 import dev.marie.MariesLib.api.registry.ProfileRegistry;
 import dev.marie.MariesLib.api.registry.ValueRegistry;
 import dev.marie.MariesLib.core.IMarieLibConfig;
-import dev.marie.MariesLib.tracking.DiminishingReturnsConfig;
 import dev.marie.MariesLib.handler.SourceApplicationPipeline;
 import dev.marie.MariesLib.tracking.TrackingAttachment;
 import dev.marie.MariesLib.tracking.TrackingData;
+import dev.marie.MariesLib.tracking.TrackingResetSupport;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.arguments.EntityArgument;
@@ -90,14 +90,8 @@ final class MariePlayerCommands {
             return 0;
         }
         TrackingData data = TrackingAttachment.getData(player);
-        DiminishingReturnsConfig cfg = IMarieLibConfig.get().trackingMemoryConfig();
-        float start = cfg != null ? (float) cfg.startingValueFill() : 0.5f;
-        boolean changed = false;
-        for (String key : MarieCommandSupport.registeredValueKeys()) {
-            if (SourceApplicationPipeline.writeDirectValue(player, data, key, start)) {
-                changed = true;
-            }
-        }
+        float start = TrackingResetSupport.resolveStartingFill();
+        boolean changed = TrackingResetSupport.resetAllBarValues(player, data, start);
         if (changed) {
             SourceApplicationPipeline.finalizeDirectWrite(player, data);
         }
