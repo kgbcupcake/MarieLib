@@ -86,11 +86,24 @@ final class MarieMilestoneTemplateCommand {
 
     private static void writeMilestoneJson(Path path, String modId, String valueKey) throws IOException {
         JsonObject root = new JsonObject();
+        root.addProperty("_comment_value_key", "one of the registered nutrient/value keys");
         root.addProperty("value_key", valueKey);
+        root.addProperty("_comment_cumulative_goal",
+                "cumulative sum of raw consumed amount units for this value over time "
+                        + "(same units as source_classifications' amount field, scaled by the value's amountScale) "
+                        + "— not a 0.0-1.0 normalized level like thresholds");
         root.addProperty("cumulative_goal", 5.0f);
+        root.addProperty("_comment_reward_effect_id",
+                "any vanilla or modded status effect id, e.g. minecraft:regeneration");
         root.addProperty("reward_effect_id", "minecraft:regeneration");
+        root.addProperty("_comment_amplifier",
+                "0-indexed effect level — 0 = level I, 1 = level II, 2 = level III, etc.");
         root.addProperty("amplifier", 0);
+        root.addProperty("_comment_reward_duration", "ticks — 20 ticks = 1 second");
         root.addProperty("reward_duration", 200);
+        root.addProperty("_comment_advancement_id",
+                "resource location of the vanilla advancement to grant when this milestone triggers, "
+                        + "e.g. nourished:milestones/example");
         root.addProperty("advancement_id", modId + ":milestones/example");
         Files.writeString(path, GSON.toJson(root), StandardCharsets.UTF_8);
     }

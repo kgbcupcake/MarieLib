@@ -44,11 +44,15 @@ public final class DatapackValidator {
         }
 
         for (Map.Entry<String, JsonElement> entry : json.entrySet()) {
-            if (!knownFields.contains(entry.getKey())) {
+            String key = entry.getKey();
+            if (key.startsWith("_comment_")) {
+                continue;
+            }
+            if (!knownFields.contains(key)) {
                 diagnostics.add(new DatapackDiagnostic(
                         DatapackDiagnostic.Severity.WARN,
                         filePath,
-                        entry.getKey(),
+                        key,
                         "Unknown field for schema type '" + schema.getTypeName() + "'"
                 ));
             }
