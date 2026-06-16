@@ -16,6 +16,8 @@ public final class ValueDefinition {
     private final String id;
     private final String displayName;
     private final int color;
+    @Nullable
+    private final Integer colorOverride;
     private final float defaultDecayRate;
     private final float criticalThreshold;
     private final float lowThreshold;
@@ -29,6 +31,7 @@ public final class ValueDefinition {
             String id,
             String displayName,
             int color,
+            @Nullable Integer colorOverride,
             float defaultDecayRate,
             float criticalThreshold,
             float lowThreshold,
@@ -40,6 +43,7 @@ public final class ValueDefinition {
         this.id = id;
         this.displayName = displayName;
         this.color = color;
+        this.colorOverride = colorOverride;
         this.defaultDecayRate = defaultDecayRate;
         this.criticalThreshold = criticalThreshold;
         this.lowThreshold = lowThreshold;
@@ -88,6 +92,12 @@ public final class ValueDefinition {
     @ApiStatus.Stable
     public int getColor() {
         return color;
+    }
+
+    @Nullable
+    @ApiStatus.Stable
+    public Integer getColorOverride() {
+        return colorOverride;
     }
 
     /**
@@ -172,6 +182,7 @@ public final class ValueDefinition {
         private final String id;
         private String displayName = "";
         private int color = 0xFFFFFFFF;
+        private Integer colorOverride = null;
         private float defaultDecayRate = 0.001f;
         private float criticalThreshold = 0.1f;
         private float lowThreshold = 0.3f;
@@ -206,6 +217,7 @@ public final class ValueDefinition {
         @ApiStatus.Stable
         public Builder color(int color) {
             this.color = color;
+            this.colorOverride = color;
             return this;
         }
 
@@ -311,6 +323,7 @@ public final class ValueDefinition {
                     id,
                     displayName,
                     color,
+                    colorOverride,
                     defaultDecayRate,
                     criticalThreshold,
                     lowThreshold,

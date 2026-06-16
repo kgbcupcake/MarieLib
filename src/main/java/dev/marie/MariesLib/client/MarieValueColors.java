@@ -1,10 +1,13 @@
 package dev.marie.MariesLib.client;
 
+import dev.marie.MariesLib.api.ValueDefinition;
 import dev.marie.MariesLib.color.ColorRegistry;
 import dev.marie.MariesLib.core.MarieLibContext;
+import dev.marie.MariesLib.api.registry.ValueRegistry;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -54,13 +57,25 @@ public final class MarieValueColors {
     }
 
     /**
-     * ARGB accent color: transient override, then {@link ColorRegistry}, then the built-in palette.
+     * ARGB accent color: transient override, then {@link ColorRegistry}, then explicit
+     * {@link ValueDefinition} color, then the built-in palette.
      */
     public static int baseColorArgb(String key) {
         Integer override = OVERRIDES.get(key);
         if (override != null) {
             return override;
         }
-        return ColorRegistry.getArgb(key).orElseGet(() -> paletteOnlyArgb(key));
+        Optional<Integer> registryColor = ColorRegistry.getArgb(key);
+        if (registryColor.isPresent()) {
+            return registryColor.get();
+        }
+        ValueDefinition def = ValueRegistry.get(key);
+        if (def != null) {
+            Integer explicit = def.getColorOverride();
+            if (explicit != null) {
+                return explicit;
+            }
+        }
+        return paletteOnlyArgb(key);
     }
 }

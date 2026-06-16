@@ -399,8 +399,15 @@ public final class MarieDataLoader extends SimpleJsonResourceReloadListener {
     }
 
     private static ThresholdEffect parseEffect(ResourceLocation fileId, JsonObject json) {
-        throw new UnsupportedOperationException(
-                "parseEffect not yet implemented — datapack entry at " + fileId + " will be skipped");
+        return ThresholdEffect.builder()
+                .valueKey(getRequiredString(json, DatapackSchema.KEY_VALUE_KEY))
+                .threshold(getRequiredFloat(json, DatapackSchema.KEY_THRESHOLD))
+                .thresholdType(ThresholdEffect.ThresholdType.valueOf(
+                        getRequiredString(json, DatapackSchema.KEY_THRESHOLD_TYPE).toUpperCase(Locale.ROOT)))
+                .effectId(ResourceLocation.parse(getRequiredString(json, DatapackSchema.KEY_EFFECT_ID)))
+                .amplifier(getOptionalInt(json, DatapackSchema.KEY_AMPLIFIER, 0))
+                .duration(getOptionalInt(json, DatapackSchema.KEY_DURATION, 200))
+                .build();
     }
 
     private static SynergyDefinition parseSynergy(ResourceLocation fileId, JsonObject json) {

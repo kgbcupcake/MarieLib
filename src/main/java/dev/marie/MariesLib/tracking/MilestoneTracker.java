@@ -5,6 +5,7 @@ import dev.marie.MariesLib.api.MarieEvents;
 import dev.marie.MariesLib.api.MilestoneDefinition;
 import dev.marie.MariesLib.api.registry.MilestoneRegistry;
 import dev.marie.MariesLib.config.FeatureFlagCache;
+import dev.marie.MariesLib.core.MarieLibContext;
 import dev.marie.MariesLib.core.MariesLib;
 import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -14,6 +15,7 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.neoforged.neoforge.common.NeoForge;
 
 import javax.annotation.Nullable;
+import java.util.List;
 
 /**
  * Accumulates per-value cumulative intake, detects milestone completions, and grants rewards.
@@ -59,6 +61,37 @@ public final class MilestoneTracker {
             awardAdvancement(player, milestone);
             NeoForge.EVENT_BUS.post(new MarieEvents.MilestoneTriggeredEvent(
                     player, milestone, valueKey, cumulative));
+        }
+
+        for (MilestoneDefinition milestone : MilestoneRegistry.getForAll()) {
+            if (data.isCompleted(milestone.getId())) {
+                continue;
+            }
+
+            List<String> valueKeys = MarieLibContext.get().valueKeys();
+            if (valueKeys.isEmpty()) {
+                continue;
+            }
+
+            float minCumulative = Float.MAX_VALUE;
+            boolean allPass = true;
+            for (String key : valueKeys) {
+                float keyCumulative = data.getCumulativeIntake(key);
+                if (keyCumulative < milestone.getCumulativeGoal()) {
+                    allPass = false;
+                    break;
+                }
+                minCumulative = Math.min(minCumulative, keyCumulative);
+            }
+            if (!allPass) {
+                continue;
+            }
+
+            data.markCompleted(milestone.getId());
+            applyRewardEffect(player, milestone);
+            awardAdvancement(player, milestone);
+            NeoForge.EVENT_BUS.post(new MarieEvents.MilestoneTriggeredEvent(
+                    player, milestone, "all", minCumulative));
         }
     }
 
