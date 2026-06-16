@@ -77,4 +77,15 @@ public final class MilestoneRegistry {
                 .filter(m -> valueKey.equals(m.getValueKey()))
                 .toList();
     }
+
+    /**
+     * Returns all milestones that require every value key to reach the cumulative goal.
+     *
+     * @return an unmodifiable list of cross-nutrient milestones ({@code valueKey} {@code "all"})
+     */
+    public static List<MilestoneDefinition> getForAll() {
+        return INSTANCE.values().stream()
+                .filter(m -> "all".equals(m.getValueKey()))
+                .toList();
+    }
 }
