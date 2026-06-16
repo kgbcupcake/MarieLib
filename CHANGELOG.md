@@ -4,6 +4,117 @@
 
 ## [ MariesLib 0.1.0-beta.3 ] 2026-6-15
 
+Milestone tracking release. Cumulative intake milestones are now tracked at runtime,
+fired as events, loadable from datapacks, and exposed to KubeJS.
+
+### Added
+
+- **`MilestoneTriggeredEvent`** in `MarieEvents`, fired after a player completes a cumulative
+  intake milestone and configured rewards are applied
+- **`MilestoneProgressData`**, per-player cumulative intake totals and one-shot completion
+  bookkeeping, serialized separately from `TrackingData`
+- **`MilestoneProgressAttachment`**, NeoForge data attachment (`milestone_progress`) with
+  `copyOnDeath()`, gated by `FeatureFlagCache.enableMilestones()`
+- **`MilestoneTracker`**, accumulates positive value intake, detects first-time completions,
+  grants mob-effect and advancement rewards, then posts `MilestoneTriggeredEvent`
+- **`MarieDatapackCallbacks`**, default `MarieDataLoader.Callbacks` implementation that delegates
+  datapack registrations to `MarieAPI` (values, effects, synergies, milestones, profiles, compat,
+  source families, module locks)
+- **Datapack milestone parsing** in `MarieDataLoader` for
+  `data/<namespace>/<modid>/milestones/<id>.json` (`valueKey`, `cumulativeGoal`, optional
+  `rewardEffectId`, `amplifier`, `rewardDuration`, `advancementId`)
+- **Bootstrap wiring** in `MariesLibBootstrap`: registers `MilestoneProgressAttachment` and sets
+  `MarieDataManager.setCallbacks(MarieDatapackCallbacks.INSTANCE)` on standalone bootstrap
+- **`advancementId` on `MarieKubeBindings.registerMilestone`**, optional KubeJS spec key mapped to
+  `MilestoneDefinition.Builder.advancement()`
+
+### Architecture
+
+- **Pipeline hook**: `SourceApplicationPipeline` calls `MilestoneTracker.onValueApplied(player,
+  key, finalDelta)` after each positive per-valueKey delta is applied and `SourceAppliedEvent` is
+  posted
+- **Reward flow**: `MilestoneTracker` applies optional mob effects via `BuiltInRegistries.MOB_EFFECT`,
+  awards advancements through the server advancement manager, and logs warnings for unknown
+  effect/advancement IDs
+- **Feature gating**: milestone progress reads and writes are no-ops when
+  `FeatureFlagCache.enableMilestones()` is false
+
+### API
+
+- **`MarieEvents.MilestoneTriggeredEvent`**: `getPlayer()`, `getMilestone()`, `getValueKey()`,
+  `getCumulativeIntake()`
+
+### Integrations
+
+- **KubeJS `milestoneTriggered` event**: `MarieKubeEvents.MILESTONE_TRIGGERED` /
+  `MarieMilestoneTriggeredEvent` exposes `playerId`, `milestoneId`, `valueKey`, `cumulativeIntake`,
+  and `cumulativeGoal`; bridged through `KubeEventBridge` with `KubeGuard` listener short-circuit
+
+### Notes
+
+- Published artifact version is **0.1.0-beta.3** (`gradle.properties`)
+- Milestones datapack loader from 1.0.0 is now fully wired (previously threw
+  `UnsupportedOperationException` at parse time)
+
+---
+
+## [ MariesLib 0.1.0-beta.2 ] 2026-6-13
+
+Stability, value-pipeline, death-handling, and KubeJS integration release.
+
+### Added
+
+- **`ValueModifierContext`**: structured modifier context (player, source, value key,
+  level, position) shared by `ValueModifierEvent` and the value pipeline
+- **`DeathNutritionBehavior`** (`@Stable`): `PRESERVE`, `RESET_TO_STARTING`, `VANILLA_HALF`;
+  configured via `MarieLibContext.Builder.deathNutritionBehavior()` or a custom
+  `deathTrackingTransformer`
+- **`TrackingResetSupport`**: death respawn policy application, starting-fill resolution, and
+  bar reset helpers used by commands and lifecycle handlers
+- **`AttachmentTrackingDataProvider`**: ensures tracking data provider initialization in
+  `MarieLibContext`
+- **`SourceApplicationPipeline` direct writes**: `writeValue`, `finalizeValue`, and related
+  helpers for command and integration code paths
+- **Project documentation**: `API.md`, `ARCHITECTURE.md`, `PHILOSOPHY.md`, `RoadMap.md`
+- **KubeJS package layout**: moved from `compat/kubejs/` to `kubejs/` with `bindings/`,
+  `events/`, and `internal/` packages; `KubeIntegration` centralizes optional KubeJS wiring
+- **KubeJS event bridges**: `MarieDecayTickEvent`, `MariePlayerSyncedEvent`,
+  `MarieSourceConsumedEvent`, `MarieValueChangedEvent`, `MarieValueCriticalEvent`,
+  `MarieValueDeltaModifierEvent`, `MarieValueExcessEvent`
+- **EMI/REI service registration**: `META-INF/services` entries for recipe-viewer plugins
+
+### Changed
+
+- **`ValueModifierEvent`**: backed by `ValueModifierContext`; event constructor is
+  `@Internal` (addon authors subscribe, they do not construct)
+- **`MariePlayerCommands`**: `/value`, `/set`, and `/reset` route through
+  `SourceApplicationPipeline` instead of ad-hoc tracking writes
+- **Death and respawn handling**: `PlayerTrackingLifecycle` applies
+  `DeathNutritionBehavior` on respawn; `TrackingAttachment` copies on death;
+  `TrackingData` resolves initial bar fill through `TrackingResetSupport`
+- **API stability pass**: broader `@Stable` coverage on events, definitions, registries,
+  runtime resolver types, client toast tooling, and command helpers
+- **`MarieAPI` validation**: rejects null definitions and invalid IDs during value
+  registration; validates `valueKey` in `modifyValue`
+- **Build reliability**: `createMinecraftArtifacts` reruns when the NeoForge compile jar is
+  missing; task dependency ordering fixes in `build.gradle`
+- **Assets and metadata**: banner/icon filenames normalized for case consistency; unused
+  duplicate icon assets removed; `neoforge.mods.toml` dependency entries corrected
+
+### Breaking Changes
+
+- **KubeJS Java package move**: internal KubeJS classes relocated from
+  `dev.marie.MariesLib.compat.kubejs` to `dev.marie.MariesLib.kubejs.*`; script-facing
+  `MarieAPI` / `MarieKubeEvents` bindings are unchanged
+
+### Notes
+
+- Published artifact version is **0.1.0-beta.2** (`gradle.properties`)
+
+---
+
+## [ MariesLib 2.0.0 ] 2026-6-11
+
 Library purification release. MariesLib is now a domain-agnostic infrastructure library.
 All gameplay balance configuration has been removed from the library and moved to consuming mods.
 
@@ -69,37 +180,37 @@ tracking, compat, and datapack loaders.
   no JarJar bundling. Consuming mods wire runtime through `MarieLibContext` at bootstrap.
 - **Scanner pipeline**: bulk classification of every edible/source item in a modpack:
     - Token stemming (`TokenStemmer`), archetype patterns, and recipe inheritance
-        - Spread-based confidence validation (not hard thresholds)
-        - Tag recommendation writer: ready-to-paste datapack JSON under `data/<modid>/tags/item/`
-        - Multi-value analysis: secondary groups, overlap matrices, ambiguous-item reports
-        - Scan cache and metrics (`ScannerMetrics`, `CacheStats`)
+    - Spread-based confidence validation (not hard thresholds)
+    - Tag recommendation writer: ready-to-paste datapack JSON under `data/<modid>/tags/item/`
+    - Multi-value analysis: secondary groups, overlap matrices, ambiguous-item reports
+    - Scan cache and metrics (`ScannerMetrics`, `CacheStats`)
 - **Classification traces**: inspectable per-item pipeline decisions (`ClassificationTrace`,
   `ClassificationTraceStep`, `ClassificationTraceFormatter`):
     - Tag lookup, resolver scores, blend precedence, confidence spread
-        - Runtime stages: SIGNAL_AGGREGATION, WINNER_SELECTION, CONFIDENCE, TAG_RUNTIME_BLEND
+    - Runtime stages: SIGNAL_AGGREGATION, WINNER_SELECTION, CONFIDENCE, TAG_RUNTIME_BLEND
 - **Runtime classification**: gameplay-path resolution separate from bulk scanner:
     - `RuntimeResolver` with cascade stages and resolution outcomes
-        - Tag/runtime blending (`ValueBlend`) with precedence rules (TAG vs RUNTIME_SUPPLEMENT)
-        - Source families (`FamilyResolver`) and `config/<modid>/source_overrides.json`
+    - Tag/runtime blending (`ValueBlend`) with precedence rules (TAG vs RUNTIME_SUPPLEMENT)
+    - Source families (`FamilyResolver`) and `config/<modid>/source_overrides.json`
 - **Tracking system**: full player value progression infrastructure:
     - Memory windows (source, category, family) with time and count limits
-        - Diminishing returns via logistic saturation curve
-        - Debt tracking, streak bonuses, value decay, threshold effects
-        - Source pair synergies, value synergies, milestones, tracking profiles
-        - Season hooks and absorption modifiers
-        - Persistent player data via `TrackingAttachment` codec
+    - Diminishing returns via logistic saturation curve
+    - Debt tracking, streak bonuses, value decay, threshold effects
+    - Source pair synergies, value synergies, milestones, tracking profiles
+    - Season hooks and absorption modifiers
+    - Persistent player data via `TrackingAttachment` codec
 - **Three-tier compat system** (`ModCompat`, `CompatRegistry`):
     1. `data/<modid>/compat/compat_registry.json` in the consuming mod
     2. `data/<other_modid>/marie_compat.json` from loaded mods
     3. `config/<modid>/compat_overrides.json` for modpack overrides
     - Auto-compat discovery for unregistered food mods (`AutoCompatDiscovery`)
-        - Conflict detection for effects, survival overhaul, and decay settings
+    - Conflict detection for effects, survival overhaul, and decay settings
 - **Datapack loaders** (`MarieDataLoader`, schema v1):
     - Working now: `source_classifications/`, `compat/`, `source_families/`, `module_locks/`
     - Schema defined (loaders in progress): `values/`, `effects/`, `synergies/`,
       `source_synergies/`, `milestones/`, `tracking_profiles/`
-        - Validation (`DatapackValidator`) and reload diagnostics (`DatapackDiagnostics`)
-        - `/marie schema` command for sample JSON templates
+    - Validation (`DatapackValidator`) and reload diagnostics (`DatapackDiagnostics`)
+    - `/marie schema` command for sample JSON templates
 - **Module system**: `ModuleCache` hot-path feature flags and server-side `LockRegistry`
   for datapack module locks
 - **Config presets**: `PresetRegistry` with save/load/delete and compressed share-code
