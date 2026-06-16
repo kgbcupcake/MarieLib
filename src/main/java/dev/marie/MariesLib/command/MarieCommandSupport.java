@@ -64,6 +64,7 @@ final class MarieCommandSupport {
 
     static void onServerStopped() {
         ACTIVE_PROFILES.clear();
+        SourceRegistry.clearSessionWarnings();
     }
 
     static String activeProfile(ServerPlayer player) {

@@ -26,6 +26,9 @@ public class SourceRegistry {
     /** @GuardedBy("itself — ConcurrentHashSet") Per-reload dedupe for empty blend warnings. */
     private static final Set<String> EMPTY_BLEND_WARNED = ConcurrentHashMap.newKeySet();
 
+    /** @GuardedBy("itself — ConcurrentHashSet") Per-session dedupe for external classification cap warnings. */
+    private static final Set<String> WARNED_CAP_ITEMS = ConcurrentHashMap.newKeySet();
+
     private static final int EXTERNAL_CLASSIFICATION_CAP = 4096;
 
     /** @GuardedBy("itself — ConcurrentHashMap") */
@@ -38,12 +41,14 @@ public class SourceRegistry {
 
     public static void registerClassification(ResourceLocation sourceId, String valueKey, float amount) {
         if (EXTERNAL_CLASSIFICATIONS.size() >= EXTERNAL_CLASSIFICATION_CAP && !EXTERNAL_CLASSIFICATIONS.containsKey(sourceId)) {
-            LOGGER.warn("[SourceRegistry] External classification cap ({}) reached — ignoring: {} -> {}",
-                    EXTERNAL_CLASSIFICATION_CAP, sourceId, valueKey);
+            if (WARNED_CAP_ITEMS.add(sourceId.toString())) {
+                LOGGER.warn("[SourceRegistry] External classification cap ({}) reached — ignoring: {} -> {}",
+                        EXTERNAL_CLASSIFICATION_CAP, sourceId, valueKey);
+            }
             return;
         }
         EXTERNAL_CLASSIFICATIONS.computeIfAbsent(sourceId, k -> new ConcurrentHashMap<>()).put(valueKey, amount);
-        LOGGER.info("[SourceRegistry] Registered external classification: {} -> {} ({})", sourceId, valueKey, amount);
+        LOGGER.debug("[SourceRegistry] Registered external classification: {} -> {} ({})", sourceId, valueKey, amount);
     }
 
     public static void clearExternalClassifications() {
@@ -78,6 +83,10 @@ public class SourceRegistry {
     public static void clearPerReloadWarnings() {
         WARNED_ITEMS.clear();
         EMPTY_BLEND_WARNED.clear();
+    }
+
+    public static void clearSessionWarnings() {
+        WARNED_CAP_ITEMS.clear();
     }
 
     public static Map<String, Float> getExternalClassification(ResourceLocation sourceId) {
