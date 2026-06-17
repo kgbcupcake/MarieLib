@@ -78,4 +78,21 @@ public final class MarieValueColors {
         }
         return paletteOnlyArgb(key);
     }
+
+    /**
+     * Resolved default ARGB for a value key, bypassing transient {@link #OVERRIDES} and
+     * {@link ColorRegistry}. Use this — never {@link #paletteOnlyArgb} directly — when
+     * deciding whether an edited color is an actual customization, since paletteOnlyArgb
+     * has no relationship to a nutrient's defined color.
+     */
+    public static int resolvedDefaultArgb(String key) {
+        ValueDefinition def = ValueRegistry.get(key);
+        if (def != null) {
+            Integer explicit = def.getColorOverride();
+            if (explicit != null) {
+                return explicit;
+            }
+        }
+        return paletteOnlyArgb(key);
+    }
 }
