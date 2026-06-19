@@ -50,6 +50,8 @@ public interface IMarieLibConfig extends MarieLibSettings {
 
     int decayIntervalTicks();
 
+    float decayRateFor(String valueKey);
+
     boolean showJoinMessage();
 
     DiminishingReturnsConfig trackingMemoryConfig();

@@ -3,6 +3,8 @@ package dev.marie.MariesLib.core;
 import com.google.gson.JsonObject;
 
 import dev.marie.MariesLib.api.ApiStatus;
+import dev.marie.MariesLib.api.ValueDefinition;
+import dev.marie.MariesLib.api.registry.ValueRegistry;
 import dev.marie.MariesLib.config.MariesLibConfigBridge;
 import dev.marie.MariesLib.config.MariesLibConfigHolder;
 import dev.marie.MariesLib.config.PresetRegistry;
@@ -37,6 +39,10 @@ enum FallbackConfig implements IMarieLibConfig {
     @Override public float criticalThreshold() { return 0.25f; }
     @Override public float criticalThresholdFor(String valueKey) { return criticalThreshold(); }
     @Override public int decayIntervalTicks() { return 20; }
+    @Override public float decayRateFor(String valueKey) {
+        ValueDefinition def = ValueRegistry.get(valueKey);
+        return def != null ? def.getDefaultDecayRate() : 0.001f;
+    }
     @Override public boolean showJoinMessage() { return false; }
     @Override public DiminishingReturnsConfig trackingMemoryConfig() { return new DiminishingReturnsConfig(60L, 1.2, 3.0, 0.2, 0.5); }
     @Override public JsonObject configExporter() { return MariesLibConfigBridge.buildExportRoot(); }

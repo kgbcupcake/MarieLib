@@ -34,6 +34,9 @@ public class SourceRegistry {
     /** @GuardedBy("itself — ConcurrentHashMap") */
     private static final Map<ResourceLocation, Map<String, Float>> EXTERNAL_CLASSIFICATIONS = new ConcurrentHashMap<>();
 
+    /** @GuardedBy("itself — ConcurrentHashMap") API/KubeJS registrations that must survive reload clears. */
+    private static final Map<ResourceLocation, Map<String, Float>> API_REGISTERED_CLASSIFICATIONS = new ConcurrentHashMap<>();
+
     /** @GuardedBy("itself — ConcurrentHashMap") */
     private static final Map<ResourceLocation, Map<String, Float>> SCANNER_CLASSIFICATIONS = new ConcurrentHashMap<>();
 
@@ -48,11 +51,15 @@ public class SourceRegistry {
             return;
         }
         EXTERNAL_CLASSIFICATIONS.computeIfAbsent(sourceId, k -> new ConcurrentHashMap<>()).put(valueKey, amount);
+        API_REGISTERED_CLASSIFICATIONS.computeIfAbsent(sourceId, k -> new ConcurrentHashMap<>()).put(valueKey, amount);
         LOGGER.debug("[SourceRegistry] Registered external classification: {} -> {} ({})", sourceId, valueKey, amount);
     }
 
     public static void clearExternalClassifications() {
         EXTERNAL_CLASSIFICATIONS.clear();
+        for (Map.Entry<ResourceLocation, Map<String, Float>> entry : API_REGISTERED_CLASSIFICATIONS.entrySet()) {
+            EXTERNAL_CLASSIFICATIONS.put(entry.getKey(), new ConcurrentHashMap<>(entry.getValue()));
+        }
     }
 
     public static void applyFromScanner(Map<ResourceLocation, Map<String, Float>> perItemValues) {

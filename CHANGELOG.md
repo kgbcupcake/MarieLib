@@ -2,6 +2,44 @@
 
 <!-- markdownlint-disable MD013 -->
 
+## [ MariesLib 0.1.0-beta.5 ] 2026-6-16
+
+Color resolution and ARGB parsing fixes for value customization detection.
+
+### Added
+
+- **`MarieValueColors.resolvedDefaultArgb(String key)`**: returns a value key's true default ARGB,
+  checking `ValueDefinition.colorOverride` then the built-in palette, while bypassing transient
+  `OVERRIDES` and `ColorRegistry`; use this (not `paletteOnlyArgb`) when deciding whether an
+  edited color is an actual customization
+- **`IMarieLibConfig.decayRateFor(String valueKey)`** and **`MarieLibContext.Builder.decayRateFor(Function<String, Float>)`**:
+  per-value decay rate resolver wired through config context; defaults to
+  `ValueDefinition.getDefaultDecayRate()` with `0.001f` fallback when the key is unknown
+
+### Fixed
+
+- **`ColorRegistry.parseArgbString` `0x`/`0X` branch**: parses hex via `Long.parseLong` with
+  `0xFF_FF_FF_FF` masking instead of `Integer.decode`, matching the `#RRGGBB` and bare 8-digit
+  branches and avoiding signed-decode inconsistencies on full ARGB literals
+- **`ValueDecayListener` decay tick rate**: uses `IMarieLibConfig.get().decayRateFor(key)` instead
+  of always reading `ValueDefinition.getDefaultDecayRate()`, so consuming-mod overrides take effect
+- **`MarieCommandSource` / `MariePlayerCommands` decay display**: report and value-detail commands
+  route decay rates through `IMarieLibConfig.decayRateFor(key)` instead of hard-coded definition
+  defaults
+- **`SourceRegistry.clearExternalClassifications()`**: API/KubeJS `registerClassification()`
+  entries are tracked in `API_REGISTERED_CLASSIFICATIONS` and re-applied after each clear, so
+  classifications registered at mod construction survive `TagsUpdatedEvent` reload passes
+  (datapack-sourced entries are still cleared and reloaded normally)
+- **`CriticalValueToast` value name**: falls back to the raw `valueKey` when the tracking-bar
+  translation key is missing, instead of showing the untranslated key path in the toast
+  title/subtitle
+
+### Notes
+
+- Published artifact version is **0.1.0-beta.5** (`gradle.properties`)
+
+---
+
 ## [ MariesLib 0.1.0-beta.3 ] 2026-6-15
 
 Milestone tracking release. Cumulative intake milestones are now tracked at runtime,

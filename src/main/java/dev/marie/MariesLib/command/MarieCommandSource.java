@@ -2,9 +2,7 @@ package dev.marie.MariesLib.command;
 
 import dev.marie.MariesLib.api.ApiStatus;
 import dev.marie.MariesLib.api.ReportProvider;
-import dev.marie.MariesLib.api.ValueDefinition;
 import dev.marie.MariesLib.api.registry.ReportProviderRegistry;
-import dev.marie.MariesLib.api.registry.ValueRegistry;
 import dev.marie.MariesLib.core.IMarieLibConfig;
 import dev.marie.MariesLib.tracking.TrackingData;
 import net.minecraft.ChatFormatting;
@@ -109,8 +107,7 @@ public final class MarieCommandSource {
     }
 
     private static float decayRateFor(String key) {
-        ValueDefinition def = ValueRegistry.get(key);
-        return def != null ? def.getDefaultDecayRate() : 0f;
+        return IMarieLibConfig.get().decayRateFor(key);
     }
 
     private static Component chip(String text, ChatFormatting color) {
