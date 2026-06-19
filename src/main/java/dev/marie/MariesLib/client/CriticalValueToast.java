@@ -35,7 +35,9 @@ public class CriticalValueToast implements Toast {
         this.valueKey = valueKey;
         this.icon = iconItem.copy();
         String modId = MarieLibContext.isRegistered() ? MarieLibContext.get().modId() : MariesLib.MOD_ID;
-        String name = Component.translatable(modId + ".screen.tracking.bar." + valueKey).getString();
+        String barKey = modId + ".screen.tracking.bar." + valueKey;
+        String translated = Component.translatable(barKey).getString();
+        String name = translated.equals(barKey) ? valueKey : translated;
         this.title = Component.translatable(modId + ".toast.critical.title", name)
                 .withStyle(ChatFormatting.RED);
         this.subtitle = Component.translatable(modId + ".toast.critical.subtitle", name)

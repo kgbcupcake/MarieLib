@@ -42,7 +42,7 @@ public class ValueDecayListener {
         boolean changed = false;
         for (ValueDefinition def : ValueRegistry.getAll()) {
             String key = def.getId();
-            float rate = def.getDefaultDecayRate();
+            float rate = IMarieLibConfig.get().decayRateFor(key);
             rate = applySeasonalDecayModifier(key, rate);
             rate *= MarieAttributes.valueDecayMultiplier(player);
             float current = data.values.getOrDefault(key, 0f);

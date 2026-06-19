@@ -120,6 +120,7 @@ public final class MarieLibContext implements MarieLibSettings, IMarieLibConfig 
     private final BiConsumer<ServerPlayer, TrackingData> effectApplier;
     private final Consumer<ServerPlayer> effectClearer;
     private final Supplier<Integer> decayIntervalTicks;
+    private final Function<String, Float> decayRateResolver;
     private final Supplier<Boolean> showJoinMessage;
     private final Supplier<Component> joinMessageLine1;
     private final Supplier<Component> joinMessageLine2;
@@ -183,6 +184,7 @@ public final class MarieLibContext implements MarieLibSettings, IMarieLibConfig 
         this.effectApplier = builder.effectApplier;
         this.effectClearer = builder.effectClearer;
         this.decayIntervalTicks = builder.decayIntervalTicks;
+        this.decayRateResolver = builder.decayRateResolver;
         this.showJoinMessage = builder.showJoinMessage;
         this.joinMessageLine1 = builder.joinMessageLine1;
         this.joinMessageLine2 = builder.joinMessageLine2;
@@ -487,6 +489,11 @@ public final class MarieLibContext implements MarieLibSettings, IMarieLibConfig 
     }
 
     @ApiStatus.Internal
+    public float decayRateFor(String valueKey) {
+        return decayRateResolver.apply(valueKey);
+    }
+
+    @ApiStatus.Internal
     public float criticalThresholdFor(String valueKey) {
         ValueDefinition def = ValueRegistry.get(valueKey);
         return def != null ? def.getCriticalThreshold() : criticalThreshold();
@@ -702,6 +709,10 @@ public final class MarieLibContext implements MarieLibSettings, IMarieLibConfig 
         private BiConsumer<ServerPlayer, TrackingData> effectApplier = (p, d) -> {};
         private Consumer<ServerPlayer> effectClearer = p -> {};
         private Supplier<Integer> decayIntervalTicks = () -> 20;
+        private Function<String, Float> decayRateResolver = valueKey -> {
+            ValueDefinition def = ValueRegistry.get(valueKey);
+            return def != null ? def.getDefaultDecayRate() : 0.001f;
+        };
         private Supplier<Boolean> showJoinMessage = () -> false;
         private Supplier<Component> joinMessageLine1 = Component::empty;
         private Supplier<Component> joinMessageLine2 = Component::empty;
@@ -784,6 +795,7 @@ public final class MarieLibContext implements MarieLibSettings, IMarieLibConfig 
         @ApiStatus.Experimental
         public Builder effectClearer(Consumer<ServerPlayer> c) { this.effectClearer = c; return this; }
         public Builder decayIntervalTicks(Supplier<Integer> s) { this.decayIntervalTicks = s; return this; }
+        public Builder decayRateFor(Function<String, Float> resolver) { this.decayRateResolver = resolver; return this; }
         @ApiStatus.Experimental
         public Builder showJoinMessage(Supplier<Boolean> s) { this.showJoinMessage = s; return this; }
         @ApiStatus.Experimental

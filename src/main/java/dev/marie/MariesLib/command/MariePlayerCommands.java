@@ -7,9 +7,7 @@ import com.mojang.brigadier.arguments.FloatArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import dev.marie.MariesLib.api.ValueDefinition;
 import dev.marie.MariesLib.api.registry.ProfileRegistry;
-import dev.marie.MariesLib.api.registry.ValueRegistry;
 import dev.marie.MariesLib.core.IMarieLibConfig;
 import dev.marie.MariesLib.handler.SourceApplicationPipeline;
 import dev.marie.MariesLib.tracking.TrackingAttachment;
@@ -184,8 +182,7 @@ final class MariePlayerCommands {
 
         TrackingData data = TrackingAttachment.getData(target);
         float value = data.values.getOrDefault(key, 0f);
-        ValueDefinition def = ValueRegistry.get(key);
-        float decay = def != null ? def.getDefaultDecayRate() : 0f;
+        float decay = IMarieLibConfig.get().decayRateFor(key);
         float critical = IMarieLibConfig.get().criticalThresholdFor(key);
         float low = IMarieLibConfig.get().lowThreshold();
         float excess = IMarieLibConfig.get().excessThreshold();
