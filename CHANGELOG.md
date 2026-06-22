@@ -2,6 +2,50 @@
 
 <!-- markdownlint-disable MD013 -->
 
+## [ MariesLib 0.1.1-beta.1 ] 2026-6-20
+
+Generic registry-export framework, scanner spec loading fix, explicit bootstrap requirement, and registry frozen-state exposure.
+
+### Added
+
+- **`ExportResolver<T>`** (`@ApiStatus.Stable`): consuming-mod hook that resolves per-entry export
+  data for an entire registry; registered via `MarieAPI.registerExportResolver`
+- **`ExportResolverRegistry`** (`@ApiStatus.Internal`): keyed store of export resolvers and their
+  target `ResourceKey<? extends Registry<T>>`; never frozen so resolvers can register throughout mod init
+- **`RegistryExporter.run(resolverId)`** (`@ApiStatus.Internal`): iterates the resolver's target
+  registry via `BuiltInRegistries.REGISTRY`, calls `ExportResolver.resolve` per entry, and returns
+  non-empty results keyed by entry id
+- **`ExportWriter.writeExport(resolverId)`** (`@ApiStatus.Internal`): runs `RegistryExporter` and
+  writes `config/<modid>/<resolverId>_export.json` as a sorted JSON array of
+  `{"id": "<resource location>", "data": {...}}` objects; nested `Map` values serialize as JSON objects
+- **`/marieslib dump <resolverId>`** and **`/marie dump <resolverId>`** (`MariesLibCommand`): runs
+  `ExportWriter.writeExport` and reports the output path or a failure message
+- **`MarieAPI.registerExportResolver(resolverId, registryKey, resolver)`** (`@ApiStatus.Stable`):
+  public registration entry point with `MarieAPIState` phase guard and blank-`resolverId` validation
+- **`ValueRegistry.isFrozen()`** (`@ApiStatus.Internal`): exposes the underlying
+  `AbstractRegistry` frozen state via `INSTANCE.isFrozen()`, matching the existing
+  `freezeInternal()` / `resetInternal()` internal lifecycle surface
+
+### Changed
+
+- **`MariesLib` constructor**: no longer auto-calls `MariesLibBootstrap.bootstrap()` when
+  `MarieLibContext` is unregistered; consuming mods must bootstrap explicitly via
+  `MariesLibBootstrap.attach` / `bootstrap`
+
+### Fixed
+
+- **`ScannerSpecRegistry` bundled spec loading** (`parseBundled`, `writeBundledTo`): reads
+  `scanner_spec.json` via `Thread.currentThread().getContextClassLoader()` (with the leading
+  `/` stripped from the resource path) instead of `ScannerSpecRegistry.class.getResourceAsStream`,
+  so specs packaged in the consuming mod's jar (e.g. Nourished) resolve correctly instead of
+  failing with `Bundled scanner_spec.json missing`
+
+### Notes
+
+- Published artifact version is **0.1.1-beta.1** (`gradle.properties`)
+
+---
+
 ## [ MariesLib 0.1.0-beta.5 ] 2026-6-16
 
 Color resolution and ARGB parsing fixes for value customization detection.
@@ -37,6 +81,44 @@ Color resolution and ARGB parsing fixes for value customization detection.
 ### Notes
 
 - Published artifact version is **0.1.0-beta.5** (`gradle.properties`)
+
+---
+
+## [ MariesLib 0.1.0-beta.4 ] 2026-6-16
+
+Milestone tooling, per-value color overrides, datapack effect loading, and build stability.
+
+### Added
+
+- **`ValueDefinition.colorOverride`**: optional per-value ARGB stored on the definition;
+  `MarieValueColors.baseColorArgb` prefers transient UI override, then `ColorRegistry`, then
+  `colorOverride`, then the built-in palette
+- **`MilestoneRegistry.getForAll()`**: returns milestones whose `valueKey` is `"all"` (every
+  registered value key must reach the cumulative goal)
+- **`MilestoneTracker` cross-nutrient milestones**: after per-key milestone checks, evaluates
+  `"all"` milestones against every key in `MarieLibContext.valueKeys()`, grants rewards, and
+  posts `MilestoneTriggeredEvent` with `valueKey` `"all"`
+- **`generate_milestone_template` command** (`MarieMilestoneTemplateCommand`): writes a starter
+  milestone + advancement datapack to `<world>/datapacks/<modid>-milestone-template/`
+- **`MarieDataLoader.parseEffect`**: loads threshold-effect datapack entries (previously threw
+  `UnsupportedOperationException` and skipped files)
+- **`SourceRegistry.clearSessionWarnings()`**: resets per-session dedupe for external
+  classification cap warnings
+
+### Changed
+
+- **`DatapackValidator`**: ignores JSON fields prefixed with `_comment_` instead of warning on
+  them as unknown schema fields
+- **`SourceRegistry.registerClassification`**: cap-reached warnings log once per `sourceId` per
+  session; successful registrations log at debug instead of info
+- **Compile dependency pins** (`gradle.properties`, `build.gradle`): `jei_version`, `rei_version`,
+  and `emi_version` replace `+` ranges; `cloth-config-neoforge` forced to
+  `${cloth_config_version}` so Java 21 builds do not resolve future Java 25 artifacts
+- **GitHub Actions publish workflow**: `actions/checkout@v4` → `actions/checkout@v5`
+
+### Notes
+
+- Published artifact version is **0.1.0-beta.4** (`gradle.properties`)
 
 ---
 

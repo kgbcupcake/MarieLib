@@ -85,8 +85,21 @@ public final class ModCompat {
         // Compat discovery is now strictly registry-driven.
     }
 
+    private static InputStream openClasspathResource(String resourcePath) {
+        String normalized = resourcePath.startsWith("/") ? resourcePath.substring(1) : resourcePath;
+        ClassLoader contextLoader = Thread.currentThread().getContextClassLoader();
+        if (contextLoader != null) {
+            InputStream fromContext = contextLoader.getResourceAsStream(normalized);
+            if (fromContext != null) {
+                return fromContext;
+            }
+        }
+        return ModCompat.class.getResourceAsStream("/" + normalized);
+    }
+
     private static void loadTier1BuiltIn(Map<String, JsonCompatEntry> merged) {
-        try (InputStream is = ModCompat.class.getResourceAsStream("/data/" + MarieLibContext.get().modId() + "/compat/compat_registry.json")) {
+        String resourcePath = "data/" + MarieLibContext.get().modId() + "/compat/compat_registry.json";
+        try (InputStream is = openClasspathResource(resourcePath)) {
             if (is == null) {
                 LOGGER.warn("[MarieLib] Built-in compat_registry.json not found in jar");
                 return;
@@ -116,8 +129,8 @@ public final class ModCompat {
                 continue;
             }
 
-            String resourcePath = "/data/" + modId + "/marie_compat.json";
-            try (InputStream is = ModCompat.class.getResourceAsStream(resourcePath)) {
+            String resourcePath = "data/" + modId + "/marie_compat.json";
+            try (InputStream is = openClasspathResource(resourcePath)) {
                 if (is != null) {
                     try (Reader reader = new InputStreamReader(is, StandardCharsets.UTF_8)) {
                         CompatRegistry registry = GSON.fromJson(reader, CompatRegistry.class);

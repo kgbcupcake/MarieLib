@@ -134,7 +134,8 @@ public final class ScannerSpecRegistry {
     }
 
     private static ScannerSpec parseBundled() {
-        try (InputStream in = ScannerSpecRegistry.class.getResourceAsStream(bundledResourcePath())) {
+        try (InputStream in = Thread.currentThread().getContextClassLoader()
+                .getResourceAsStream(bundledResourcePath().substring(1))) {
             if (in == null) return null;
             try (Reader r = new InputStreamReader(in, StandardCharsets.UTF_8)) {
                 return parseReader(r);
@@ -146,7 +147,8 @@ public final class ScannerSpecRegistry {
     }
 
     private static void writeBundledTo(Path file) throws IOException {
-        try (InputStream in = ScannerSpecRegistry.class.getResourceAsStream(bundledResourcePath())) {
+        try (InputStream in = Thread.currentThread().getContextClassLoader()
+                .getResourceAsStream(bundledResourcePath().substring(1))) {
             if (in == null) {
                 throw new IOException("Bundled scanner_spec.json missing at " + bundledResourcePath());
             }

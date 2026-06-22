@@ -17,10 +17,6 @@ public final class MariesLib {
 
     public MariesLib(IEventBus modEventBus, ModContainer modContainer) {
         MariesLibConfigIO.load();
-        if (!MarieLibContext.isRegistered()) {
-            MariesLibBootstrap.bootstrap(modEventBus);
-            // MariesLibInternalContext.get() is now the active config
-        }
         LOGGER.info("MariesLib initialized");
     }
 }

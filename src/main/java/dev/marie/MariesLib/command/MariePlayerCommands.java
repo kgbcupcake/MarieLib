@@ -9,6 +9,7 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import dev.marie.MariesLib.api.registry.ProfileRegistry;
 import dev.marie.MariesLib.core.IMarieLibConfig;
+import dev.marie.MariesLib.core.MarieLibContext;
 import dev.marie.MariesLib.handler.SourceApplicationPipeline;
 import dev.marie.MariesLib.tracking.TrackingAttachment;
 import dev.marie.MariesLib.tracking.TrackingData;
@@ -78,6 +79,27 @@ final class MariePlayerCommands {
         float applied = data.values.getOrDefault(key, 0f);
         ctx.getSource().sendSuccess(() -> Component.literal(String.format(Locale.ROOT,
                 "Set %s for %s: %.2f -> %.2f", key, player.getName().getString(), old, applied)), true);
+        return 1;
+    }
+
+    static int setAllValues(CommandContext<CommandSourceStack> ctx, String modId) throws CommandSyntaxException {
+        if (!MarieCommandSupport.ensureConsumerRegistered(ctx.getSource())) {
+            return 0;
+        }
+        float value = FloatArgumentType.getFloat(ctx, "value");
+        ServerPlayer player = EntityArgument.getPlayer(ctx, "player");
+        if (!TrackingAttachment.isRegistered()) {
+            ctx.getSource().sendFailure(Component.literal("Tracking attachment is not registered."));
+            return 0;
+        }
+        TrackingData data = TrackingAttachment.getData(player);
+        boolean changed = TrackingResetSupport.resetAllBarValues(player, data, value);
+        if (changed) {
+            SourceApplicationPipeline.finalizeDirectWrite(player, data);
+        }
+        int count = MarieLibContext.get().valueKeys().size();
+        ctx.getSource().sendSuccess(() -> Component.literal(String.format(Locale.ROOT,
+                "Set all %d value(s) for %s to %.2f", count, player.getName().getString(), value)), true);
         return 1;
     }
 
