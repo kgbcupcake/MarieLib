@@ -8,6 +8,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import org.slf4j.Logger;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -106,6 +107,10 @@ public class SourceRegistry {
 
     public static boolean hasAuthoritativeClassification(ResourceLocation sourceId) {
         return EXTERNAL_CLASSIFICATIONS.containsKey(sourceId);
+    }
+
+    static Map<ResourceLocation, Map<String, Float>> getAllExternalView() {
+        return Collections.unmodifiableMap(EXTERNAL_CLASSIFICATIONS);
     }
 
     static boolean hasApiClassification(ResourceLocation sourceId) {

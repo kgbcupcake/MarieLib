@@ -68,7 +68,7 @@ public final class RecipeInheritanceResolver {
 
     private final Map<ResourceLocation, List<ResourceLocation>> recipeCache;
     @Nullable
-    private final RecipeManager recipeManager;
+    private volatile RecipeManager recipeManager;
     @Nullable
     private final BiFunction<Map<String, Float>, Float, Map<String, Float>> inheritanceFilter;
 
@@ -254,7 +254,7 @@ public final class RecipeInheritanceResolver {
         return contributions;
     }
 
-    private List<ResourceLocation> getIngredients(ResourceLocation itemId) {
+    public List<ResourceLocation> getIngredients(ResourceLocation itemId) {
         List<ResourceLocation> cached = recipeCache.get(itemId);
         if (cached != null) {
             return cached;
@@ -374,6 +374,14 @@ public final class RecipeInheritanceResolver {
         }
 
         return null;
+    }
+
+    /**
+     * Sets the active recipe manager and prepares this resolver for use.
+     * Does not clear the cache — call {@link #clearCache()} first if needed.
+     */
+    public void buildIndex(RecipeManager recipeManager) {
+        this.recipeManager = recipeManager;
     }
 
     /**

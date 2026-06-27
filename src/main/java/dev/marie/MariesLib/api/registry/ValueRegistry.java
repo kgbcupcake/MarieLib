@@ -33,6 +33,10 @@ public final class ValueRegistry {
         INSTANCE.reset();
     }
 
+    public static boolean isFrozen() {
+        return INSTANCE.isFrozen();
+    }
+
     public static void register(ValueDefinition definition) {
         if (definition == null) {
             throw new IllegalArgumentException("definition cannot be null");

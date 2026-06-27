@@ -24,6 +24,7 @@ import dev.marie.MariesLib.runtime.TriggerHandlerRegistry;
 import dev.marie.MariesLib.tracking.TrackingAttachment;
 import dev.marie.MariesLib.tracking.TrackingData;
 import dev.marie.MariesLib.util.MarieRegistryUtils;
+import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
@@ -598,5 +599,68 @@ public final class MarieAPI {
         tracking.tickTime(gameTimeMs);
         tracking.tick();
         SourceApplicationPipeline.process(player, trigger, stack, tracking, gameTimeMs);
+    }
+
+    // ───────────────────────────────────────────────────────────────
+    // Config Validation
+    // ───────────────────────────────────────────────────────────────
+
+    @ApiStatus.Stable
+    public static void registerConfigValidator(ConfigValidator validator) {
+        dev.marie.MariesLib.config.ConfigValidatorRegistry.registerRaw(validator);
+        dev.marie.MariesLib.config.ConfigValidatorRegistry.register(
+                validator.validatorId(),
+                ctx -> {
+                    dev.marie.MariesLib.config.validation.ValidationResult result = validator.validate();
+                    CommandSourceStack source = ctx.getSource();
+                    String prefix = "[" + validator.validatorId() + "] ";
+                    if (result.status() == dev.marie.MariesLib.config.validation.ValidationResult.Status.PASS) {
+                        source.sendSuccess(() -> net.minecraft.network.chat.Component.literal(
+                                prefix + "PASS — no issues found."), false);
+                    } else {
+                        for (dev.marie.MariesLib.config.validation.Finding f : result.findings()) {
+                            String msg = prefix + f.severity().name() + " [" + f.file() + " / " + f.key() + "] " + f.message();
+                            if (f.severity() == dev.marie.MariesLib.config.validation.ValidationResult.Status.FAIL) {
+                                source.sendFailure(net.minecraft.network.chat.Component.literal(msg));
+                            } else {
+                                source.sendSuccess(() -> net.minecraft.network.chat.Component.literal(msg), false);
+                            }
+                        }
+                    }
+                    return result.status() == dev.marie.MariesLib.config.validation.ValidationResult.Status.FAIL ? 0 : 1;
+                });
+    }
+
+    // ───────────────────────────────────────────────────────────────
+    // Export Resolvers
+    // ───────────────────────────────────────────────────────────────
+
+    @ApiStatus.Stable
+    public static <T> void registerExportResolver(ExportResolver<T> resolver) {
+        dev.marie.MariesLib.export.ExportResolverRegistry.register(
+                resolver.resolverId(),
+                () -> null);
+    }
+
+    @ApiStatus.Stable
+    public static <T> void registerExportResolver(
+            String key,
+            net.minecraft.resources.ResourceKey<net.minecraft.core.Registry<T>> registryKey,
+            ExportResolver<T> resolver) {
+        dev.marie.MariesLib.export.ExportResolverRegistry.registerWithRegistry(key, registryKey, resolver);
+    }
+
+    // ───────────────────────────────────────────────────────────────
+    // Tag Audit
+    // ───────────────────────────────────────────────────────────────
+
+    @ApiStatus.Stable
+    public static void registerTagRule(dev.marie.MariesLib.tagaudit.rule.TagRule rule) {
+        dev.marie.MariesLib.tagaudit.TagRuleRegistry.register(rule);
+    }
+
+    @ApiStatus.Stable
+    public static void registerTagAuditContext(String modId, dev.marie.MariesLib.tagaudit.model.TagAuditContext context) {
+        dev.marie.MariesLib.tagaudit.TagAuditContextRegistry.register(modId, context);
     }
 }
