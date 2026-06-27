@@ -35,7 +35,6 @@ public final class MariesLibCommand {
     @SubscribeEvent
     public void onRegisterCommands(RegisterCommandsEvent event) {
         CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
-        registerLibraryTree(dispatcher, MariesLib.MOD_ID);
         registerLibraryTree(dispatcher, "marie");
     }
 

@@ -81,6 +81,26 @@ final class MariePlayerCommands {
         return 1;
     }
 
+    static int setAllValues(CommandContext<CommandSourceStack> ctx, String modId) throws CommandSyntaxException {
+        if (!MarieCommandSupport.ensureConsumerRegistered(ctx.getSource())) {
+            return 0;
+        }
+        float value = FloatArgumentType.getFloat(ctx, "value");
+        ServerPlayer player = EntityArgument.getPlayer(ctx, "player");
+        if (!TrackingAttachment.isRegistered()) {
+            ctx.getSource().sendFailure(Component.literal("Tracking attachment is not registered."));
+            return 0;
+        }
+        TrackingData data = TrackingAttachment.getData(player);
+        for (String key : MarieCommandSupport.registeredValueKeys()) {
+            SourceApplicationPipeline.writeDirectValue(player, data, key, value);
+        }
+        SourceApplicationPipeline.finalizeDirectWrite(player, data);
+        ctx.getSource().sendSuccess(() -> Component.literal(String.format(Locale.ROOT,
+                "Set all values for %s to %.2f", player.getName().getString(), value)), true);
+        return 1;
+    }
+
     static int resetPlayer(CommandContext<CommandSourceStack> ctx, String modId) throws CommandSyntaxException {
         ServerPlayer player = EntityArgument.getPlayer(ctx, "player");
         if (!TrackingAttachment.isRegistered()) {

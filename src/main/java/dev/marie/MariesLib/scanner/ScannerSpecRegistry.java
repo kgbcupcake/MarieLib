@@ -77,8 +77,11 @@ public final class ScannerSpecRegistry {
         try {
             Files.createDirectories(configDir);
             if (!Files.exists(file)) {
-                writeBundledTo(file);
-                MariesLib.LOGGER.info("[ScannerSpecRegistry] Wrote default scanner_spec.json");
+                if (writeBundledTo(file)) {
+                    MariesLib.LOGGER.info("[ScannerSpecRegistry] Wrote default scanner_spec.json");
+                } else {
+                    MariesLib.LOGGER.debug("[ScannerSpecRegistry] No bundled scanner_spec.json for this modId, skipping write");
+                }
             }
             ScannerSpec spec = parseFile(file);
             if (spec == null) {
@@ -145,10 +148,10 @@ public final class ScannerSpecRegistry {
         }
     }
 
-    private static void writeBundledTo(Path file) throws IOException {
+    private static boolean writeBundledTo(Path file) throws IOException {
         try (InputStream in = ScannerSpecRegistry.class.getResourceAsStream(bundledResourcePath())) {
             if (in == null) {
-                throw new IOException("Bundled scanner_spec.json missing at " + bundledResourcePath());
+                return false;
             }
             try (Reader reader = new InputStreamReader(in, StandardCharsets.UTF_8);
                  Writer writer = Files.newBufferedWriter(file)) {
@@ -159,6 +162,7 @@ public final class ScannerSpecRegistry {
                 GSON.toJson(obj, writer);
             }
         }
+        return true;
     }
 
     private static ScannerSpec parseReader(Reader reader) {
