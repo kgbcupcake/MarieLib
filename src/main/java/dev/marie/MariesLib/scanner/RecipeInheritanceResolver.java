@@ -24,7 +24,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -66,9 +65,9 @@ public final class RecipeInheritanceResolver {
     private static final int MAX_INGREDIENTS = 8;
     private static final float DECAY_PER_LEVEL = 0.5f;
 
-    private final Map<ResourceLocation, List<ResourceLocation>> recipeCache;
+    private Map<ResourceLocation, List<ResourceLocation>> recipeIndex;
     @Nullable
-    private final RecipeManager recipeManager;
+    private volatile RecipeManager recipeManager;
     @Nullable
     private final BiFunction<Map<String, Float>, Float, Map<String, Float>> inheritanceFilter;
 
@@ -81,8 +80,46 @@ public final class RecipeInheritanceResolver {
             @Nullable BiFunction<Map<String, Float>, Float, Map<String, Float>> inheritanceFilter
     ) {
         this.recipeManager = recipeManager;
-        this.recipeCache = new ConcurrentHashMap<>();
         this.inheritanceFilter = inheritanceFilter;
+        this.recipeIndex = buildIndex();
+    }
+
+    private Map<ResourceLocation, List<ResourceLocation>> buildIndex() {
+        if (recipeManager == null) {
+            return new HashMap<>();
+        }
+        Map<ResourceLocation, List<ResourceLocation>> index = new HashMap<>();
+        for (RecipeHolder<?> holder : recipeManager.getRecipes()) {
+            Recipe<?> recipe = holder.value();
+            try {
+                ItemStack result = recipe.getResultItem(null);
+                if (result == null || result.isEmpty()) {
+                    continue;
+                }
+                ResourceLocation outputId = MarieRegistryUtils.itemKey(result);
+                if (outputId == null) {
+                    continue;
+                }
+                List<Ingredient> recipeIngredients = recipe.getIngredients();
+                if (recipeIngredients.size() > MAX_INGREDIENTS) {
+                    continue;
+                }
+                for (Ingredient ingredient : recipeIngredients) {
+                    ItemStack[] items = ingredient.getItems();
+                    if (items.length == 0) {
+                        continue;
+                    }
+                    ResourceLocation id = MarieRegistryUtils.itemKey(items[0]);
+                    if (id == null || id.equals(outputId)) {
+                        continue;
+                    }
+                    index.computeIfAbsent(outputId, k -> new ArrayList<>()).add(id);
+                }
+            } catch (Exception ignored) {
+            }
+        }
+        index.replaceAll((k, v) -> v.size() > MAX_INGREDIENTS ? v.subList(0, MAX_INGREDIENTS) : v);
+        return index;
     }
 
     /**
@@ -254,7 +291,7 @@ public final class RecipeInheritanceResolver {
         return contributions;
     }
 
-    private List<ResourceLocation> getIngredients(ResourceLocation itemId) {
+    public List<ResourceLocation> getIngredients(ResourceLocation itemId) {
         List<ResourceLocation> cached = recipeCache.get(itemId);
         if (cached != null) {
             return cached;
@@ -294,21 +331,22 @@ public final class RecipeInheritanceResolver {
                             }
                         }
                     }
-
-                    if (!ingredients.isEmpty()) {
-                        break;
-                    }
-                } catch (Exception ignored) {
                 }
-            }
+                if (!ingredients.isEmpty()) {
+                    index.merge(outputId, ingredients, (a, b) -> {
+                        List<ResourceLocation> merged = new ArrayList<>(a);
+                        merged.addAll(b);
+                        return merged.size() > MAX_INGREDIENTS ? merged.subList(0, MAX_INGREDIENTS) : merged;
+                    });
+                }
+            } catch (Exception ignored) {}
         }
+        this.recipeIndex.clear();
+        this.recipeIndex.putAll(index);
+    }
 
-        if (ingredients.size() > MAX_INGREDIENTS) {
-            ingredients = ingredients.subList(0, MAX_INGREDIENTS);
-        }
-
-        recipeCache.put(itemId, ingredients);
-        return ingredients;
+    public List<ResourceLocation> getIngredients(ResourceLocation itemId) {
+        return recipeIndex.getOrDefault(itemId, List.of());
     }
 
     /**
@@ -377,16 +415,24 @@ public final class RecipeInheritanceResolver {
     }
 
     /**
-     * Clear the recipe cache. Call when mod list changes.
+     * Sets the active recipe manager and prepares this resolver for use.
+     * Does not clear the cache — call {@link #clearCache()} first if needed.
      */
-    public void clearCache() {
-        recipeCache.clear();
+    public void buildIndex(RecipeManager recipeManager) {
+        this.recipeManager = recipeManager;
     }
 
     /**
-     * Get the current cache size for diagnostics.
+     * Clear the recipe cache. Call when mod list changes.
+     */
+    public void clearCache() {
+        // index is immutable; construct a new instance to refresh
+    }
+
+    /**
+     * Get the current index size for diagnostics.
      */
     public int cacheSize() {
-        return recipeCache.size();
+        return recipeIndex.size();
     }
 }

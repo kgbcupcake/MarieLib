@@ -8,6 +8,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import org.slf4j.Logger;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -29,7 +30,7 @@ public class SourceRegistry {
     /** @GuardedBy("itself — ConcurrentHashSet") Per-session dedupe for external classification cap warnings. */
     private static final Set<String> WARNED_CAP_ITEMS = ConcurrentHashMap.newKeySet();
 
-    private static final int EXTERNAL_CLASSIFICATION_CAP = 4096;
+    private static final int EXTERNAL_CLASSIFICATION_CAP = 16384;
 
     /** @GuardedBy("itself — ConcurrentHashMap") */
     private static final Map<ResourceLocation, Map<String, Float>> EXTERNAL_CLASSIFICATIONS = new ConcurrentHashMap<>();
@@ -106,6 +107,10 @@ public class SourceRegistry {
 
     public static boolean hasAuthoritativeClassification(ResourceLocation sourceId) {
         return EXTERNAL_CLASSIFICATIONS.containsKey(sourceId);
+    }
+
+    static Map<ResourceLocation, Map<String, Float>> getAllExternalView() {
+        return Collections.unmodifiableMap(EXTERNAL_CLASSIFICATIONS);
     }
 
     static boolean hasApiClassification(ResourceLocation sourceId) {

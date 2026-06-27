@@ -33,7 +33,6 @@ public final class ValueRegistry {
         INSTANCE.reset();
     }
 
-    @ApiStatus.Internal
     public static boolean isFrozen() {
         return INSTANCE.isFrozen();
     }

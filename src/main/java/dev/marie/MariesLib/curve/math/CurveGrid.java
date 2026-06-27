@@ -3,85 +3,59 @@ package dev.marie.MariesLib.curve.math;
 import dev.marie.MariesLib.api.ApiStatus;
 
 /**
- * Immutable 2D bilinear response grid. Maps two normalized inputs (x, y), each
- * expected in [0, 1], to a single output multiplier via bilinear interpolation
- * between the four nearest grid cells.
- *
- * <p>Reusable infrastructure — has no knowledge of what x, y, or the output
- * represent. The consuming mod defines that meaning.</p>
- *
- * @param xCells       number of grid cells along the x axis (>= 1)
- * @param yCells       number of grid cells along the y axis (>= 1)
- * @param multipliers  flattened [xCells+1][yCells+1] grid of corner values,
- *                     row-major (index = row * (yCells + 1) + col), where
- *                     row corresponds to x and col corresponds to y
+ * A 2D grid of float multipliers, evaluated via bilinear interpolation.
+ * Axes are (intensity, confidence), each normalised to [0, 1].
+ * The backing array has {@code (xCells+1) * (yCells+1)} elements stored as
+ * {@code grid[xi * (yCells+1) + yi]}.
  */
 @ApiStatus.Stable
-public record CurveGrid(int xCells, int yCells, float[] multipliers) {
+public final class CurveGrid {
 
-    public CurveGrid {
-        if (xCells < 1 || yCells < 1) {
-            throw new IllegalArgumentException("CurveGrid: xCells and yCells must be >= 1");
-        }
-        int expected = (xCells + 1) * (yCells + 1);
-        if (multipliers == null || multipliers.length != expected) {
-            throw new IllegalArgumentException(
-                    "CurveGrid: multipliers length must be " + expected + " for a " + xCells + "x" + yCells + " grid");
-        }
+    private final int xCells;
+    private final int yCells;
+    private final float[] grid;
+
+    public CurveGrid(int xCells, int yCells, float[] grid) {
+        this.xCells = xCells;
+        this.yCells = yCells;
+        this.grid = grid;
     }
 
-    /**
-     * Returns a flat grid of uniform {@code value} at every corner — the identity/no-op curve.
-     */
+    /** Creates a grid filled uniformly with {@code value}. */
     public static CurveGrid flat(int xCells, int yCells, float value) {
-        int size = (xCells + 1) * (yCells + 1);
-        float[] grid = new float[size];
+        float[] grid = new float[(xCells + 1) * (yCells + 1)];
         java.util.Arrays.fill(grid, value);
         return new CurveGrid(xCells, yCells, grid);
     }
 
     /**
-     * Evaluates the curve at (x, y), clamping inputs to [0, 1] and bilinearly
-     * interpolating between the four surrounding grid corners.
+     * Bilinear interpolation of the grid at normalised coordinates (x, y).
+     * Both x and y are clamped to [0, 1].
      */
     public float evaluate(float x, float y) {
-        float cx = clamp01(x);
-        float cy = clamp01(y);
+        x = Math.max(0f, Math.min(1f, x));
+        y = Math.max(0f, Math.min(1f, y));
 
-        float gx = cx * xCells;
-        float gy = cy * yCells;
-
-        int x0 = (int) Math.floor(gx);
-        int y0 = (int) Math.floor(gy);
-        x0 = Math.min(x0, xCells - 1);
-        y0 = Math.min(y0, yCells - 1);
+        float fx = x * xCells;
+        float fy = y * yCells;
+        int x0 = Math.min((int) fx, xCells - 1);
+        int y0 = Math.min((int) fy, yCells - 1);
         int x1 = x0 + 1;
         int y1 = y0 + 1;
 
-        float tx = gx - x0;
-        float ty = gy - y0;
+        float tx = fx - x0;
+        float ty = fy - y0;
 
-        float c00 = cornerAt(x0, y0);
-        float c10 = cornerAt(x1, y0);
-        float c01 = cornerAt(x0, y1);
-        float c11 = cornerAt(x1, y1);
+        float v00 = grid[x0 * (yCells + 1) + y0];
+        float v10 = grid[x1 * (yCells + 1) + y0];
+        float v01 = grid[x0 * (yCells + 1) + y1];
+        float v11 = grid[x1 * (yCells + 1) + y1];
 
-        float top = lerp(c00, c10, tx);
-        float bottom = lerp(c01, c11, tx);
-        return lerp(top, bottom, ty);
+        return (v00 * (1 - tx) + v10 * tx) * (1 - ty)
+             + (v01 * (1 - tx) + v11 * tx) * ty;
     }
 
-    private float cornerAt(int xi, int yi) {
-        int cols = yCells + 1;
-        return multipliers[xi * cols + yi];
-    }
-
-    private static float lerp(float a, float b, float t) {
-        return a + (b - a) * t;
-    }
-
-    private static float clamp01(float v) {
-        if (Float.isNaN(v)) return 0f;
-        return Math.max(0f, Math.min(1f, v));
-    }
+    public int xCells() { return xCells; }
+    public int yCells() { return yCells; }
+    public float[] gridData() { return grid; }
 }

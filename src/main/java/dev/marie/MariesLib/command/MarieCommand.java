@@ -16,6 +16,17 @@ import net.neoforged.neoforge.event.server.ServerStoppedEvent;
 public class MarieCommand {
 
     @SubscribeEvent
+    public void onRegisterCommands(RegisterCommandsEvent event) {
+        CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
+        for (MarieLibContext ctx : MarieModRegistry.getAll()) {
+            String modId = ctx.modId();
+            if (!modId.equals(MariesLib.MOD_ID)) {
+                MarieConsumerCommandTree.register(dispatcher, modId);
+            }
+        }
+    }
+
+    @SubscribeEvent
     public void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) {
             MarieCommandSupport.onPlayerLoggedOut(player);
@@ -27,15 +38,4 @@ public class MarieCommand {
         MarieCommandSupport.onServerStopped();
     }
 
-    @SubscribeEvent
-    public void onRegisterCommands(RegisterCommandsEvent event) {
-        CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
-
-        for (MarieLibContext ctx : MarieModRegistry.getAll()) {
-            String modId = ctx.modId();
-            if (!modId.equals(MariesLib.MOD_ID)) {
-                MarieConsumerCommandTree.register(dispatcher, modId);
-            }
-        }
-    }
 }

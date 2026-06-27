@@ -93,13 +93,12 @@ final class MariePlayerCommands {
             return 0;
         }
         TrackingData data = TrackingAttachment.getData(player);
-        boolean changed = TrackingResetSupport.resetAllBarValues(player, data, value);
-        if (changed) {
-            SourceApplicationPipeline.finalizeDirectWrite(player, data);
+        for (String key : MarieCommandSupport.registeredValueKeys()) {
+            SourceApplicationPipeline.writeDirectValue(player, data, key, value);
         }
-        int count = MarieLibContext.get().valueKeys().size();
+        SourceApplicationPipeline.finalizeDirectWrite(player, data);
         ctx.getSource().sendSuccess(() -> Component.literal(String.format(Locale.ROOT,
-                "Set all %d value(s) for %s to %.2f", count, player.getName().getString(), value)), true);
+                "Set all values for %s to %.2f", player.getName().getString(), value)), true);
         return 1;
     }
 

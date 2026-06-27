@@ -6,10 +6,11 @@ import com.mojang.brigadier.context.CommandContext;
 import dev.marie.MariesLib.api.ApiStatus;
 import dev.marie.MariesLib.api.MarieAPIState;
 import dev.marie.MariesLib.api.MarieAPIVersion;
+import dev.marie.MariesLib.config.ConfigValidatorRegistry;
 import dev.marie.MariesLib.core.MarieLibContext;
 import dev.marie.MariesLib.core.MarieModRegistry;
 import dev.marie.MariesLib.core.MariesLib;
-import dev.marie.MariesLib.export.ExportWriter;
+import dev.marie.MariesLib.export.ExportResolverRegistry;
 import dev.marie.MariesLib.registry.RegistryLifecycleManager;
 import dev.marie.MariesLib.tagaudit.TagAuditReportWriter;
 import dev.marie.MariesLib.tagaudit.TagScanner;
@@ -20,12 +21,15 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModList;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 
 import java.nio.file.Path;
 import java.util.List;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * Library-only commands registered under /marieslib and /marie.
@@ -40,7 +44,6 @@ public final class MariesLibCommand {
     @SubscribeEvent
     public void onRegisterCommands(RegisterCommandsEvent event) {
         CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
-        registerLibraryTree(dispatcher, MariesLib.MOD_ID);
         registerLibraryTree(dispatcher, "marie");
     }
 
@@ -55,16 +58,51 @@ public final class MariesLibCommand {
                                 .executes(this::showApiPhase))
                         .then(Commands.literal("registries")
                                 .executes(this::showRegistries))
-                        .then(Commands.literal("validate")
-                                .then(Commands.argument("modid", StringArgumentType.string())
-                                        .executes(ctx -> MarieValidationCommands.runForModId(
-                                                ctx, StringArgumentType.getString(ctx, "modid")))))
                         .then(Commands.literal("dump")
+                                .requires(s -> s.hasPermission(2))
                                 .then(Commands.argument("resolverId", StringArgumentType.string())
-                                        .executes(this::runDump)))
-                        .then(Commands.literal("audit_tags")
+                                        .suggests((ctx, b) -> {
+                                            ExportResolverRegistry.getAll().keySet().forEach(b::suggest);
+                                            return b.buildFuture();
+                                        })
+                                        .executes(ctx -> {
+                                            CommandSourceStack source = ctx.getSource();
+                                            String resolverId = StringArgumentType.getString(ctx, "resolverId");
+                                            Supplier<Path> resolver = ExportResolverRegistry.get(resolverId);
+                                            if (resolver == null) {
+                                                source.sendFailure(Component.literal(
+                                                        "[MariesLib] No exporter registered for: " + resolverId));
+                                                return 0;
+                                            }
+                                            Path written = resolver.get();
+                                            if (written == null) {
+                                                source.sendFailure(Component.literal(
+                                                        "[MariesLib] Export failed or produced no data for: " + resolverId));
+                                                return 0;
+                                            }
+                                            source.sendSuccess(() -> Component.literal(
+                                                    "[MariesLib] Wrote export to " + written), false);
+                                            return 1;
+                                        })))
+                        .then(Commands.literal("validate")
+                                .requires(s -> s.hasPermission(2))
                                 .then(Commands.argument("modid", StringArgumentType.string())
-                                        .executes(this::runAuditTags)))
+                                        .suggests((ctx, b) -> {
+                                            ConfigValidatorRegistry.getRegisteredModIds().forEach(b::suggest);
+                                            return b.buildFuture();
+                                        })
+                                        .executes(ctx -> {
+                                            CommandSourceStack source = ctx.getSource();
+                                            String modId = StringArgumentType.getString(ctx, "modid");
+                                            Function<CommandContext<CommandSourceStack>, Integer> validator =
+                                                    ConfigValidatorRegistry.get(modId);
+                                            if (validator == null) {
+                                                source.sendFailure(Component.literal(
+                                                        "[MariesLib] No validator registered for modid: " + modId));
+                                                return 0;
+                                            }
+                                            return validator.apply(ctx);
+                                        })))
         );
     }
 

@@ -7,7 +7,7 @@ import dev.marie.MariesLib.api.SourcePairSynergy;
 import dev.marie.MariesLib.api.SynergyDefinition;
 import dev.marie.MariesLib.api.ThresholdEffect;
 import dev.marie.MariesLib.api.ValueDefinition;
-import dev.marie.MariesLib.runtime.SourceOverrideRegistry;
+import dev.marie.MariesLib.runtime.SourceClassificationRegistry;
 import dev.marie.MariesLib.util.MarieValidation;
 import net.minecraft.resources.ResourceLocation;
 
@@ -66,7 +66,7 @@ public final class MarieKubeBindings {
             values.put(entry.getKey(), asFloat(entry.getValue()));
         }
         boolean enabled = !overrides.containsKey("enabled") || asBoolean(overrides.get("enabled"));
-        SourceOverrideRegistry.setOverride(itemId, values, enabled);
+        SourceClassificationRegistry.setOverride(itemId, values, enabled);
     }
 
     public static void registerEffect(Map<String, Object> spec) {

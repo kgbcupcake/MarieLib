@@ -2,6 +2,87 @@
 
 <!-- markdownlint-disable MD013 -->
 
+## [ MariesLib 0.1.1-beta.2 ] 2026-6-27
+
+Config validation framework, tag-audit system, curve grid math, command extensions, and scanner spec graceful-skip.
+
+### Added
+
+- **`ConfigValidator`** (`@ApiStatus.Stable`): consuming-mod hook that validates its own configuration and
+  returns a structured `ValidationResult`; registered via `MarieAPI.registerConfigValidator`
+- **`ConfigValidatorRegistry`** (`@ApiStatus.Internal`): keyed store of `ConfigValidator` instances;
+  supports `getAllRaw()` for internal runner iteration
+- **`Finding`** (`@ApiStatus.Stable`): record carrying `severity`, `file`, `key`, and `message` for a
+  single validation issue within a `ValidationResult`
+- **`ValidationResult`** (`@ApiStatus.Stable`): structured outcome of a config validator run; status is
+  one of `PASS`, `WARN`, or `FAIL`, plus a list of `Finding` items
+- **`ValidationRunner.runForMod(modId)`** (`@ApiStatus.Stable`): filters and runs only the validators
+  belonging to the given mod id; complements `runAll()` for per-consumer diagnostics
+- **`TagAuditContext`** (`@ApiStatus.Stable`): context interface passed to tag-audit rules; exposes
+  `knownCategories()`, `itemsInCategory(category)`, `categoriesForItem(itemId)`,
+  `liveInferenceLookup()`, and `namespacesPresent()`
+- **`TagRule`** (`@ApiStatus.Stable`): interface for pluggable tag-audit rules; implements
+  `findIssues(context)` and `suggestFixes(context, issues)`
+- **`TagIssue`** (`@ApiStatus.Stable`): record describing a single tag problem with `severity`, `category`,
+  `itemId`, and `message`
+- **`TagFixSuggestion`** (`@ApiStatus.Stable`): record carrying a corrective suggestion (`category`,
+  `itemId`, `action`, `reason`) produced by a `TagRule`
+- **`TagAuditSeverity`** (`@ApiStatus.Stable`): severity enum (`ERROR`, `WARN`, `INFO`) for `TagIssue`
+- **`TagReport`** (`@ApiStatus.Stable`): result of a full `TagScanner.scan` run; includes `timestamp`,
+  `rulesRun`, `issues`, and `suggestions`
+- **`TagScanner.scan(context)`** (`@ApiStatus.Stable`): iterates all registered `TagRule` instances,
+  collects issues and fix suggestions, and returns a timestamped `TagReport`
+- **`TagRuleRegistry`** (`@ApiStatus.Internal`): ordered store of registered `TagRule` instances
+- **`TagAuditContextRegistry`** (`@ApiStatus.Internal`): per-modId store of `TagAuditContext` instances
+- **`CurveGrid`** (`@ApiStatus.Stable`): 2-D grid of float multipliers evaluated via bilinear
+  interpolation; axes are `(intensity, confidence)` both normalised to `[0, 1]`; `flat(xCells, yCells,
+  value)` constructs a uniform grid, `evaluate(x, y)` samples with clamping
+- **`CurveGridJson`** (`@ApiStatus.Internal`): JSON serialisation / deserialisation for `CurveGrid`
+- **`SourceClassificationRegistry`** (`@ApiStatus.Stable`): public read-only view of external source
+  classifications registered via `SourceRegistry`; `getAll()` returns an unmodifiable map of
+  `ResourceLocation → SourceClassification(sourceId, values)`
+- **`MarieAPI.registerConfigValidator(validator)`** (`@ApiStatus.Stable`): public registration entry
+  point for `ConfigValidator` instances
+- **`MarieAPI.registerExportResolver(resolver)`** and **`registerExportResolver(key, registryKey, resolver)`**
+  (`@ApiStatus.Stable`): two overloads for wiring `ExportResolver` instances into `ExportResolverRegistry`
+- **`MarieAPI.registerTagRule(rule)`** and **`MarieAPI.registerTagAuditContext(modId, context)`**
+  (`@ApiStatus.Stable`): public registration entry points for the tag-audit system
+- **`/<modid> set_all <value> <player>`** (`MarieConsumerCommandTree`, permission 2): sets all
+  registered value keys for the target player to the given normalised level in a single command via
+  `SourceApplicationPipeline.writeDirectValue`
+- **`/<modid> validate`** (`MarieConsumerCommandTree`): runs all `ConfigValidator` instances
+  registered for the consumer mod and prints PASS / WARN / FAIL results with per-finding detail in
+  colour-coded chat; backed by `MarieValidationCommands`
+- **`/<modid> analyze <item>`** (`MarieConsumerCommandTree`, permission 0): resolves a
+  `ClassificationTrace` for any food item via `RuntimeResolver` and writes a full inspector dump to
+  `config/<modid>/debug/analyze_<item>_<timestamp>.txt`; suggests only food-bearing items via
+  `DataComponents.FOOD` filter
+- **`MarieValidationCommands`** (`@ApiStatus.Internal`): internal command handler for the `validate`
+  subcommand; formats `ValidationResult` output with `ChatFormatting` colour coding
+- **`SourceRegistry.getAllExternalClassifications()`**: returns a snapshot of all API- and KubeJS-
+  registered classifications for external inspection
+
+### Changed
+
+- **`MariesLibCommand`**: removed duplicate `registerLibraryTree` call under `MariesLib.MOD_ID`; the
+  library command tree is now registered only under the `/marie` alias
+- **`RecipeInheritanceResolver.getIngredients()`**: promoted to `public` visibility; added `buildIndex(RecipeManager)`
+  to set the active recipe manager for ingredient index construction
+- **`MarieValueColors`**: additional accessor method(s) to support tag-audit and export tooling
+
+### Fixed
+
+- **`ScannerSpecRegistry.writeBundledTo()`**: now returns `boolean` instead of `void`; the caller
+  (`ensureLoaded`) only logs a success message when `true` is returned and silently skips at
+  `DEBUG` level when no bundled `scanner_spec.json` exists for the active modId, eliminating
+  spurious warnings for mods that do not ship a bundled spec
+
+### Notes
+
+- Published artifact version is **0.1.1-beta.2** (`gradle.properties`)
+
+---
+
 ## [ MariesLib 0.1.1-beta.1 ] 2026-6-20
 
 Generic registry-export framework, scanner spec loading fix, explicit bootstrap requirement, and registry frozen-state exposure.
@@ -151,7 +232,7 @@ fired as events, loadable from datapacks, and exposed to KubeJS.
 ### Architecture
 
 - **Pipeline hook**: `SourceApplicationPipeline` calls `MilestoneTracker.onValueApplied(player,
-  key, finalDelta)` after each positive per-valueKey delta is applied and `SourceAppliedEvent` is
+key, finalDelta)` after each positive per-valueKey delta is applied and `SourceAppliedEvent` is
   posted
 - **Reward flow**: `MilestoneTracker` applies optional mob effects via `BuiltInRegistries.MOB_EFFECT`,
   awards advancements through the server advancement manager, and logs warnings for unknown
