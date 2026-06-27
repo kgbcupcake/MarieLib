@@ -24,7 +24,7 @@ import dev.marie.MariesLib.api.registry.ValueRegistry;
 import dev.marie.MariesLib.config.MariesLibConfigBridge;
 import dev.marie.MariesLib.config.PresetRegistry;
 import dev.marie.MariesLib.tracking.AttachmentTrackingDataProvider;
-import dev.marie.MariesLib.runtime.SourceValueRegistry;
+import dev.marie.MariesLib.runtime.SourceClassificationRegistry;
 import dev.marie.MariesLib.util.MarieRegistryUtils;
 import dev.marie.MariesLib.util.MarieValidation;
 import dev.marie.MariesLib.scan.ResolutionStageHandler;
@@ -609,7 +609,7 @@ public final class MarieLibContext implements MarieLibSettings, IMarieLibConfig 
         }
         Map<String, Float> result = new HashMap<>();
         for (ValueDefinition def : ValueRegistry.getAll()) {
-            float score = SourceValueRegistry.getScore(itemId.toString(), def.getId());
+            float score = SourceClassificationRegistry.getScore(itemId.toString(), def.getId());
             if (score != 0f) {
                 result.put(def.getId(), score);
             }
@@ -627,7 +627,7 @@ public final class MarieLibContext implements MarieLibSettings, IMarieLibConfig 
         }
         Map<String, Float> result = new HashMap<>();
         for (ValueDefinition def : ValueRegistry.getAll()) {
-            float score = SourceValueRegistry.getScore(itemId.toString(), def.getId());
+            float score = SourceClassificationRegistry.getScore(itemId.toString(), def.getId());
             if (score != 0f) {
                 result.put(def.getId(), score);
             }

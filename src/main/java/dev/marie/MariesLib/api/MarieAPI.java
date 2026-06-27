@@ -3,6 +3,8 @@ package dev.marie.MariesLib.api;
 import dev.marie.MariesLib.api.ApiStatus;
 import dev.marie.MariesLib.api.MarieAPIState;
 import dev.marie.MariesLib.api.MarieAPIVersion;
+import dev.marie.MariesLib.command.CommandCapability;
+import dev.marie.MariesLib.command.CommandCapabilityRegistry;
 import dev.marie.MariesLib.api.impl.EmptyApplicationHistoryView;
 import dev.marie.MariesLib.compat.CompatDefinition;
 import dev.marie.MariesLib.api.registry.AbsorptionModifierRegistry;
@@ -628,6 +630,19 @@ public final class MarieAPI {
     public static void registerTagAuditContext(String modId, dev.marie.MariesLib.tagaudit.model.TagAuditContext context) {
         MarieAPIState.assertRegistrationAllowed("registerTagAuditContext");
         dev.marie.MariesLib.tagaudit.registry.TagAuditContextRegistry.register(modId, context);
+    }
+
+    // ───────────────────────────────────────────────────────────────
+    // Registration — Command Capabilities
+    // ───────────────────────────────────────────────────────────────
+
+    @ApiStatus.Experimental
+    public static void registerCommandCapability(
+            ResourceLocation modId,
+            ResourceLocation capability,
+            CommandCapability handler) {
+        MarieAPIState.assertRegistrationAllowed("registerCommandCapability");
+        CommandCapabilityRegistry.register(modId, capability, handler);
     }
 
     /**

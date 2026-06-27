@@ -20,12 +20,14 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModList;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Library-only commands registered under /marieslib and /marie.
@@ -40,7 +42,6 @@ public final class MariesLibCommand {
     @SubscribeEvent
     public void onRegisterCommands(RegisterCommandsEvent event) {
         CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
-        registerLibraryTree(dispatcher, MariesLib.MOD_ID);
         registerLibraryTree(dispatcher, "marie");
     }
 
@@ -65,6 +66,43 @@ public final class MariesLibCommand {
                         .then(Commands.literal("audit_tags")
                                 .then(Commands.argument("modid", StringArgumentType.string())
                                         .executes(this::runAuditTags)))
+                        // Capability dispatch — mod-specific operations MarieLib knows nothing about
+                        .then(Commands.literal("run")
+                                .requires(s -> s.hasPermission(2))
+                                .then(Commands.argument("modid", StringArgumentType.word())
+                                        .suggests((ctx, builder) -> {
+                                            MarieModRegistry.getAll().forEach(c -> builder.suggest(c.modId()));
+                                            return builder.buildFuture();
+                                        })
+                                        .then(Commands.argument("capability", StringArgumentType.word())
+                                                .suggests((ctx, builder) -> {
+                                                    String modIdStr = ctx.getArgument("modid", String.class);
+                                                    ResourceLocation modId = ResourceLocation.tryParse(modIdStr);
+                                                    if (modId != null) {
+                                                        CommandCapabilityRegistry.capabilitiesFor(modId)
+                                                                .forEach(rl -> builder.suggest(rl.toString()));
+                                                    }
+                                                    return builder.buildFuture();
+                                                })
+                                                .executes(ctx -> {
+                                                    String modIdStr = StringArgumentType.getString(ctx, "modid");
+                                                    String capStr = StringArgumentType.getString(ctx, "capability");
+                                                    ResourceLocation modId = ResourceLocation.tryParse(modIdStr);
+                                                    ResourceLocation cap = ResourceLocation.tryParse(capStr);
+                                                    if (modId == null || cap == null) {
+                                                        ctx.getSource().sendFailure(Component.literal(
+                                                                "Invalid modid or capability identifier."));
+                                                        return 0;
+                                                    }
+                                                    Optional<CommandCapability> handler =
+                                                            CommandCapabilityRegistry.get(modId, cap);
+                                                    if (handler.isEmpty()) {
+                                                        ctx.getSource().sendFailure(Component.literal(
+                                                                "No capability '" + capStr + "' registered for: " + modIdStr));
+                                                        return 0;
+                                                    }
+                                                    return handler.get().execute(ctx);
+                                                }))))
         );
     }
 

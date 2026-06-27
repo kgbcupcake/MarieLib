@@ -163,7 +163,12 @@ public final class MarieDebugCommand {
         try {
             Path dir = FMLPaths.CONFIGDIR.get().resolve(modId).resolve(DEBUG_SUBDIR);
             Files.createDirectories(dir);
-            Path file = dir.resolve("trace_dump.txt");
+            String safeItemName = sanitizeForFilename(itemName.replace(':', '_'));
+            String timestamp = java.time.format.DateTimeFormatter
+                    .ofPattern("yyyyMMdd'T'HHmmss")
+                    .withZone(java.time.ZoneOffset.UTC)
+                    .format(dumpedAt);
+            Path file = dir.resolve("trace_dump_" + safeItemName + "_" + timestamp + ".txt");
             Files.writeString(file, fullTrace);
             source.sendSuccess(() -> Component.literal("Trace written to: " + file.toString()), false);
         } catch (IOException e) {

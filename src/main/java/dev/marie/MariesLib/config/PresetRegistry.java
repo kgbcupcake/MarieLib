@@ -27,49 +27,19 @@ import java.util.stream.Stream;
  */
 public final class PresetRegistry {
 
-    public static final String PRESET_JSON_ENABLE_DECAY = "enableDecay";
-    public static final String PRESET_JSON_ENABLE_EFFECTS = "enableEffects";
-
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
-    public record PresetValues(
-            double decayRate,
-            double criticalThreshold,
-            double lowThreshold,
-            double excessThreshold,
-            int defaultEffectDurationTicks,
-            boolean enableDecay,
-            boolean enableEffects
-    ) {
+    public record PresetValues(JsonObject values) {
         public static PresetValues fromJsonObject(JsonObject values) {
-            double decay = values.has("decayRate") ? values.get("decayRate").getAsDouble() : 0.1d;
-            double crit = values.has("criticalThreshold") ? values.get("criticalThreshold").getAsDouble() : 0.25d;
-            double low = values.has("lowThreshold") ? values.get("lowThreshold").getAsDouble() : 0.4d;
-            double excess = values.has("excessThreshold") ? values.get("excessThreshold").getAsDouble() : 0.9d;
-            int dur = values.has("defaultEffectDurationTicks") ? values.get("defaultEffectDurationTicks").getAsInt() : 140;
-            boolean decayOn = !values.has(PRESET_JSON_ENABLE_DECAY) || values.get(PRESET_JSON_ENABLE_DECAY).getAsBoolean();
-            boolean effectsOn = !values.has(PRESET_JSON_ENABLE_EFFECTS) || values.get(PRESET_JSON_ENABLE_EFFECTS).getAsBoolean();
-            return new PresetValues(decay, crit, low, excess, dur, decayOn, effectsOn);
-        }
-
-        public static PresetValues fromCurrentConfig() {
-            throw new UnsupportedOperationException("Implement via consuming mod");
+            return new PresetValues(values != null ? values : new JsonObject());
         }
 
         public static PresetValues empty() {
-            return new PresetValues(0.1d, 0.25d, 0.4d, 0.9d, 140, false, false);
+            return new PresetValues(new JsonObject());
         }
 
         public JsonObject toJsonObject() {
-            JsonObject o = new JsonObject();
-            o.addProperty("decayRate", decayRate);
-            o.addProperty("criticalThreshold", criticalThreshold);
-            o.addProperty("lowThreshold", lowThreshold);
-            o.addProperty("excessThreshold", excessThreshold);
-            o.addProperty("defaultEffectDurationTicks", defaultEffectDurationTicks);
-            o.addProperty(PRESET_JSON_ENABLE_DECAY, enableDecay);
-            o.addProperty(PRESET_JSON_ENABLE_EFFECTS, enableEffects);
-            return o;
+            return values;
         }
     }
 
