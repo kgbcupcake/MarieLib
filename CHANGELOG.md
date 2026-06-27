@@ -165,6 +165,44 @@ Color resolution and ARGB parsing fixes for value customization detection.
 
 ---
 
+## [ MariesLib 0.1.0-beta.4 ] 2026-6-16
+
+Milestone tooling, per-value color overrides, datapack effect loading, and build stability.
+
+### Added
+
+- **`ValueDefinition.colorOverride`**: optional per-value ARGB stored on the definition;
+  `MarieValueColors.baseColorArgb` prefers transient UI override, then `ColorRegistry`, then
+  `colorOverride`, then the built-in palette
+- **`MilestoneRegistry.getForAll()`**: returns milestones whose `valueKey` is `"all"` (every
+  registered value key must reach the cumulative goal)
+- **`MilestoneTracker` cross-nutrient milestones**: after per-key milestone checks, evaluates
+  `"all"` milestones against every key in `MarieLibContext.valueKeys()`, grants rewards, and
+  posts `MilestoneTriggeredEvent` with `valueKey` `"all"`
+- **`generate_milestone_template` command** (`MarieMilestoneTemplateCommand`): writes a starter
+  milestone + advancement datapack to `<world>/datapacks/<modid>-milestone-template/`
+- **`MarieDataLoader.parseEffect`**: loads threshold-effect datapack entries (previously threw
+  `UnsupportedOperationException` and skipped files)
+- **`SourceRegistry.clearSessionWarnings()`**: resets per-session dedupe for external
+  classification cap warnings
+
+### Changed
+
+- **`DatapackValidator`**: ignores JSON fields prefixed with `_comment_` instead of warning on
+  them as unknown schema fields
+- **`SourceRegistry.registerClassification`**: cap-reached warnings log once per `sourceId` per
+  session; successful registrations log at debug instead of info
+- **Compile dependency pins** (`gradle.properties`, `build.gradle`): `jei_version`, `rei_version`,
+  and `emi_version` replace `+` ranges; `cloth-config-neoforge` forced to
+  `${cloth_config_version}` so Java 21 builds do not resolve future Java 25 artifacts
+- **GitHub Actions publish workflow**: `actions/checkout@v4` → `actions/checkout@v5`
+
+### Notes
+
+- Published artifact version is **0.1.0-beta.4** (`gradle.properties`)
+
+---
+
 ## [ MariesLib 0.1.0-beta.3 ] 2026-6-15
 
 Milestone tracking release. Cumulative intake milestones are now tracked at runtime,

@@ -9,6 +9,7 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import dev.marie.MariesLib.api.registry.ProfileRegistry;
 import dev.marie.MariesLib.core.IMarieLibConfig;
+import dev.marie.MariesLib.core.MarieLibContext;
 import dev.marie.MariesLib.handler.SourceApplicationPipeline;
 import dev.marie.MariesLib.tracking.TrackingAttachment;
 import dev.marie.MariesLib.tracking.TrackingData;

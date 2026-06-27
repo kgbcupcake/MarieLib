@@ -3,6 +3,8 @@ package dev.marie.MariesLib.api;
 import dev.marie.MariesLib.api.ApiStatus;
 import dev.marie.MariesLib.api.MarieAPIState;
 import dev.marie.MariesLib.api.MarieAPIVersion;
+import dev.marie.MariesLib.command.CommandCapability;
+import dev.marie.MariesLib.command.CommandCapabilityRegistry;
 import dev.marie.MariesLib.api.impl.EmptyApplicationHistoryView;
 import dev.marie.MariesLib.compat.CompatDefinition;
 import dev.marie.MariesLib.api.registry.AbsorptionModifierRegistry;
@@ -12,6 +14,7 @@ import dev.marie.MariesLib.api.registry.ReportProviderRegistry;
 import dev.marie.MariesLib.api.registry.SeasonHookRegistry;
 import dev.marie.MariesLib.api.registry.SleepBonusEvaluatorRegistry;
 import dev.marie.MariesLib.api.registry.SourcePropertySignalRegistry;
+import dev.marie.MariesLib.tagaudit.rule.TagRule;
 import dev.marie.MariesLib.api.registry.SynergyRegistry;
 import dev.marie.MariesLib.api.registry.ValueRegistry;
 import dev.marie.MariesLib.core.IMarieLibConfig;
@@ -508,6 +511,42 @@ public final class MarieAPI {
     }
 
     /**
+     * Registers an export resolver that produces per-entry data for an entire registry,
+     * written to an editable config file when {@code /marieslib dump <resolverId>} is run.
+     * The consuming mod decides what the exported data means for each entry.
+     *
+     * @param resolverId  unique identifier for this export, used as the output filename prefix
+     * @param registryKey the registry this resolver applies to (e.g. {@link net.minecraft.core.registries.Registries#ITEM})
+     * @param resolver    produces exportable data for each entry in the registry
+     * @param <T> the registry entry type
+     */
+    @ApiStatus.Stable
+    public static <T> void registerExportResolver(
+            String resolverId,
+            net.minecraft.resources.ResourceKey<? extends net.minecraft.core.Registry<T>> registryKey,
+            ExportResolver<T> resolver
+    ) {
+        MarieAPIState.assertRegistrationAllowed("registerExportResolver");
+        if (resolverId == null || resolverId.isBlank()) {
+            throw new IllegalArgumentException("MarieAPI.registerExportResolver: resolverId must not be blank");
+        }
+        dev.marie.MariesLib.registry.ExportResolverRegistry.register(resolverId, registryKey, resolver);
+    }
+
+    /**
+     * Registers a config validator that checks consuming-mod config files on demand.
+     * MarieLib runs validators and collects results; the consuming mod defines what "valid" means.
+     *
+     * @param validator the validator to register
+     * @throws IllegalArgumentException if {@code validator} is null
+     */
+    @ApiStatus.Stable
+    public static void registerConfigValidator(ConfigValidator validator) {
+        MarieAPIState.assertRegistrationAllowed("registerConfigValidator");
+        dev.marie.MariesLib.config.validation.ConfigValidatorRegistry.register(validator);
+    }
+
+    /**
      * Registers a sleep bonus evaluator. When a player wakes up,
      * MarieLib calls the evaluator and applies any returned effect.
      * Only one evaluator should be registered per mod; registering
@@ -562,6 +601,49 @@ public final class MarieAPI {
     @ApiStatus.Stable
     public static void addTriggerSource(SourceTriggerDefinition definition) {
         registerTriggerSource(definition);
+    }
+
+    // ───────────────────────────────────────────────────────────────
+    // Registration — Tag Audit
+    // ───────────────────────────────────────────────────────────────
+
+    /**
+     * Registers a tag audit rule. The consuming mod's TagRule implementation
+     * inspects tag data via a TagAuditContext (also consuming-mod-supplied) and
+     * produces issues and/or fix suggestions, run by {@link dev.marie.MariesLib.tagaudit.TagScanner}.
+     *
+     * @param rule the rule implementation
+     */
+    @ApiStatus.Stable
+    public static void registerTagRule(TagRule rule) {
+        MarieAPIState.assertRegistrationAllowed("registerTagRule");
+        dev.marie.MariesLib.tagaudit.registry.TagRuleRegistry.register(rule);
+    }
+
+    /**
+     * Registers a TagAuditContext for this mod, so {@code /marieslib audit_tags <modid>}
+     * can run {@link dev.marie.MariesLib.tagaudit.TagScanner} against it.
+     *
+     * @param modId   the registering mod's id, used as the lookup key for the command
+     * @param context the consuming mod's TagAuditContext implementation
+     */
+    @ApiStatus.Stable
+    public static void registerTagAuditContext(String modId, dev.marie.MariesLib.tagaudit.model.TagAuditContext context) {
+        MarieAPIState.assertRegistrationAllowed("registerTagAuditContext");
+        dev.marie.MariesLib.tagaudit.registry.TagAuditContextRegistry.register(modId, context);
+    }
+
+    // ───────────────────────────────────────────────────────────────
+    // Registration — Command Capabilities
+    // ───────────────────────────────────────────────────────────────
+
+    @ApiStatus.Experimental
+    public static void registerCommandCapability(
+            ResourceLocation modId,
+            ResourceLocation capability,
+            CommandCapability handler) {
+        MarieAPIState.assertRegistrationAllowed("registerCommandCapability");
+        CommandCapabilityRegistry.register(modId, capability, handler);
     }
 
     /**

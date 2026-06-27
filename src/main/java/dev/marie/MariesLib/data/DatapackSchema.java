@@ -20,9 +20,13 @@ public final class DatapackSchema {
     public static final String CONFIG_COLORS = "config/colors.json";
     /** Datapack-relative path: {@code config/locks.json}. */
     public static final String CONFIG_LOCKS = "config/locks.json";
-    /** Datapack-relative path: {@code config/source_overrides.json}. */
+    /** Datapack-relative path: {@code config/source_classifications.json}. */
+    public static final String CONFIG_SOURCE_CLASSIFICATIONS = "config/source_classifications.json";
+    /** @deprecated Use {@link #CONFIG_SOURCE_CLASSIFICATIONS}. */
+    @Deprecated
     public static final String CONFIG_SOURCE_OVERRIDES = "config/source_overrides.json";
-    /** Datapack-relative path: {@code config/source_values.json}. */
+    /** @deprecated Use {@link #CONFIG_SOURCE_CLASSIFICATIONS}. */
+    @Deprecated
     public static final String CONFIG_SOURCE_VALUES = "config/source_values.json";
     /** Optional integer key declaring datapack schema version. */
     public static final String KEY_SCHEMA_VERSION = "marie_schema_version";

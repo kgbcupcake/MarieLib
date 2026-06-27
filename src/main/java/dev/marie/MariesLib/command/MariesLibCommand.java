@@ -12,10 +12,16 @@ import dev.marie.MariesLib.core.MarieModRegistry;
 import dev.marie.MariesLib.core.MariesLib;
 import dev.marie.MariesLib.export.ExportResolverRegistry;
 import dev.marie.MariesLib.registry.RegistryLifecycleManager;
+import dev.marie.MariesLib.tagaudit.TagAuditReportWriter;
+import dev.marie.MariesLib.tagaudit.TagScanner;
+import dev.marie.MariesLib.tagaudit.model.TagAuditContext;
+import dev.marie.MariesLib.tagaudit.model.TagReport;
+import dev.marie.MariesLib.tagaudit.registry.TagAuditContextRegistry;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModList;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
@@ -27,7 +33,10 @@ import java.util.function.Supplier;
 
 /**
  * Library-only commands registered under /marieslib and /marie.
- * These introspect the framework itself, not consumer mod data.
+ * Most commands introspect the framework itself (status, mods, api, registries). {@code validate
+ * <modid>} runs the generic config validation framework for one mod's registered validators,
+ * the same way {@code dump <resolverId>} looks up one resolver's export — both require their
+ * argument and do nothing when called bare.
  */
 @ApiStatus.Internal
 public final class MariesLibCommand {
@@ -179,5 +188,42 @@ public final class MariesLibCommand {
         }
 
         return 1;
+    }
+
+    private int runDump(CommandContext<CommandSourceStack> ctx) {
+        CommandSourceStack source = ctx.getSource();
+        String resolverId = StringArgumentType.getString(ctx, "resolverId");
+
+        Path written = ExportWriter.writeExport(resolverId);
+
+        if (written == null) {
+            source.sendFailure(Component.literal("[MariesLib] Export failed or produced no data for resolver: " + resolverId).withStyle(ChatFormatting.RED));
+            return 0;
+        }
+
+        source.sendSuccess(() -> Component.literal("[MariesLib] Wrote export to " + written).withStyle(ChatFormatting.GREEN), false);
+        return 1;
+    }
+
+    private int runAuditTags(CommandContext<CommandSourceStack> ctx) {
+        CommandSourceStack source = ctx.getSource();
+        String modId = StringArgumentType.getString(ctx, "modid");
+
+        TagAuditContext context = TagAuditContextRegistry.get(modId);
+        if (context == null) {
+            source.sendFailure(Component.literal(
+                    "[MariesLib] No TagAuditContext registered for modId: " + modId).withStyle(ChatFormatting.RED));
+            return 0;
+        }
+
+        TagReport report = TagScanner.scan(context);
+        Path reportPath = TagAuditReportWriter.write(modId, report);
+        if (reportPath != null) {
+            source.sendSuccess(() -> Component.literal(
+                    "Full report written to " + reportPath.toAbsolutePath() + ".").withStyle(ChatFormatting.GREEN), false);
+            return 1;
+        }
+        source.sendFailure(Component.literal("[MariesLib] Failed to write tag audit report.").withStyle(ChatFormatting.RED));
+        return 0;
     }
 }

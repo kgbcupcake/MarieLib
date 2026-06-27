@@ -30,7 +30,7 @@ public class SourceRegistry {
     /** @GuardedBy("itself — ConcurrentHashSet") Per-session dedupe for external classification cap warnings. */
     private static final Set<String> WARNED_CAP_ITEMS = ConcurrentHashMap.newKeySet();
 
-    private static final int EXTERNAL_CLASSIFICATION_CAP = 4096;
+    private static final int EXTERNAL_CLASSIFICATION_CAP = 16384;
 
     /** @GuardedBy("itself — ConcurrentHashMap") */
     private static final Map<ResourceLocation, Map<String, Float>> EXTERNAL_CLASSIFICATIONS = new ConcurrentHashMap<>();

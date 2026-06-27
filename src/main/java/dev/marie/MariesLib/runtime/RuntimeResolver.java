@@ -158,6 +158,22 @@ public final class RuntimeResolver {
                     .build();
         }
 
+        Map<String, Float> liveOverride = SourceRegistry.getExternalClassification(itemId);
+        if (liveOverride != null && !liveOverride.isEmpty()) {
+            boolean isApiClassification = SourceRegistry.hasApiClassification(itemId);
+            String overrideSource = isApiClassification
+                    ? "EXTERNAL_CLASSIFICATIONS (API/KubeJS)"
+                    : "SCANNER_CLASSIFICATIONS (cached scan result)";
+            Map<String, Object> overrideDetail = new LinkedHashMap<>();
+            overrideDetail.put("source", overrideSource);
+            overrideDetail.put("values", liveOverride);
+            traceOut.add(new ClassificationTraceStep(
+                    TraceStepId.EXTERNAL_CLASSIFICATION,
+                    TraceStepStatus.SUCCESS,
+                    "Gameplay will use this cached/external result, NOT the live inference below: " + liveOverride,
+                    overrideDetail));
+        }
+
         ResolutionResult cached = resolvedCache.get(itemId);
         if (cached != null) {
             cacheHits.incrementAndGet();

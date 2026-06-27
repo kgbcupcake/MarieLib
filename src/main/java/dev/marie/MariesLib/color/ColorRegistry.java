@@ -204,7 +204,8 @@ public final class ColorRegistry {
         String s = raw.trim();
         try {
             if (s.startsWith("0x") || s.startsWith("0X")) {
-                return Integer.decode(s) | 0xFF00_0000;
+                String hex = s.substring(2);
+                return (int) (Long.parseLong(hex, 16) & 0xFF_FF_FF_FF);
             }
             if (s.startsWith("#")) {
                 s = s.substring(1);

@@ -22,7 +22,7 @@ import dev.marie.MariesLib.core.IMarieLibConfig;
 import dev.marie.MariesLib.core.MarieLibContext;
 import dev.marie.MariesLib.core.MariesLib;
 import dev.marie.MariesLib.debug.MarieDebugLogger;
-import dev.marie.MariesLib.runtime.SourceOverrideRegistry;
+import dev.marie.MariesLib.runtime.SourceClassificationRegistry;
 import dev.marie.MariesLib.runtime.SourceTriggerRegistry;
 import dev.marie.MariesLib.tracking.MilestoneTracker;
 import dev.marie.MariesLib.tracking.TrackingAttachment;
@@ -76,8 +76,8 @@ public final class SourceApplicationPipeline {
         Map<String, Float> valuesBefore = debugApplyLog ? snapshotValues(tracking) : Map.of();
 
         String sourceKey = trigger.sourceId();
-        SourceOverrideRegistry.SourceOverride override =
-                SourceOverrideRegistry.getOverride(sourceKey).orElse(null);
+        SourceClassificationRegistry.SourceClassification override =
+                SourceClassificationRegistry.getOverride(sourceKey).orElse(null);
 
         float totalAdded;
         Map<String, Float> valueDeltas;

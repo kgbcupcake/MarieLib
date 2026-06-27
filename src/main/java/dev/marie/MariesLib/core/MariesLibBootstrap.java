@@ -24,8 +24,7 @@ import dev.marie.MariesLib.registry.MarieApiRegistries;
 import dev.marie.MariesLib.runtime.TriggerHandlerRegistry;
 import dev.marie.MariesLib.registry.MarieAttributes;
 import dev.marie.MariesLib.registry.RegistryLifecycleManager;
-import dev.marie.MariesLib.runtime.SourceOverrideRegistry;
-import dev.marie.MariesLib.runtime.SourceValueRegistry;
+import dev.marie.MariesLib.runtime.SourceClassificationRegistry;
 import dev.marie.MariesLib.scanner.ScannerSpecRegistry;
 import dev.marie.MariesLib.api.ApiStatus;
 import dev.marie.MariesLib.data.MarieDataManager;
@@ -169,10 +168,8 @@ public final class MariesLibBootstrap {
                 ColorRegistry::loadFromDatapack);
         RegistryLifecycleManager.registerRegistry("ScannerSpecRegistry", ScannerSpecRegistry::load,
                 ScannerSpecRegistry::reload, ScannerSpecRegistry::loadFromDatapack);
-        RegistryLifecycleManager.registerRegistry("SourceOverrideRegistry", SourceOverrideRegistry::load,
-                SourceOverrideRegistry::reload, SourceOverrideRegistry::loadFromDatapack);
-        RegistryLifecycleManager.registerRegistry("SourceValueRegistry", SourceValueRegistry::load,
-                SourceValueRegistry::reload, SourceValueRegistry::loadFromDatapack);
+        RegistryLifecycleManager.registerRegistry("SourceClassificationRegistry", SourceClassificationRegistry::load,
+                SourceClassificationRegistry::reload, SourceClassificationRegistry::loadFromDatapack);
         RegistryLifecycleManager.registerRegistry("PresetRegistry", PresetRegistry::reload, PresetRegistry::reload, null);
     }
 

@@ -1,6 +1,7 @@
 package dev.marie.MariesLib.registry;
 
 import dev.marie.MariesLib.api.ApiStatus;
+import dev.marie.MariesLib.config.validation.ConfigValidatorRegistry;
 import dev.marie.MariesLib.api.registry.AbsorptionModifierRegistry;
 import dev.marie.MariesLib.api.registry.ProfileRegistry;
 import dev.marie.MariesLib.api.registry.MilestoneRegistry;
@@ -31,6 +32,7 @@ public final class MarieApiRegistries {
         SourcePropertySignalRegistry.freezeInternal();
         SleepBonusEvaluatorRegistry.freezeInternal();
         TriggerHandlerRegistry.freezeInternal();
+        ConfigValidatorRegistry.freezeInternal();
     }
 
     /**
