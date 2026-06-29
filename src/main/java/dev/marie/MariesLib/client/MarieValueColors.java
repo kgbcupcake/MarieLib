@@ -57,13 +57,6 @@ public final class MarieValueColors {
     }
 
     /**
-     * Resolved default ARGB for a value key — alias for {@link #baseColorArgb(String)}.
-     */
-    public static int resolvedDefaultArgb(String key) {
-        return baseColorArgb(key);
-    }
-
-    /**
      * ARGB accent color: transient override, then {@link ColorRegistry}, then explicit
      * {@link ValueDefinition} color, then the built-in palette.
      */
