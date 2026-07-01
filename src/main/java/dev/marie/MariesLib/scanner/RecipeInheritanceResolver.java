@@ -292,60 +292,6 @@ public final class RecipeInheritanceResolver {
     }
 
     public List<ResourceLocation> getIngredients(ResourceLocation itemId) {
-        List<ResourceLocation> cached = recipeCache.get(itemId);
-        if (cached != null) {
-            return cached;
-        }
-
-        List<ResourceLocation> ingredients = new ArrayList<>();
-
-        if (recipeManager != null) {
-            Item item = BuiltInRegistries.ITEM.get(itemId);
-            if (item == null) {
-                recipeCache.put(itemId, ingredients);
-                return ingredients;
-            }
-
-            ItemStack resultStack = new ItemStack(item);
-
-            for (RecipeHolder<?> holder : recipeManager.getRecipes()) {
-                Recipe<?> recipe = holder.value();
-
-                try {
-                    ItemStack recipeResult = recipe.getResultItem(null);
-                    if (recipeResult == null || !ItemStack.isSameItem(recipeResult, resultStack)) {
-                        continue;
-                    }
-
-                    List<Ingredient> recipeIngredients = recipe.getIngredients();
-                    if (recipeIngredients.size() > MAX_INGREDIENTS) {
-                        continue;
-                    }
-
-                    for (Ingredient ingredient : recipeIngredients) {
-                        ItemStack[] items = ingredient.getItems();
-                        if (items.length > 0) {
-                            ResourceLocation ingId = MarieRegistryUtils.itemKey(items[0]);
-                            if (ingId != null && !ingId.equals(itemId)) {
-                                ingredients.add(ingId);
-                            }
-                        }
-                    }
-                }
-                if (!ingredients.isEmpty()) {
-                    index.merge(outputId, ingredients, (a, b) -> {
-                        List<ResourceLocation> merged = new ArrayList<>(a);
-                        merged.addAll(b);
-                        return merged.size() > MAX_INGREDIENTS ? merged.subList(0, MAX_INGREDIENTS) : merged;
-                    });
-                }
-            } catch (Exception ignored) {}
-        }
-        this.recipeIndex.clear();
-        this.recipeIndex.putAll(index);
-    }
-
-    public List<ResourceLocation> getIngredients(ResourceLocation itemId) {
         return recipeIndex.getOrDefault(itemId, List.of());
     }
 
@@ -420,6 +366,7 @@ public final class RecipeInheritanceResolver {
      */
     public void buildIndex(RecipeManager recipeManager) {
         this.recipeManager = recipeManager;
+        this.recipeIndex = buildIndex();
     }
 
     /**

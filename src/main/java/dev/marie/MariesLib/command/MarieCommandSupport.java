@@ -6,8 +6,10 @@ import dev.marie.MariesLib.api.registry.ProfileRegistry;
 import dev.marie.MariesLib.api.registry.ValueRegistry;
 import dev.marie.MariesLib.core.MarieLibContext;
 import dev.marie.MariesLib.data.SchemaDefinition;
+import dev.marie.MariesLib.handler.SourceApplicationPipeline;
 import dev.marie.MariesLib.runtime.SourceRegistry;
 import dev.marie.MariesLib.scanner.ItemScanner;
+import dev.marie.MariesLib.tracking.SynergyBuffTracker;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.SharedSuggestionProvider;
@@ -60,6 +62,8 @@ final class MarieCommandSupport {
 
     static void onPlayerLoggedOut(ServerPlayer player) {
         ACTIVE_PROFILES.remove(player.getUUID());
+        SynergyBuffTracker.clearPlayer(player.getUUID());
+        SourceApplicationPipeline.clearPlayer(player.getUUID());
     }
 
     static void onServerStopped() {

@@ -20,6 +20,8 @@ public final class SourcePairSynergy {
     private final int timeWindowTicks;
     private final String bonusValueKey;
     private final float bonusAmount;
+    private final float valueModifier;
+    private final int modifierDurationTicks;
 
     private SourcePairSynergy(
             String id,
@@ -27,7 +29,9 @@ public final class SourcePairSynergy {
             ResourceLocation sourceB,
             int timeWindowTicks,
             String bonusValueKey,
-            float bonusAmount
+            float bonusAmount,
+            float valueModifier,
+            int modifierDurationTicks
     ) {
         this.id = id;
         this.sourceA = sourceA;
@@ -35,6 +39,8 @@ public final class SourcePairSynergy {
         this.timeWindowTicks = timeWindowTicks;
         this.bonusValueKey = bonusValueKey;
         this.bonusAmount = bonusAmount;
+        this.valueModifier = valueModifier;
+        this.modifierDurationTicks = modifierDurationTicks;
     }
 
     /**
@@ -111,6 +117,26 @@ public final class SourcePairSynergy {
     }
 
     /**
+     * Returns the temporary value modifier applied when the synergy activates.
+     *
+     * @return the value modifier multiplier; {@code 1.0} means no effect
+     */
+    @ApiStatus.Stable
+    public float getValueModifier() {
+        return valueModifier;
+    }
+
+    /**
+     * Returns the duration, in game ticks, that the value modifier remains active.
+     *
+     * @return the modifier duration in ticks; {@code 0} means the modifier is not applied
+     */
+    @ApiStatus.Stable
+    public int getModifierDurationTicks() {
+        return modifierDurationTicks;
+    }
+
+    /**
      * Builder for constructing {@link SourcePairSynergy} instances.
      */
     @ApiStatus.Stable
@@ -122,6 +148,8 @@ public final class SourcePairSynergy {
         private int timeWindowTicks = 100;
         private String bonusValueKey;
         private float bonusAmount;
+        private float valueModifier = 1.0f;
+        private int modifierDurationTicks = 0;
 
         private Builder(String id) {
             this.id = id;
@@ -189,6 +217,30 @@ public final class SourcePairSynergy {
         }
 
         /**
+         * Sets the temporary value modifier applied when the synergy activates.
+         *
+         * @param valueModifier the value modifier multiplier; {@code 1.0} means no effect
+         * @return this builder for chaining
+         */
+        @ApiStatus.Stable
+        public Builder valueModifier(float valueModifier) {
+            this.valueModifier = valueModifier;
+            return this;
+        }
+
+        /**
+         * Sets the duration, in game ticks, that the value modifier remains active.
+         *
+         * @param ticks the modifier duration in ticks; {@code 0} disables the modifier
+         * @return this builder for chaining
+         */
+        @ApiStatus.Stable
+        public Builder modifierDurationTicks(int ticks) {
+            this.modifierDurationTicks = ticks;
+            return this;
+        }
+
+        /**
          * Builds and returns the immutable {@link SourcePairSynergy}.
          *
          * @return the constructed definition
@@ -208,7 +260,8 @@ public final class SourcePairSynergy {
             if (bonusValueKey == null) {
                 throw new IllegalStateException("bonusValueKey is required");
             }
-            return new SourcePairSynergy(id, sourceA, sourceB, timeWindowTicks, bonusValueKey, bonusAmount);
+            return new SourcePairSynergy(id, sourceA, sourceB, timeWindowTicks, bonusValueKey, bonusAmount,
+                    valueModifier, modifierDurationTicks);
         }
     }
 }

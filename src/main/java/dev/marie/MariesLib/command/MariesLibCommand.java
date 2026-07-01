@@ -11,6 +11,7 @@ import dev.marie.MariesLib.core.MarieLibContext;
 import dev.marie.MariesLib.core.MarieModRegistry;
 import dev.marie.MariesLib.core.MariesLib;
 import dev.marie.MariesLib.export.ExportResolverRegistry;
+import dev.marie.MariesLib.export.ExportWriter;
 import dev.marie.MariesLib.registry.RegistryLifecycleManager;
 import dev.marie.MariesLib.tagaudit.TagAuditReportWriter;
 import dev.marie.MariesLib.tagaudit.TagScanner;

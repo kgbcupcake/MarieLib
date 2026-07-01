@@ -2,6 +2,99 @@
 
 <!-- markdownlint-disable MD013 -->
 
+## [ MariesLib 0.1.1-beta.3 ] 2026-6-30
+
+Source-pair synergy value buffs, source classification unification, tag-audit and export
+command wiring, and player-logout state cleanup for the new synergy tracking.
+
+### Added
+
+- **`MarieAPI.registerConfigValidator(validator)`**: now validates that the `validator`'s
+  `modId()` is non-empty and matches a registered mod; throws `IllegalArgumentException` if not
+- **`SourcePairSynergy.getValueModifier()` / `getModifierDurationTicks()`** (`@ApiStatus.Stable`),
+  with matching `Builder.valueModifier(float)` / `Builder.modifierDurationTicks(int)`: an optional
+  temporary value-gain multiplier applied when the pair synergy fires, lasting the given number
+  of game ticks
+- **`SynergyBuffTracker`** (`tracking`): per-player, per-value-key temporary modifier store keyed
+  off `player.level().getGameTime()`; `activate(playerId, valueKey, modifier, expiryTick)` sets a
+  buff, `getActiveModifier(playerId, valueKey, currentTick)` reads it back and evicts it in place
+  once expired; `clearPlayer(playerId)` drops all buffs for a player
+- **`SynergyAbsorptionModifier`** (`tracking`, implements `AbsorptionModifier`): stateless bridge
+  that applies `SynergyBuffTracker`'s active modifier during value absorption; registered in
+  `MariesLibBootstrap` via `MarieAPI.registerAbsorptionModifier`
+- **`SourceApplicationPipeline.clearPlayer(playerId)`**: clears the per-player synergy last-fired
+  and value-synergy active-state maps; wired into the existing `PlayerLoggedOutEvent` handler
+  (`MarieCommandSupport.onPlayerLoggedOut`) alongside the new `SynergyBuffTracker.clearPlayer`
+  call, so synergy state no longer persists in memory after a player disconnects
+- **Datapack schema keys** `value_modifier` / `modifier_duration_ticks`
+  (`DatapackSchema.KEY_VALUE_MODIFIER` / `KEY_MODIFIER_DURATION_TICKS`) for
+  `data/<namespace>/<modid>/source_synergies/<id>.json`, both optional (default `1.0` / `0`)
+- **`MarieDataLoader.parseSynergy` / `parseSourcePairSynergy`**: datapack loading for
+  `synergies/` and `source_synergies/` is now implemented (previously threw
+  `UnsupportedOperationException` and skipped the file)
+- **`CommandCapability`** / **`CommandCapabilityRegistry`** (`@ApiStatus.Experimental`):
+  consuming-mod-registered command handlers keyed by `(modId, capability)` resource locations,
+  via `MarieAPI.registerCommandCapability`
+- **`ExportWriter.writeExport(resolverId)`** and **`RegistryExporter`**: runs a registered
+  `ExportResolver` over its target registry and writes
+  `config/<modid>/<resolverId>_export.json`; wired into `/marieslib dump <resolverId>` /
+  `/marie dump <resolverId>`
+- **`TagAuditReportWriter`**: writes a full `TagReport` (from `TagScanner.scan`) to disk; wired
+  into a new `/marieslib audit_tags <modid>` command via `MariesLibCommand.runAuditTags`
+- **`MariesLibCommand.runDump` / `runAuditTags`**: command handlers backing the `dump` and
+  `audit_tags` subcommands
+- **`SourceClassificationRegistry`** rewritten as a full config-backed registry (was previously a
+  thin read-only view over `SourceRegistry`): `load()` / `reload()` / `loadFromDatapack()` read
+  `config/<modid>/source_classifications.json`, auto-migrating existing
+  `source_overrides.json` + `source_values.json` on first run; adds `get(sourceId)`,
+  `getOverride(sourceId)`, `getScore(itemId, valueKey)`, and `setOverride(itemId, values, enabled)`
+- **`RuntimeResolver` classification trace**: when a live external/scanner override exists for an
+  item, a new `EXTERNAL_CLASSIFICATION` trace step is recorded explaining that gameplay uses the
+  cached override rather than the live inference result shown below it
+
+### Changed
+
+- **`SourceOverrideRegistry` and `SourceValueRegistry` removed**, merged into the rewritten
+  `SourceClassificationRegistry`; `MarieKubeBindings.registerClassification` and
+  `MarieLibContext` scanner-score lookups now call `SourceClassificationRegistry` directly
+- **`MarieAPI`**: registration methods reordered/regrouped (export resolvers, config validators,
+  tag audit, and the new command-capability registration now live together near the end of the
+  class); no functional change to existing methods
+- **`MariesLib` constructor**: no longer auto-bootstraps `MariesLibBootstrap` when
+  `MarieLibContext` is unregistered — this call was already removed from `MarieAPI`'s
+  fireSourceTrigger path in 0.1.1-beta.1's changelog notes but the constructor still had it;
+  consuming mods must call `MariesLibBootstrap.attach` / `bootstrap` explicitly
+- **`RecipeInheritanceResolver.buildIndex(RecipeManager)`**: now actually builds the ingredient
+  index (`this.recipeIndex = buildIndex()`) instead of only storing the `RecipeManager` reference
+- **`PresetRegistry.PresetValues`**: replaced the fixed-field record (`decayRate`,
+  `criticalThreshold`, `lowThreshold`, `excessThreshold`, `defaultEffectDurationTicks`,
+  `enableDecay`, `enableEffects`) with a single opaque `JsonObject values` passthrough, so
+  consuming mods can store arbitrary preset schemas instead of MariesLib-defined fields
+- **`MarieValueColors.resolvedDefaultArgb(key)`**: no longer an alias for `baseColorArgb`; now
+  resolves `ValueDefinition.getColorOverride()` first, then falls back to the palette-only color,
+  bypassing transient UI overrides and `ColorRegistry` as intended for "is this actually
+  customized" checks
+- **`ModCompat` classpath resource loading** (`loadTier1BuiltIn`, tier-2 mod loop): reads
+  `compat_registry.json` / `marie_compat.json` via the current thread's context class loader
+  first, falling back to `ModCompat.class.getResourceAsStream`, matching the same fix already
+  applied to `ScannerSpecRegistry` in 0.1.1-beta.1
+- **`ScannerSpecRegistry.parseBundled()`**: also routes through the context class loader
+
+### Fixed
+
+- **`ColorRegistry.parseArgbString` `0x`/`0X` branch**: parses the hex portion via
+  `Long.parseLong(hex, 16)` with `0xFF_FF_FF_FF` masking instead of `Integer.decode`, avoiding
+  the same signed-decode inconsistency already fixed for other branches in 0.1.0-beta.5
+- **`MarieDebugCommand` trace dump filename**: `analyze <item>` writes to
+  `trace_dump_<item>_<timestamp>.txt` instead of a single shared `trace_dump.txt`, so repeated or
+  concurrent analyses no longer overwrite each other's output
+
+### Notes
+
+- Published artifact version is **0.1.1-beta.3** (`gradle.properties`)
+
+---
+
 ## [ MariesLib 0.1.1-beta.2 ] 2026-6-27
 
 Config validation framework, tag-audit system, curve grid math, command extensions, and scanner spec graceful-skip.
@@ -36,7 +129,7 @@ Config validation framework, tag-audit system, curve grid math, command extensio
 - **`TagAuditContextRegistry`** (`@ApiStatus.Internal`): per-modId store of `TagAuditContext` instances
 - **`CurveGrid`** (`@ApiStatus.Stable`): 2-D grid of float multipliers evaluated via bilinear
   interpolation; axes are `(intensity, confidence)` both normalised to `[0, 1]`; `flat(xCells, yCells,
-  value)` constructs a uniform grid, `evaluate(x, y)` samples with clamping
+value)` constructs a uniform grid, `evaluate(x, y)` samples with clamping
 - **`CurveGridJson`** (`@ApiStatus.Internal`): JSON serialisation / deserialisation for `CurveGrid`
 - **`SourceClassificationRegistry`** (`@ApiStatus.Stable`): public read-only view of external source
   classifications registered via `SourceRegistry`; `getAll()` returns an unmodifiable map of

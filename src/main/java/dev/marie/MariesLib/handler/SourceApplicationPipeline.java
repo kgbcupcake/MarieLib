@@ -3,6 +3,9 @@ package dev.marie.MariesLib.handler;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -11,12 +14,19 @@ import dev.marie.MariesLib.api.ApiStatus;
 import dev.marie.MariesLib.api.MarieEvents;
 import dev.marie.MariesLib.api.MarieSeasonHook;
 import dev.marie.MariesLib.api.AbsorptionModifier;
+import dev.marie.MariesLib.api.SourcePairSynergy;
+import dev.marie.MariesLib.api.SynergyDefinition;
 import dev.marie.MariesLib.api.ValueDefinition;
 import dev.marie.MariesLib.api.ValueModifierContext;
 import dev.marie.MariesLib.api.ValueModifierEvent;
 import dev.marie.MariesLib.api.ValueSourceTrigger;
 import dev.marie.MariesLib.api.registry.AbsorptionModifierRegistry;
 import dev.marie.MariesLib.api.registry.SeasonHookRegistry;
+import dev.marie.MariesLib.api.registry.SynergyRegistry;
+import dev.marie.MariesLib.tracking.TrackingDataApplicationHistoryView;
+
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.world.effect.MobEffectInstance;
 import dev.marie.MariesLib.config.FeatureFlagCache;
 import dev.marie.MariesLib.core.IMarieLibConfig;
 import dev.marie.MariesLib.core.MarieLibContext;
@@ -25,6 +35,7 @@ import dev.marie.MariesLib.debug.MarieDebugLogger;
 import dev.marie.MariesLib.runtime.SourceClassificationRegistry;
 import dev.marie.MariesLib.runtime.SourceTriggerRegistry;
 import dev.marie.MariesLib.tracking.MilestoneTracker;
+import dev.marie.MariesLib.tracking.SynergyBuffTracker;
 import dev.marie.MariesLib.tracking.TrackingAttachment;
 import dev.marie.MariesLib.tracking.TrackingData;
 import dev.marie.MariesLib.registry.MarieAttributes;
@@ -45,7 +56,25 @@ public final class SourceApplicationPipeline {
     private static final java.util.concurrent.atomic.AtomicBoolean WARN_ONCE_SOURCE_APPLIED =
             new java.util.concurrent.atomic.AtomicBoolean(false);
 
+    // per-player, per-synergy-id last-fired game tick — transient, not persisted
+    private static final ConcurrentHashMap<UUID, Map<String, Long>> SYNERGY_LAST_FIRED =
+            new ConcurrentHashMap<>();
+
+    // tracks which value-synergy ids are currently in their "both conditions met" state per player
+    private static final ConcurrentHashMap<UUID, Set<String>> VALUE_SYNERGY_ACTIVE_STATE =
+            new ConcurrentHashMap<>();
+
     private SourceApplicationPipeline() {}
+
+    /**
+     * Removes all tracked synergy state for the given player, e.g. on logout.
+     *
+     * @param playerId the player's UUID
+     */
+    public static void clearPlayer(UUID playerId) {
+        SYNERGY_LAST_FIRED.remove(playerId);
+        VALUE_SYNERGY_ACTIVE_STATE.remove(playerId);
+    }
 
     public static void process(ServerPlayer player, ValueSourceTrigger trigger, ItemStack stack,
                              TrackingData tracking, long gameTimeMs) {
@@ -191,6 +220,104 @@ public final class SourceApplicationPipeline {
                 NeoForge.EVENT_BUS.post(new MarieEvents.SourceAppliedEvent(
                         player, sourceResourceId, key, finalDelta));
                 MilestoneTracker.onValueApplied(player, key, finalDelta);
+            }
+        }
+
+        if (FeatureFlagCache.enableSynergies()) {
+            var synergies = SynergyRegistry.getSourcePairSynergies();
+            if (!synergies.isEmpty()) {
+                long currentGameTick = player.level().getGameTime();
+                TrackingDataApplicationHistoryView historyView = new TrackingDataApplicationHistoryView(tracking);
+                for (SourcePairSynergy synergy : synergies) {
+                    ResourceLocation otherSourceId;
+                    if (sourceResourceId.equals(synergy.getSourceA())) {
+                        otherSourceId = synergy.getSourceB();
+                    } else if (sourceResourceId.equals(synergy.getSourceB())) {
+                        otherSourceId = synergy.getSourceA();
+                    } else {
+                        continue;
+                    }
+                    long elapsed = historyView.getTimeSinceSource(otherSourceId);
+                    if (elapsed == -1L || elapsed > synergy.getTimeWindowTicks()) {
+                        continue;
+                    }
+                    Map<String, Long> playerFires = SYNERGY_LAST_FIRED.computeIfAbsent(
+                            player.getUUID(), k -> new ConcurrentHashMap<>());
+                    Long lastFiredTick = playerFires.get(synergy.getId());
+                    if (lastFiredTick != null && currentGameTick - lastFiredTick < synergy.getTimeWindowTicks()) {
+                        continue;
+                    }
+                    String bonusKey = synergy.getBonusValueKey();
+                    if (!tracking.values.containsKey(bonusKey)) {
+                        continue;
+                    }
+                    float bonusAmount = synergy.getBonusAmount();
+                    ValueModifierContext bonusCtx = ValueModifierContext.of(player, sourceResourceId, bonusKey);
+                    ValueModifierEvent bonusEvent = new ValueModifierEvent(bonusCtx, bonusAmount);
+                    NeoForge.EVENT_BUS.post(bonusEvent);
+                    if (bonusEvent.isCanceled()) {
+                        continue;
+                    }
+                    float finalBonus = bonusEvent.getAmount();
+                    finalBonus = MarieLibContext.get().applyPostValueModifier(bonusCtx, finalBonus);
+                    if (!Float.isFinite(finalBonus) || finalBonus == 0f) {
+                        continue;
+                    }
+                    float oldBonusValue = tracking.values.getOrDefault(bonusKey, 0f);
+                    tracking.addValue(bonusKey, finalBonus);
+                    float newBonusValue = tracking.values.getOrDefault(bonusKey, 0f);
+                    if (oldBonusValue != newBonusValue) {
+                        NeoForge.EVENT_BUS.post(new MarieEvents.ValueChangedEvent(
+                                player, bonusKey, oldBonusValue, newBonusValue));
+                    }
+                    NeoForge.EVENT_BUS.post(new MarieEvents.SourceAppliedEvent(
+                            player, sourceResourceId, bonusKey, finalBonus));
+                    MilestoneTracker.onValueApplied(player, bonusKey, finalBonus);
+                    playerFires.put(synergy.getId(), currentGameTick);
+
+                    if (synergy.getValueModifier() != 1.0f && synergy.getModifierDurationTicks() > 0) {
+                        SynergyBuffTracker.activate(player.getUUID(), synergy.getBonusValueKey(),
+                                synergy.getValueModifier(), currentGameTick + synergy.getModifierDurationTicks());
+                    }
+                }
+            }
+        }
+
+        if (FeatureFlagCache.enableSynergies()) {
+            var valueSynergies = SynergyRegistry.getValueSynergies();
+            if (!valueSynergies.isEmpty()) {
+                Set<String> activeForPlayer = VALUE_SYNERGY_ACTIVE_STATE.computeIfAbsent(
+                        player.getUUID(), k -> ConcurrentHashMap.newKeySet());
+                for (SynergyDefinition synergy : valueSynergies) {
+                    String keyA = synergy.getValueKeyA();
+                    String keyB = synergy.getValueKeyB();
+                    ValueDefinition defA = MarieLibContext.get().valueDefinitionFor(keyA);
+                    ValueDefinition defB = MarieLibContext.get().valueDefinitionFor(keyB);
+                    if (defA == null || defB == null) {
+                        continue;
+                    }
+                    float levelA = tracking.values.getOrDefault(keyA, 0f);
+                    float levelB = tracking.values.getOrDefault(keyB, 0f);
+                    boolean currentlyActive = meetsSynergyCondition(levelA, defA, synergy.getConditionA())
+                            && meetsSynergyCondition(levelB, defB, synergy.getConditionB());
+                    boolean wasActive = activeForPlayer.contains(synergy.getId());
+                    if (currentlyActive && !wasActive) {
+                        activeForPlayer.add(synergy.getId());
+                        ResourceLocation effectId = synergy.getBonusEffectId();
+                        if (effectId != null) {
+                            BuiltInRegistries.MOB_EFFECT.getHolder(effectId).ifPresentOrElse(
+                                    holder -> player.addEffect(new MobEffectInstance(
+                                            holder,
+                                            synergy.getEffectDuration(),
+                                            synergy.getEffectAmplifier())),
+                                    () -> MariesLib.LOGGER.warn(
+                                            "[MarieLib] ValueSynergy '{}' references unknown effect '{}'",
+                                            synergy.getId(), effectId));
+                        }
+                    } else if (!currentlyActive && wasActive) {
+                        activeForPlayer.remove(synergy.getId());
+                    }
+                }
             }
         }
 
@@ -445,6 +572,14 @@ public final class SourceApplicationPipeline {
     static void resetSnapshotWarnings() {
         WARN_ONCE_SOURCE_APPLIED.set(false);
         THRESHOLD_WARN_ONCE.set(false);
+    }
+
+    private static boolean meetsSynergyCondition(float value, ValueDefinition def, SynergyDefinition.LevelCondition condition) {
+        return switch (condition) {
+            case HIGH -> value >= def.getExcessThreshold();
+            case LOW -> value <= def.getLowThreshold();
+            case OPTIMAL -> value > def.getLowThreshold() && value < def.getExcessThreshold();
+        };
     }
 
     private record DiminishingReturnsConfigOrNull(
