@@ -30,7 +30,9 @@ import dev.marie.MariesLib.api.ApiStatus;
 import dev.marie.MariesLib.data.MarieDataManager;
 import dev.marie.MariesLib.data.MarieDatapackCallbacks;
 import dev.marie.MariesLib.tracking.MilestoneProgressAttachment;
+import dev.marie.MariesLib.tracking.SynergyAbsorptionModifier;
 import dev.marie.MariesLib.tracking.TrackingAttachment;
+import dev.marie.MariesLib.api.MarieAPI;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.fml.event.lifecycle.FMLLoadCompleteEvent;
@@ -171,6 +173,7 @@ public final class MariesLibBootstrap {
         RegistryLifecycleManager.registerRegistry("SourceClassificationRegistry", SourceClassificationRegistry::load,
                 SourceClassificationRegistry::reload, SourceClassificationRegistry::loadFromDatapack);
         RegistryLifecycleManager.registerRegistry("PresetRegistry", PresetRegistry::reload, PresetRegistry::reload, null);
+        MarieAPI.registerAbsorptionModifier(new SynergyAbsorptionModifier());
     }
 
     private static boolean handlersRegistered;

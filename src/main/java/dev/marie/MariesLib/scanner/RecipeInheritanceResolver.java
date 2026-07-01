@@ -366,6 +366,7 @@ public final class RecipeInheritanceResolver {
      */
     public void buildIndex(RecipeManager recipeManager) {
         this.recipeManager = recipeManager;
+        this.recipeIndex = buildIndex();
     }
 
     /**

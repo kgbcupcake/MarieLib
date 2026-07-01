@@ -411,13 +411,32 @@ public final class MarieDataLoader extends SimpleJsonResourceReloadListener {
     }
 
     private static SynergyDefinition parseSynergy(ResourceLocation fileId, JsonObject json) {
-        throw new UnsupportedOperationException(
-                "parseSynergy not yet implemented — datapack entry at " + fileId + " will be skipped");
+        return SynergyDefinition.builder(fileId.getPath())
+                .valueA(getRequiredString(json, DatapackSchema.KEY_VALUE_A_KEY),
+                        SynergyDefinition.LevelCondition.valueOf(
+                                getRequiredString(json, DatapackSchema.KEY_VALUE_A_CONDITION).toUpperCase(Locale.ROOT)))
+                .valueB(getRequiredString(json, DatapackSchema.KEY_VALUE_B_KEY),
+                        SynergyDefinition.LevelCondition.valueOf(
+                                getRequiredString(json, DatapackSchema.KEY_VALUE_B_CONDITION).toUpperCase(Locale.ROOT)))
+                .bonusEffect(json.has(DatapackSchema.KEY_BONUS_EFFECT_ID)
+                        ? ResourceLocation.parse(getRequiredString(json, DatapackSchema.KEY_BONUS_EFFECT_ID))
+                        : null)
+                .effectAmplifier(getOptionalInt(json, DatapackSchema.KEY_AMPLIFIER, 0))
+                .effectDuration(getOptionalInt(json, DatapackSchema.KEY_EFFECT_DURATION, 200))
+                .penalty(json.has(DatapackSchema.KEY_IS_PENALTY) && json.get(DatapackSchema.KEY_IS_PENALTY).getAsBoolean())
+                .build();
     }
 
     private static SourcePairSynergy parseSourcePairSynergy(ResourceLocation fileId, JsonObject json) {
-        throw new UnsupportedOperationException(
-                "parseSourcePairSynergy not yet implemented — datapack entry at " + fileId + " will be skipped");
+        return SourcePairSynergy.builder(fileId.getPath())
+                .sourceA(ResourceLocation.parse(getRequiredString(json, DatapackSchema.KEY_SOURCE_A)))
+                .sourceB(ResourceLocation.parse(getRequiredString(json, DatapackSchema.KEY_SOURCE_B)))
+                .timeWindowTicks(getOptionalInt(json, DatapackSchema.KEY_TIME_WINDOW_TICKS, 100))
+                .bonusValueKey(getRequiredString(json, DatapackSchema.KEY_BONUS_VALUE_KEY))
+                .bonusAmount(getRequiredFloat(json, DatapackSchema.KEY_BONUS_AMOUNT))
+                .valueModifier(getOptionalFloat(json, DatapackSchema.KEY_VALUE_MODIFIER, 1.0f))
+                .modifierDurationTicks(getOptionalInt(json, DatapackSchema.KEY_MODIFIER_DURATION_TICKS, 0))
+                .build();
     }
 
     private static MilestoneDefinition parseMilestone(ResourceLocation fileId, JsonObject json) {
@@ -510,6 +529,10 @@ public final class MarieDataLoader extends SimpleJsonResourceReloadListener {
 
     private static int getOptionalInt(JsonObject json, String key, int fallback) {
         return json.has(key) ? json.get(key).getAsInt() : fallback;
+    }
+
+    private static float getOptionalFloat(JsonObject json, String key, float fallback) {
+        return json.has(key) ? json.get(key).getAsFloat() : fallback;
     }
 
     private static boolean getOptionalBoolean(JsonObject json, String key, boolean fallback) {
