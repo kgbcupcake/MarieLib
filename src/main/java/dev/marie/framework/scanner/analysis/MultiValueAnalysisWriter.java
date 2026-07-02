@@ -1,14 +1,14 @@
-package dev.marie.MariesLib.scanner.analysis;
+package dev.marie.framework.scanner.analysis;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.core.MariesLib;
-import dev.marie.MariesLib.core.MarieLibContext;
-import dev.marie.MariesLib.util.MarieValidation;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.core.MariesLib;
+import dev.marie.framework.core.MarieLibContext;
+import dev.marie.framework.util.MarieValidation;
 import net.neoforged.fml.loading.FMLPaths;
 
 import javax.annotation.Nullable;

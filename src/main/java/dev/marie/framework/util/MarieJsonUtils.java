@@ -1,9 +1,9 @@
-package dev.marie.MariesLib.util;
+package dev.marie.framework.util;
 
 import com.google.gson.JsonObject;
 
 /**
- * Gson {@link JsonObject} helpers, modeled on {@link dev.marie.MariesLib.data.MarieDataLoader}.
+ * Gson {@link JsonObject} helpers, modeled on {@link dev.marie.framework.data.MarieDataLoader}.
  */
 public final class MarieJsonUtils {
 

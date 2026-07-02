@@ -1,7 +1,7 @@
-package dev.marie.MariesLib.client;
+package dev.marie.framework.client;
 
 import com.google.gson.JsonObject;
-import dev.marie.MariesLib.core.MariesLib;
+import dev.marie.framework.core.MariesLib;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Checkbox;

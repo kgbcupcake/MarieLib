@@ -1,8 +1,8 @@
-package dev.marie.MariesLib.config;
+package dev.marie.framework.config;
 
 import com.mojang.brigadier.context.CommandContext;
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.api.ConfigValidator;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.api.ConfigValidator;
 import net.minecraft.commands.CommandSourceStack;
 
 import javax.annotation.Nullable;

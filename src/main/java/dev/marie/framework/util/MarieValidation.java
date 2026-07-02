@@ -1,4 +1,4 @@
-package dev.marie.MariesLib.util;
+package dev.marie.framework.util;
 
 import com.google.gson.JsonArray;
 import com.mojang.logging.LogUtils;

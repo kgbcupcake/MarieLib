@@ -1,4 +1,4 @@
-package dev.marie.MariesLib.cache;
+package dev.marie.framework.cache;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;

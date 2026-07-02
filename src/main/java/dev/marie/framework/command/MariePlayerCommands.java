@@ -1,4 +1,4 @@
-package dev.marie.MariesLib.command;
+package dev.marie.framework.command;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -7,13 +7,13 @@ import com.mojang.brigadier.arguments.FloatArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import dev.marie.MariesLib.api.registry.ProfileRegistry;
-import dev.marie.MariesLib.core.IMarieLibConfig;
-import dev.marie.MariesLib.core.MarieLibContext;
-import dev.marie.MariesLib.handler.SourceApplicationPipeline;
-import dev.marie.MariesLib.tracking.TrackingAttachment;
-import dev.marie.MariesLib.tracking.TrackingData;
-import dev.marie.MariesLib.tracking.TrackingResetSupport;
+import dev.marie.framework.api.registry.ProfileRegistry;
+import dev.marie.framework.core.IMarieLibConfig;
+import dev.marie.framework.core.MarieLibContext;
+import dev.marie.framework.handler.SourceApplicationPipeline;
+import dev.marie.framework.tracking.TrackingAttachment;
+import dev.marie.framework.tracking.TrackingData;
+import dev.marie.framework.tracking.TrackingResetSupport;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.arguments.EntityArgument;

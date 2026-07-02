@@ -1,7 +1,7 @@
-package dev.marie.MariesLib.handler;
+package dev.marie.framework.handler;
 
-import dev.marie.MariesLib.core.IMarieLibConfig;
-import dev.marie.MariesLib.tracking.DiminishingReturnsConfig;
+import dev.marie.framework.core.IMarieLibConfig;
+import dev.marie.framework.tracking.DiminishingReturnsConfig;
 
 final class DiminishingReturnsSupport {
 

@@ -1,7 +1,7 @@
-package dev.marie.MariesLib.registry;
+package dev.marie.framework.registry;
 
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.api.ExportResolver;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.api.ExportResolver;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceKey;
 

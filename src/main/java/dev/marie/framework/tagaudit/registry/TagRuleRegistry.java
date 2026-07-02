@@ -1,8 +1,8 @@
-package dev.marie.MariesLib.tagaudit.registry;
+package dev.marie.framework.tagaudit.registry;
 
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.registry.AbstractRegistry;
-import dev.marie.MariesLib.tagaudit.rule.TagRule;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.registry.AbstractRegistry;
+import dev.marie.framework.tagaudit.rule.TagRule;
 
 import java.util.List;
 import java.util.Map;

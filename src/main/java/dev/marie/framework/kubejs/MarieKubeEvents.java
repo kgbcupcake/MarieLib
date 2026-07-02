@@ -1,16 +1,16 @@
-package dev.marie.MariesLib.kubejs;
+package dev.marie.framework.kubejs;
 
 import dev.latvian.mods.kubejs.event.EventGroup;
 import dev.latvian.mods.kubejs.event.EventHandler;
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.kubejs.events.MarieDecayTickEvent;
-import dev.marie.MariesLib.kubejs.events.MarieMilestoneTriggeredEvent;
-import dev.marie.MariesLib.kubejs.events.MariePlayerSyncedEvent;
-import dev.marie.MariesLib.kubejs.events.MarieSourceConsumedEvent;
-import dev.marie.MariesLib.kubejs.events.MarieValueChangedEvent;
-import dev.marie.MariesLib.kubejs.events.MarieValueCriticalEvent;
-import dev.marie.MariesLib.kubejs.events.MarieValueDeltaModifierEvent;
-import dev.marie.MariesLib.kubejs.events.MarieValueExcessEvent;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.kubejs.events.MarieDecayTickEvent;
+import dev.marie.framework.kubejs.events.MarieMilestoneTriggeredEvent;
+import dev.marie.framework.kubejs.events.MariePlayerSyncedEvent;
+import dev.marie.framework.kubejs.events.MarieSourceConsumedEvent;
+import dev.marie.framework.kubejs.events.MarieValueChangedEvent;
+import dev.marie.framework.kubejs.events.MarieValueCriticalEvent;
+import dev.marie.framework.kubejs.events.MarieValueDeltaModifierEvent;
+import dev.marie.framework.kubejs.events.MarieValueExcessEvent;
 
 import javax.annotation.Nullable;
 

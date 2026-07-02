@@ -13,4 +13,4 @@
  * </ul></p>
  */
 @javax.annotation.ParametersAreNonnullByDefault
-package dev.marie.MariesLib.classification;
+package dev.marie.framework.classification;

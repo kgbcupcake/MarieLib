@@ -1,7 +1,7 @@
-package dev.marie.MariesLib.classification;
+package dev.marie.framework.classification;
 
-import dev.marie.MariesLib.scan.ResolutionStage;
-import dev.marie.MariesLib.scan.RuntimeCascadeStage;
+import dev.marie.framework.scan.ResolutionStage;
+import dev.marie.framework.scan.RuntimeCascadeStage;
 import net.minecraft.world.item.ItemStack;
 
 import javax.annotation.Nullable;

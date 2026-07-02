@@ -6,6 +6,6 @@
  * reference these classes directly.</p>
  */
 @ApiStatus.Internal
-package dev.marie.MariesLib.api.impl;
+package dev.marie.framework.api.impl;
 
-import dev.marie.MariesLib.api.ApiStatus;
+import dev.marie.framework.api.ApiStatus;

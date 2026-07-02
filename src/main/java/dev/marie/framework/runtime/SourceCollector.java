@@ -1,9 +1,9 @@
-package dev.marie.MariesLib.runtime;
+package dev.marie.framework.runtime;
 
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.core.MarieLibContext;
-import dev.marie.MariesLib.scanner.ClassificationResult;
-import dev.marie.MariesLib.scanner.ScannerSpecRegistry;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.core.MarieLibContext;
+import dev.marie.framework.scanner.ClassificationResult;
+import dev.marie.framework.scanner.ScannerSpecRegistry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;

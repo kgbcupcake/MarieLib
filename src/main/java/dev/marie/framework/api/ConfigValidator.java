@@ -1,6 +1,6 @@
-package dev.marie.MariesLib.api;
+package dev.marie.framework.api;
 
-import dev.marie.MariesLib.config.validation.ValidationResult;
+import dev.marie.framework.config.validation.ValidationResult;
 
 /**
  * Validates a consumer mod's configuration and returns a structured result.

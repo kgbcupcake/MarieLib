@@ -1,7 +1,7 @@
-package dev.marie.MariesLib.tagaudit;
+package dev.marie.framework.tagaudit;
 
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.tagaudit.rule.TagRule;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.tagaudit.rule.TagRule;
 
 import java.util.ArrayList;
 import java.util.Collections;

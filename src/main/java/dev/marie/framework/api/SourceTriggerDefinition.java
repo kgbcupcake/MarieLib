@@ -1,4 +1,4 @@
-package dev.marie.MariesLib.api;
+package dev.marie.framework.api;
 
 /**
  * Declares that a non-item source key contributes a fixed amount

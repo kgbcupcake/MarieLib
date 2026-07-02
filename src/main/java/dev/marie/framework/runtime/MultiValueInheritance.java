@@ -1,7 +1,7 @@
-package dev.marie.MariesLib.runtime;
+package dev.marie.framework.runtime;
 
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.core.IMarieLibConfig;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.core.IMarieLibConfig;
 
 import java.util.LinkedHashMap;
 import java.util.Map;

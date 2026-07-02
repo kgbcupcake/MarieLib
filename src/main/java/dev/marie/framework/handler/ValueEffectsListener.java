@@ -1,11 +1,11 @@
-package dev.marie.MariesLib.handler;
+package dev.marie.framework.handler;
 
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.api.registry.EffectRegistry;
-import dev.marie.MariesLib.config.FeatureFlagCache;
-import dev.marie.MariesLib.core.MarieLibContext;
-import dev.marie.MariesLib.tracking.TrackingAttachment;
-import dev.marie.MariesLib.tracking.TrackingData;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.api.registry.EffectRegistry;
+import dev.marie.framework.config.FeatureFlagCache;
+import dev.marie.framework.core.MarieLibContext;
+import dev.marie.framework.tracking.TrackingAttachment;
+import dev.marie.framework.tracking.TrackingData;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;

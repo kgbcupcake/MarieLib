@@ -1,4 +1,4 @@
-package dev.marie.MariesLib.network;
+package dev.marie.framework.network;
 
 public enum SyncState {
     UNINITIALIZED,

@@ -1,4 +1,4 @@
-package dev.marie.MariesLib.config;
+package dev.marie.framework.config;
 
 /**
  * Mutable source of truth for all MariesLib-owned scalar configuration.
@@ -36,7 +36,7 @@ public final class MariesLibConfigHolder {
 
     /** Copies current {@link ScannerSpecRegistry} scalar values into this holder. */
     public void loadScannerScalarsFromRegistry() {
-        var spec = dev.marie.MariesLib.scanner.ScannerSpecRegistry.get();
+        var spec = dev.marie.framework.scanner.ScannerSpecRegistry.get();
         var mult = spec.multipliers();
         multCommunityTag = mult.communityTag();
         multNamespace = mult.namespace();

@@ -1,8 +1,8 @@
-package dev.marie.MariesLib.api.registry;
+package dev.marie.framework.api.registry;
 
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.api.AbsorptionModifier;
-import dev.marie.MariesLib.registry.ListRegistry;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.api.AbsorptionModifier;
+import dev.marie.framework.registry.ListRegistry;
 
 import java.util.Comparator;
 import java.util.List;

@@ -1,4 +1,4 @@
-package dev.marie.MariesLib.debug;
+package dev.marie.framework.debug;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -20,8 +20,8 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
-import dev.marie.MariesLib.core.IMarieLibConfig;
-import dev.marie.MariesLib.core.MariesLib;
+import dev.marie.framework.core.IMarieLibConfig;
+import dev.marie.framework.core.MariesLib;
 import net.neoforged.fml.loading.FMLPaths;
 
 /**
@@ -103,7 +103,7 @@ public final class MarieDebugLogger {
     private static Path debugDir() throws IOException {
         Path base = FMLPaths.GAMEDIR.get().resolve("config");
         Path dir = base.resolve(IMarieLibConfig.get().modId()).resolve("debug");
-        dev.marie.MariesLib.util.MarieValidation.assertPathUnder(dir, base, "MarieDebugLogger.debugDir");
+        dev.marie.framework.util.MarieValidation.assertPathUnder(dir, base, "MarieDebugLogger.debugDir");
         Files.createDirectories(dir);
         return dir;
     }

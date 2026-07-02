@@ -1,4 +1,4 @@
-package dev.marie.MariesLib.scan;
+package dev.marie.framework.scan;
 
 import net.minecraft.resources.ResourceLocation;
 

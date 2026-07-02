@@ -1,4 +1,4 @@
-package dev.marie.MariesLib.classification;
+package dev.marie.framework.classification;
 
 /**
  * Identifies each decision point in the classification pipeline.

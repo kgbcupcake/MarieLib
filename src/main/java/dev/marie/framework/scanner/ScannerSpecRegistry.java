@@ -1,17 +1,17 @@
-package dev.marie.MariesLib.scanner;
+package dev.marie.framework.scanner;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.core.IMarieLibConfig;
-import dev.marie.MariesLib.core.MariesLib;
-import dev.marie.MariesLib.registry.AbstractRegistry;
-import dev.marie.MariesLib.data.DatapackSchema;
-import dev.marie.MariesLib.util.MarieJsonUtils;
-import dev.marie.MariesLib.util.MarieResourceLoader;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.core.IMarieLibConfig;
+import dev.marie.framework.core.MariesLib;
+import dev.marie.framework.registry.AbstractRegistry;
+import dev.marie.framework.data.DatapackSchema;
+import dev.marie.framework.util.MarieJsonUtils;
+import dev.marie.framework.util.MarieResourceLoader;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.neoforged.fml.loading.FMLPaths;
 
@@ -43,7 +43,7 @@ import java.util.Set;
  *
  * <p>The spec contains all signal multipliers, weight maps, and archetype patterns
  * used by {@link ItemClassifier}. Domain-specific source property signals are
- * registered via {@link dev.marie.MariesLib.api.MarieAPI#registerSourcePropertySignal}.</p>
+ * registered via {@link dev.marie.framework.api.MarieAPI#registerSourcePropertySignal}.</p>
  */
 @ApiStatus.Internal
 public final class ScannerSpecRegistry {

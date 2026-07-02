@@ -1,14 +1,14 @@
-package dev.marie.MariesLib.kubejs.bindings;
+package dev.marie.framework.kubejs.bindings;
 
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.api.MarieAPI;
-import dev.marie.MariesLib.api.MilestoneDefinition;
-import dev.marie.MariesLib.api.SourcePairSynergy;
-import dev.marie.MariesLib.api.SynergyDefinition;
-import dev.marie.MariesLib.api.ThresholdEffect;
-import dev.marie.MariesLib.api.ValueDefinition;
-import dev.marie.MariesLib.runtime.SourceClassificationRegistry;
-import dev.marie.MariesLib.util.MarieValidation;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.api.MarieAPI;
+import dev.marie.framework.api.MilestoneDefinition;
+import dev.marie.framework.api.SourcePairSynergy;
+import dev.marie.framework.api.SynergyDefinition;
+import dev.marie.framework.api.ThresholdEffect;
+import dev.marie.framework.api.ValueDefinition;
+import dev.marie.framework.runtime.SourceClassificationRegistry;
+import dev.marie.framework.util.MarieValidation;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.HashMap;

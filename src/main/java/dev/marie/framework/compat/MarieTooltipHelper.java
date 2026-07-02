@@ -1,4 +1,4 @@
-package dev.marie.MariesLib.compat;
+package dev.marie.framework.compat;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -7,17 +7,17 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.api.SourcePairSynergy;
-import dev.marie.MariesLib.api.MilestoneDefinition;
-import dev.marie.MariesLib.api.registry.MilestoneRegistry;
-import dev.marie.MariesLib.api.registry.SynergyRegistry;
-import dev.marie.MariesLib.client.MarieValueColors;
-import dev.marie.MariesLib.config.FeatureFlagCache;
-import dev.marie.MariesLib.core.IMarieLibConfig;
-import dev.marie.MariesLib.core.MarieLibContext;
-import dev.marie.MariesLib.tracking.TrackingData;
-import dev.marie.MariesLib.util.MarieRegistryUtils;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.api.SourcePairSynergy;
+import dev.marie.framework.api.MilestoneDefinition;
+import dev.marie.framework.api.registry.MilestoneRegistry;
+import dev.marie.framework.api.registry.SynergyRegistry;
+import dev.marie.framework.client.MarieValueColors;
+import dev.marie.framework.config.FeatureFlagCache;
+import dev.marie.framework.core.IMarieLibConfig;
+import dev.marie.framework.core.MarieLibContext;
+import dev.marie.framework.tracking.TrackingData;
+import dev.marie.framework.util.MarieRegistryUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.registries.BuiltInRegistries;

@@ -1,6 +1,6 @@
-package dev.marie.MariesLib.api;
+package dev.marie.framework.api;
 
-import dev.marie.MariesLib.core.MariesLib;
+import dev.marie.framework.core.MariesLib;
 
 import java.util.concurrent.atomic.AtomicReference;
 

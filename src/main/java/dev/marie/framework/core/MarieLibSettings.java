@@ -1,6 +1,6 @@
-package dev.marie.MariesLib.core;
+package dev.marie.framework.core;
 
-import dev.marie.MariesLib.api.ApiStatus;
+import dev.marie.framework.api.ApiStatus;
 
 /**
  * Library-owned scanner and debug settings. Gameplay configuration

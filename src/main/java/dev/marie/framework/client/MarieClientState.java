@@ -1,7 +1,7 @@
-package dev.marie.MariesLib.client;
+package dev.marie.framework.client;
 
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.network.SyncState;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.network.SyncState;
 
 /**
  * Client-only runtime mirror of server-authoritative config.

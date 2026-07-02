@@ -1,11 +1,11 @@
-package dev.marie.MariesLib.kubejs.internal;
+package dev.marie.framework.kubejs.internal;
 
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.api.ValueModifierContext;
-import dev.marie.MariesLib.kubejs.MarieKubeEvents;
-import dev.marie.MariesLib.kubejs.events.MarieDecayTickEvent;
-import dev.marie.MariesLib.kubejs.events.MariePlayerSyncedEvent;
-import dev.marie.MariesLib.kubejs.events.MarieValueDeltaModifierEvent;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.api.ValueModifierContext;
+import dev.marie.framework.kubejs.MarieKubeEvents;
+import dev.marie.framework.kubejs.events.MarieDecayTickEvent;
+import dev.marie.framework.kubejs.events.MariePlayerSyncedEvent;
+import dev.marie.framework.kubejs.events.MarieValueDeltaModifierEvent;
 import net.minecraft.server.level.ServerPlayer;
 
 /**

@@ -1,6 +1,6 @@
-package dev.marie.MariesLib.tracking;
+package dev.marie.framework.tracking;
 
-import dev.marie.MariesLib.api.AbsorptionModifier;
+import dev.marie.framework.api.AbsorptionModifier;
 
 import net.minecraft.world.entity.player.Player;
 

@@ -1,6 +1,6 @@
-package dev.marie.MariesLib.scanner.analysis;
+package dev.marie.framework.scanner.analysis;
 
-import dev.marie.MariesLib.api.ApiStatus;
+import dev.marie.framework.api.ApiStatus;
 
 import java.util.ArrayList;
 import java.util.Comparator;

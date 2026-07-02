@@ -1,11 +1,11 @@
-package dev.marie.MariesLib.handler;
+package dev.marie.framework.handler;
 
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.diagnostics.MarieUnknownItemLogger;
-import dev.marie.MariesLib.registry.RegistryLifecycleManager;
-import dev.marie.MariesLib.runtime.RuntimeResolver;
-import dev.marie.MariesLib.runtime.SourceTriggerRegistry;
-import dev.marie.MariesLib.scanner.ItemScanner;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.diagnostics.MarieUnknownItemLogger;
+import dev.marie.framework.registry.RegistryLifecycleManager;
+import dev.marie.framework.runtime.RuntimeResolver;
+import dev.marie.framework.runtime.SourceTriggerRegistry;
+import dev.marie.framework.scanner.ItemScanner;
 
 @ApiStatus.Internal
 public final class ReloadPipeline {

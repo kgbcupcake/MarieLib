@@ -1,9 +1,9 @@
-package dev.marie.MariesLib.curve.serialization;
+package dev.marie.framework.curve.serialization;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.curve.math.CurveGrid;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.curve.math.CurveGrid;
 
 import javax.annotation.Nullable;
 

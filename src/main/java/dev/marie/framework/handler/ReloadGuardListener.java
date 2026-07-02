@@ -1,10 +1,10 @@
-package dev.marie.MariesLib.handler;
+package dev.marie.framework.handler;
 
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.core.MarieLibContext;
-import dev.marie.MariesLib.core.MariesLib;
-import dev.marie.MariesLib.data.MarieDataManager;
-import dev.marie.MariesLib.registry.RegistryLifecycleManager;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.core.MarieLibContext;
+import dev.marie.framework.core.MariesLib;
+import dev.marie.framework.data.MarieDataManager;
+import dev.marie.framework.registry.RegistryLifecycleManager;
 import net.minecraft.server.MinecraftServer;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.AddReloadListenerEvent;

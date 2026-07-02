@@ -1,4 +1,4 @@
-package dev.marie.MariesLib.client;
+package dev.marie.framework.client;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;

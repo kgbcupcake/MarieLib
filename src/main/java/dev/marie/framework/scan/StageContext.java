@@ -1,7 +1,7 @@
-package dev.marie.MariesLib.scan;
+package dev.marie.framework.scan;
 
-import dev.marie.MariesLib.cache.RunningAverage;
-import dev.marie.MariesLib.classification.ClassificationTraceStep;
+import dev.marie.framework.cache.RunningAverage;
+import dev.marie.framework.classification.ClassificationTraceStep;
 import net.minecraft.core.Holder;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;

@@ -1,7 +1,7 @@
-package dev.marie.MariesLib.registry;
+package dev.marie.framework.registry;
 
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.core.IMarieLibConfig;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.core.IMarieLibConfig;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EntityType;

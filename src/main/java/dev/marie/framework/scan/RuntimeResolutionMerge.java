@@ -1,6 +1,6 @@
-package dev.marie.MariesLib.scan;
+package dev.marie.framework.scan;
 
-import dev.marie.MariesLib.api.ApiStatus;
+import dev.marie.framework.api.ApiStatus;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;

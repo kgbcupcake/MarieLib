@@ -1,8 +1,8 @@
-package dev.marie.MariesLib.tagaudit.registry;
+package dev.marie.framework.tagaudit.registry;
 
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.registry.AbstractRegistry;
-import dev.marie.MariesLib.tagaudit.model.TagAuditContext;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.registry.AbstractRegistry;
+import dev.marie.framework.tagaudit.model.TagAuditContext;
 
 /**
  * Registry of TagAuditContext implementations, keyed by the consuming mod's

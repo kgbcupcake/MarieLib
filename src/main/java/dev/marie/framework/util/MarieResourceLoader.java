@@ -1,7 +1,7 @@
-package dev.marie.MariesLib.util;
+package dev.marie.framework.util;
 
-import dev.marie.MariesLib.core.MariesLib;
-import dev.marie.MariesLib.core.MarieLibContext;
+import dev.marie.framework.core.MariesLib;
+import dev.marie.framework.core.MarieLibContext;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;

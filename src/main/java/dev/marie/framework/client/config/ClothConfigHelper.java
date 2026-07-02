@@ -1,10 +1,10 @@
-package dev.marie.MariesLib.client.config;
+package dev.marie.framework.client.config;
 
 import java.util.Optional;
 
-import dev.marie.MariesLib.config.LockRegistry;
-import dev.marie.MariesLib.config.MariesLibConfigHolder;
-import dev.marie.MariesLib.core.MariesLib;
+import dev.marie.framework.config.LockRegistry;
+import dev.marie.framework.config.MariesLibConfigHolder;
+import dev.marie.framework.core.MariesLib;
 import me.shedaniel.clothconfig2.api.AbstractConfigListEntry;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.ConfigCategory;

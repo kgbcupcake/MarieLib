@@ -1,10 +1,10 @@
-package dev.marie.MariesLib.command;
+package dev.marie.framework.command;
 
 import com.mojang.brigadier.CommandDispatcher;
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.core.MarieLibContext;
-import dev.marie.MariesLib.core.MarieModRegistry;
-import dev.marie.MariesLib.core.MariesLib;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.core.MarieLibContext;
+import dev.marie.framework.core.MarieModRegistry;
+import dev.marie.framework.core.MariesLib;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;

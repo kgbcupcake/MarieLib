@@ -1,6 +1,6 @@
-package dev.marie.MariesLib.tracking;
+package dev.marie.framework.tracking;
 
-import dev.marie.MariesLib.api.ApiStatus;
+import dev.marie.framework.api.ApiStatus;
 
 @ApiStatus.Internal
 public record DiminishingReturnsConfig(

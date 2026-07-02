@@ -1,7 +1,7 @@
-package dev.marie.MariesLib.api.impl;
+package dev.marie.framework.api.impl;
 
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.api.ApplicationHistoryView;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.api.ApplicationHistoryView;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.List;

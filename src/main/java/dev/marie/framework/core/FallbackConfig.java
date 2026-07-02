@@ -1,14 +1,14 @@
-package dev.marie.MariesLib.core;
+package dev.marie.framework.core;
 
 import com.google.gson.JsonObject;
 
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.api.ValueDefinition;
-import dev.marie.MariesLib.api.registry.ValueRegistry;
-import dev.marie.MariesLib.config.MariesLibConfigBridge;
-import dev.marie.MariesLib.config.MariesLibConfigHolder;
-import dev.marie.MariesLib.config.PresetRegistry;
-import dev.marie.MariesLib.tracking.DiminishingReturnsConfig;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.api.ValueDefinition;
+import dev.marie.framework.api.registry.ValueRegistry;
+import dev.marie.framework.config.MariesLibConfigBridge;
+import dev.marie.framework.config.MariesLibConfigHolder;
+import dev.marie.framework.config.PresetRegistry;
+import dev.marie.framework.tracking.DiminishingReturnsConfig;
 
 /**
  * Fallback when no consuming mod has registered a {@link MarieLibContext}.

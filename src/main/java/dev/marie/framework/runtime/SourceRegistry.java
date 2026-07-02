@@ -1,8 +1,8 @@
-package dev.marie.MariesLib.runtime;
+package dev.marie.framework.runtime;
 
 import com.mojang.logging.LogUtils;
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.scanner.ItemScanner;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.scanner.ItemScanner;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;

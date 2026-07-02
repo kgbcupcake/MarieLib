@@ -1,4 +1,4 @@
-package dev.marie.MariesLib.handler;
+package dev.marie.framework.handler;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -10,37 +10,37 @@ import java.util.concurrent.ConcurrentHashMap;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.api.MarieEvents;
-import dev.marie.MariesLib.api.MarieSeasonHook;
-import dev.marie.MariesLib.api.AbsorptionModifier;
-import dev.marie.MariesLib.api.SourcePairSynergy;
-import dev.marie.MariesLib.api.SynergyDefinition;
-import dev.marie.MariesLib.api.ValueDefinition;
-import dev.marie.MariesLib.api.ValueModifierContext;
-import dev.marie.MariesLib.api.ValueModifierEvent;
-import dev.marie.MariesLib.api.ValueSourceTrigger;
-import dev.marie.MariesLib.api.registry.AbsorptionModifierRegistry;
-import dev.marie.MariesLib.api.registry.SeasonHookRegistry;
-import dev.marie.MariesLib.api.registry.SynergyRegistry;
-import dev.marie.MariesLib.tracking.TrackingDataApplicationHistoryView;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.api.MarieEvents;
+import dev.marie.framework.api.MarieSeasonHook;
+import dev.marie.framework.api.AbsorptionModifier;
+import dev.marie.framework.api.SourcePairSynergy;
+import dev.marie.framework.api.SynergyDefinition;
+import dev.marie.framework.api.ValueDefinition;
+import dev.marie.framework.api.ValueModifierContext;
+import dev.marie.framework.api.ValueModifierEvent;
+import dev.marie.framework.api.ValueSourceTrigger;
+import dev.marie.framework.api.registry.AbsorptionModifierRegistry;
+import dev.marie.framework.api.registry.SeasonHookRegistry;
+import dev.marie.framework.api.registry.SynergyRegistry;
+import dev.marie.framework.tracking.TrackingDataApplicationHistoryView;
 
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.effect.MobEffectInstance;
-import dev.marie.MariesLib.config.FeatureFlagCache;
-import dev.marie.MariesLib.core.IMarieLibConfig;
-import dev.marie.MariesLib.core.MarieLibContext;
-import dev.marie.MariesLib.core.MariesLib;
-import dev.marie.MariesLib.debug.MarieDebugLogger;
-import dev.marie.MariesLib.runtime.SourceClassificationRegistry;
-import dev.marie.MariesLib.runtime.SourceTriggerRegistry;
-import dev.marie.MariesLib.tracking.MilestoneTracker;
-import dev.marie.MariesLib.tracking.SynergyBuffTracker;
-import dev.marie.MariesLib.tracking.TrackingAttachment;
-import dev.marie.MariesLib.tracking.TrackingData;
-import dev.marie.MariesLib.registry.MarieAttributes;
-import dev.marie.MariesLib.core.KubeIntegration;
-import dev.marie.MariesLib.util.MarieRegistryUtils;
+import dev.marie.framework.config.FeatureFlagCache;
+import dev.marie.framework.core.IMarieLibConfig;
+import dev.marie.framework.core.MarieLibContext;
+import dev.marie.framework.core.MariesLib;
+import dev.marie.framework.debug.MarieDebugLogger;
+import dev.marie.framework.runtime.SourceClassificationRegistry;
+import dev.marie.framework.runtime.SourceTriggerRegistry;
+import dev.marie.framework.tracking.MilestoneTracker;
+import dev.marie.framework.tracking.SynergyBuffTracker;
+import dev.marie.framework.tracking.TrackingAttachment;
+import dev.marie.framework.tracking.TrackingData;
+import dev.marie.framework.registry.MarieAttributes;
+import dev.marie.framework.core.KubeIntegration;
+import dev.marie.framework.util.MarieRegistryUtils;
 
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -385,7 +385,7 @@ public final class SourceApplicationPipeline {
     }
 
     /**
-     * Applies a direct delta write ({@link dev.marie.MariesLib.api.MarieAPI#modifyValue}).
+     * Applies a direct delta write ({@link dev.marie.framework.api.MarieAPI#modifyValue}).
      *
      * @return {@code true} if the stored level changed
      */
@@ -583,7 +583,7 @@ public final class SourceApplicationPipeline {
     }
 
     private record DiminishingReturnsConfigOrNull(
-            dev.marie.MariesLib.tracking.DiminishingReturnsConfig config,
+            dev.marie.framework.tracking.DiminishingReturnsConfig config,
             boolean wasNullProvider
     ) {}
 }

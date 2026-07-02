@@ -1,10 +1,10 @@
-package dev.marie.MariesLib.core;
+package dev.marie.framework.core;
 
 import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
 
-import dev.marie.MariesLib.config.MariesLibConfigIO;
+import dev.marie.framework.config.MariesLibConfigIO;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;

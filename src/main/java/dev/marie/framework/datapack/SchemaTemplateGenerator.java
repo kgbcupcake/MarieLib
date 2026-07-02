@@ -1,7 +1,7 @@
-package dev.marie.MariesLib.datapack;
+package dev.marie.framework.datapack;
 
-import dev.marie.MariesLib.data.SchemaDefinition;
-import dev.marie.MariesLib.data.SchemaField;
+import dev.marie.framework.data.SchemaDefinition;
+import dev.marie.framework.data.SchemaField;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;

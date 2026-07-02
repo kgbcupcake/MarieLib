@@ -1,7 +1,7 @@
-package dev.marie.MariesLib.compat.jei;
+package dev.marie.framework.compat.jei;
 
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.core.MariesLib;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.core.MariesLib;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
 import net.minecraft.resources.ResourceLocation;

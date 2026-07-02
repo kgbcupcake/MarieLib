@@ -1,6 +1,6 @@
-package dev.marie.MariesLib.registry;
+package dev.marie.framework.registry;
 
-import dev.marie.MariesLib.api.ApiStatus;
+import dev.marie.framework.api.ApiStatus;
 
 import java.time.Instant;
 

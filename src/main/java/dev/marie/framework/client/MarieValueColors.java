@@ -1,9 +1,9 @@
-package dev.marie.MariesLib.client;
+package dev.marie.framework.client;
 
-import dev.marie.MariesLib.api.ValueDefinition;
-import dev.marie.MariesLib.color.ColorRegistry;
-import dev.marie.MariesLib.core.MarieLibContext;
-import dev.marie.MariesLib.api.registry.ValueRegistry;
+import dev.marie.framework.api.ValueDefinition;
+import dev.marie.framework.color.ColorRegistry;
+import dev.marie.framework.core.MarieLibContext;
+import dev.marie.framework.api.registry.ValueRegistry;
 
 import java.util.List;
 import java.util.Map;

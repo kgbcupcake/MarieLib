@@ -1,11 +1,11 @@
-package dev.marie.MariesLib.tracking;
+package dev.marie.framework.tracking;
 
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.api.ApplicationHistoryView;
-import dev.marie.MariesLib.api.impl.EmptyApplicationHistoryView;
-import dev.marie.MariesLib.core.IMarieLibConfig;
-import dev.marie.MariesLib.core.MarieLibContext;
-import dev.marie.MariesLib.core.MariesLib;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.api.ApplicationHistoryView;
+import dev.marie.framework.api.impl.EmptyApplicationHistoryView;
+import dev.marie.framework.core.IMarieLibConfig;
+import dev.marie.framework.core.MarieLibContext;
+import dev.marie.framework.core.MariesLib;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.attachment.AttachmentType;
 import net.neoforged.neoforge.registries.DeferredRegister;

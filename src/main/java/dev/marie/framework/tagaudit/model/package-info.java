@@ -2,6 +2,6 @@
  * Data types for tag issues, fix suggestions, reports, severity, and the
  * rule-execution context.
  */
-package dev.marie.MariesLib.tagaudit.model;
+package dev.marie.framework.tagaudit.model;
 
-import dev.marie.MariesLib.api.ApiStatus;
+import dev.marie.framework.api.ApiStatus;

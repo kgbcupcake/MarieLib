@@ -1,8 +1,8 @@
-package dev.marie.MariesLib.api.registry;
+package dev.marie.framework.api.registry;
 
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.api.ProfileDefinition;
-import dev.marie.MariesLib.registry.AbstractRegistry;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.api.ProfileDefinition;
+import dev.marie.framework.registry.AbstractRegistry;
 
 import javax.annotation.Nullable;
 import java.util.List;

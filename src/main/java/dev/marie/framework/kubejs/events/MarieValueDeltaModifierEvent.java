@@ -1,10 +1,10 @@
-package dev.marie.MariesLib.kubejs.events;
+package dev.marie.framework.kubejs.events;
 
 import javax.annotation.Nullable;
 
 import dev.latvian.mods.kubejs.event.KubeEvent;
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.api.ValueModifierContext;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.api.ValueModifierContext;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;

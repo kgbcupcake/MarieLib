@@ -1,15 +1,15 @@
-package dev.marie.MariesLib.command;
+package dev.marie.framework.command;
 
 import com.mojang.brigadier.suggestion.SuggestionProvider;
-import dev.marie.MariesLib.api.ValueDefinition;
-import dev.marie.MariesLib.api.registry.ProfileRegistry;
-import dev.marie.MariesLib.api.registry.ValueRegistry;
-import dev.marie.MariesLib.core.MarieLibContext;
-import dev.marie.MariesLib.data.SchemaDefinition;
-import dev.marie.MariesLib.handler.SourceApplicationPipeline;
-import dev.marie.MariesLib.runtime.SourceRegistry;
-import dev.marie.MariesLib.scanner.ItemScanner;
-import dev.marie.MariesLib.tracking.SynergyBuffTracker;
+import dev.marie.framework.api.ValueDefinition;
+import dev.marie.framework.api.registry.ProfileRegistry;
+import dev.marie.framework.api.registry.ValueRegistry;
+import dev.marie.framework.core.MarieLibContext;
+import dev.marie.framework.data.SchemaDefinition;
+import dev.marie.framework.handler.SourceApplicationPipeline;
+import dev.marie.framework.runtime.SourceRegistry;
+import dev.marie.framework.scanner.ItemScanner;
+import dev.marie.framework.tracking.SynergyBuffTracker;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.SharedSuggestionProvider;

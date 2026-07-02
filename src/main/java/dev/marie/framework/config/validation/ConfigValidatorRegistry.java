@@ -1,9 +1,9 @@
-package dev.marie.MariesLib.config.validation;
+package dev.marie.framework.config.validation;
 
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.api.ConfigValidator;
-import dev.marie.MariesLib.core.MariesLib;
-import dev.marie.MariesLib.registry.ListRegistry;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.api.ConfigValidator;
+import dev.marie.framework.core.MariesLib;
+import dev.marie.framework.registry.ListRegistry;
 
 import java.util.ArrayList;
 import java.util.Collections;

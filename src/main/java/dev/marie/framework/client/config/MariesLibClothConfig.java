@@ -1,6 +1,6 @@
-package dev.marie.MariesLib.client.config;
+package dev.marie.framework.client.config;
 
-import dev.marie.MariesLib.config.MariesLibConfigIO;
+import dev.marie.framework.config.MariesLibConfigIO;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
 import net.minecraft.client.gui.screens.Screen;

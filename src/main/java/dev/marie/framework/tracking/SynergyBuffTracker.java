@@ -1,4 +1,4 @@
-package dev.marie.MariesLib.tracking;
+package dev.marie.framework.tracking;
 
 import java.util.Map;
 import java.util.UUID;

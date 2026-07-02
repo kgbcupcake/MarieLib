@@ -1,7 +1,7 @@
-package dev.marie.MariesLib.kubejs.events;
+package dev.marie.framework.kubejs.events;
 
 import dev.latvian.mods.kubejs.event.KubeEvent;
-import dev.marie.MariesLib.api.ApiStatus;
+import dev.marie.framework.api.ApiStatus;
 
 @ApiStatus.Experimental
 public class MarieDecayTickEvent implements KubeEvent {

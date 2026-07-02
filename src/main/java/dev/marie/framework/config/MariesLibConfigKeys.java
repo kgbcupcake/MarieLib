@@ -1,4 +1,4 @@
-package dev.marie.MariesLib.config;
+package dev.marie.framework.config;
 
 /**
  * Stable Cloth Config / {@link LockRegistry} keys for MariesLib-owned settings.

@@ -1,7 +1,7 @@
-package dev.marie.MariesLib.registry;
+package dev.marie.framework.registry;
 
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.core.MariesLib;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.core.MariesLib;
 import net.minecraft.server.packs.resources.ResourceManager;
 
 import java.util.ArrayList;

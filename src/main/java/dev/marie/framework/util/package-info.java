@@ -1,4 +1,4 @@
 /**
  * General utilities.
  */
-package dev.marie.MariesLib.util;
+package dev.marie.framework.util;

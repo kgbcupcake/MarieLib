@@ -5,6 +5,6 @@
  * runtime systems. They are not intended as addon entry points.</p>
  */
 @ApiStatus.Internal
-package dev.marie.MariesLib.api.registry;
+package dev.marie.framework.api.registry;
 
-import dev.marie.MariesLib.api.ApiStatus;
+import dev.marie.framework.api.ApiStatus;

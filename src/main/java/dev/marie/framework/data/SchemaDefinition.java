@@ -1,4 +1,4 @@
-package dev.marie.MariesLib.data;
+package dev.marie.framework.data;
 
 import java.util.List;
 

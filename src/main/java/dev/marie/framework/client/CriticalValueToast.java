@@ -1,8 +1,8 @@
-package dev.marie.MariesLib.client;
+package dev.marie.framework.client;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import dev.marie.MariesLib.core.MarieLibContext;
-import dev.marie.MariesLib.core.MariesLib;
+import dev.marie.framework.core.MarieLibContext;
+import dev.marie.framework.core.MariesLib;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.toasts.Toast;

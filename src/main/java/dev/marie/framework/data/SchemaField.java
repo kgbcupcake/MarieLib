@@ -1,4 +1,4 @@
-package dev.marie.MariesLib.data;
+package dev.marie.framework.data;
 
 public record SchemaField(String name, SchemaType type, boolean required, Object defaultValue) {
 

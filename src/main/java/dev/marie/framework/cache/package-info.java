@@ -1,4 +1,4 @@
 /**
  * Caching utilities.
  */
-package dev.marie.MariesLib.cache;
+package dev.marie.framework.cache;

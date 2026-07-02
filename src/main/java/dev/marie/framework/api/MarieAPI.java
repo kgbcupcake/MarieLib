@@ -1,4 +1,4 @@
-package dev.marie.MariesLib.api;
+package dev.marie.framework.api;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -6,30 +6,30 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
-import dev.marie.MariesLib.api.impl.EmptyApplicationHistoryView;
-import dev.marie.MariesLib.api.registry.AbsorptionModifierRegistry;
-import dev.marie.MariesLib.api.registry.MilestoneRegistry;
-import dev.marie.MariesLib.api.registry.ProfileRegistry;
-import dev.marie.MariesLib.api.registry.ReportProviderRegistry;
-import dev.marie.MariesLib.api.registry.SeasonHookRegistry;
-import dev.marie.MariesLib.api.registry.SleepBonusEvaluatorRegistry;
-import dev.marie.MariesLib.api.registry.SourcePropertySignalRegistry;
-import dev.marie.MariesLib.api.registry.SynergyRegistry;
-import dev.marie.MariesLib.api.registry.ValueRegistry;
-import dev.marie.MariesLib.command.CommandCapability;
-import dev.marie.MariesLib.command.CommandCapabilityRegistry;
-import dev.marie.MariesLib.compat.CompatDefinition;
-import dev.marie.MariesLib.core.IMarieLibConfig;
-import dev.marie.MariesLib.core.MarieLibContext;
-import dev.marie.MariesLib.core.MarieLibDataProvider;
-import dev.marie.MariesLib.core.MarieLibRegistrationDelegate;
-import dev.marie.MariesLib.handler.SourceApplicationPipeline;
-import dev.marie.MariesLib.runtime.SourceTriggerRegistry;
-import dev.marie.MariesLib.runtime.TriggerHandlerRegistry;
-import dev.marie.MariesLib.tagaudit.rule.TagRule;
-import dev.marie.MariesLib.tracking.TrackingAttachment;
-import dev.marie.MariesLib.tracking.TrackingData;
-import dev.marie.MariesLib.util.MarieRegistryUtils;
+import dev.marie.framework.api.impl.EmptyApplicationHistoryView;
+import dev.marie.framework.api.registry.AbsorptionModifierRegistry;
+import dev.marie.framework.api.registry.MilestoneRegistry;
+import dev.marie.framework.api.registry.ProfileRegistry;
+import dev.marie.framework.api.registry.ReportProviderRegistry;
+import dev.marie.framework.api.registry.SeasonHookRegistry;
+import dev.marie.framework.api.registry.SleepBonusEvaluatorRegistry;
+import dev.marie.framework.api.registry.SourcePropertySignalRegistry;
+import dev.marie.framework.api.registry.SynergyRegistry;
+import dev.marie.framework.api.registry.ValueRegistry;
+import dev.marie.framework.command.CommandCapability;
+import dev.marie.framework.command.CommandCapabilityRegistry;
+import dev.marie.framework.compat.CompatDefinition;
+import dev.marie.framework.core.IMarieLibConfig;
+import dev.marie.framework.core.MarieLibContext;
+import dev.marie.framework.core.MarieLibDataProvider;
+import dev.marie.framework.core.MarieLibRegistrationDelegate;
+import dev.marie.framework.handler.SourceApplicationPipeline;
+import dev.marie.framework.runtime.SourceTriggerRegistry;
+import dev.marie.framework.runtime.TriggerHandlerRegistry;
+import dev.marie.framework.tagaudit.rule.TagRule;
+import dev.marie.framework.tracking.TrackingAttachment;
+import dev.marie.framework.tracking.TrackingData;
+import dev.marie.framework.util.MarieRegistryUtils;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -208,7 +208,7 @@ public final class MarieAPI {
             throw new IllegalArgumentException("registerValue: definition must not be null");
         }
         String id = definition.getId();
-        if (!dev.marie.MariesLib.util.MarieValidation.sanitizeModId(id)) {
+        if (!dev.marie.framework.util.MarieValidation.sanitizeModId(id)) {
             throw new IllegalArgumentException(
                     "registerValue: value id must match [a-z0-9_]{1,64}, got: '" + id + "'");
         }
@@ -241,7 +241,7 @@ public final class MarieAPI {
     @ApiStatus.Stable
     public static void registerSourceClassification(ResourceLocation sourceId, String valueKey, float amount) {
         MarieAPIState.assertRegistrationAllowed("registerSourceClassification");
-        dev.marie.MariesLib.util.MarieValidation.requireNonNullId(sourceId, "MarieAPI.registerSourceClassification");
+        dev.marie.framework.util.MarieValidation.requireNonNullId(sourceId, "MarieAPI.registerSourceClassification");
         if (!Float.isFinite(amount)) {
             throw new IllegalArgumentException("MarieAPI.registerSourceClassification.amount: value must be finite, got " + amount);
         }
@@ -311,7 +311,7 @@ public final class MarieAPI {
     @ApiStatus.Stable
     public static void registerCompatEntry(CompatDefinition definition) {
         MarieAPIState.assertRegistrationAllowed("registerCompatEntry");
-        dev.marie.MariesLib.compat.ModCompat.registerExternal(definition);
+        dev.marie.framework.compat.ModCompat.registerExternal(definition);
     }
 
     /**
@@ -519,7 +519,7 @@ public final class MarieAPI {
      */
     @ApiStatus.Stable
     public static <T> void registerExportResolver(ExportResolver<T> resolver) {
-        dev.marie.MariesLib.export.ExportResolverRegistry.register(
+        dev.marie.framework.export.ExportResolverRegistry.register(
                 resolver.resolverId(),
                 () -> null);
     }
@@ -529,7 +529,7 @@ public final class MarieAPI {
             String key,
             net.minecraft.resources.ResourceKey<net.minecraft.core.Registry<T>> registryKey,
             ExportResolver<T> resolver) {
-        dev.marie.MariesLib.export.ExportResolverRegistry.registerWithRegistry(key, registryKey, resolver);
+        dev.marie.framework.export.ExportResolverRegistry.registerWithRegistry(key, registryKey, resolver);
     }
 
     /**
@@ -541,27 +541,27 @@ public final class MarieAPI {
      */
     @ApiStatus.Stable
     public static void registerConfigValidator(ConfigValidator validator) {
-        dev.marie.MariesLib.config.ConfigValidatorRegistry.registerRaw(validator);
-        dev.marie.MariesLib.config.ConfigValidatorRegistry.register(
+        dev.marie.framework.config.ConfigValidatorRegistry.registerRaw(validator);
+        dev.marie.framework.config.ConfigValidatorRegistry.register(
                 validator.validatorId(),
                 ctx -> {
-                    dev.marie.MariesLib.config.validation.ValidationResult result = validator.validate();
+                    dev.marie.framework.config.validation.ValidationResult result = validator.validate();
                     CommandSourceStack source = ctx.getSource();
                     String prefix = "[" + validator.validatorId() + "] ";
-                    if (result.status() == dev.marie.MariesLib.config.validation.ValidationResult.Status.PASS) {
+                    if (result.status() == dev.marie.framework.config.validation.ValidationResult.Status.PASS) {
                         source.sendSuccess(() -> net.minecraft.network.chat.Component.literal(
                                 prefix + "PASS — no issues found."), false);
                     } else {
-                        for (dev.marie.MariesLib.config.validation.Finding f : result.findings()) {
+                        for (dev.marie.framework.config.validation.Finding f : result.findings()) {
                             String msg = prefix + f.severity().name() + " [" + f.file() + " / " + f.key() + "] " + f.message();
-                            if (f.severity() == dev.marie.MariesLib.config.validation.ValidationResult.Status.FAIL) {
+                            if (f.severity() == dev.marie.framework.config.validation.ValidationResult.Status.FAIL) {
                                 source.sendFailure(net.minecraft.network.chat.Component.literal(msg));
                             } else {
                                 source.sendSuccess(() -> net.minecraft.network.chat.Component.literal(msg), false);
                             }
                         }
                     }
-                    return result.status() == dev.marie.MariesLib.config.validation.ValidationResult.Status.FAIL ? 0 : 1;
+                    return result.status() == dev.marie.framework.config.validation.ValidationResult.Status.FAIL ? 0 : 1;
                 });
     }
 
@@ -629,25 +629,25 @@ public final class MarieAPI {
     /**
      * Registers a tag audit rule. The consuming mod's TagRule implementation
      * inspects tag data via a TagAuditContext (also consuming-mod-supplied) and
-     * produces issues and/or fix suggestions, run by {@link dev.marie.MariesLib.tagaudit.TagScanner}.
+     * produces issues and/or fix suggestions, run by {@link dev.marie.framework.tagaudit.TagScanner}.
      *
      * @param rule the rule implementation
      */
     @ApiStatus.Stable
-    public static void registerTagRule(dev.marie.MariesLib.tagaudit.rule.TagRule rule) {
-        dev.marie.MariesLib.tagaudit.TagRuleRegistry.register(rule);
+    public static void registerTagRule(dev.marie.framework.tagaudit.rule.TagRule rule) {
+        dev.marie.framework.tagaudit.TagRuleRegistry.register(rule);
     }
 
     /**
      * Registers a TagAuditContext for this mod, so {@code /marieslib audit_tags <modid>}
-     * can run {@link dev.marie.MariesLib.tagaudit.TagScanner} against it.
+     * can run {@link dev.marie.framework.tagaudit.TagScanner} against it.
      *
      * @param modId   the registering mod's id, used as the lookup key for the command
      * @param context the consuming mod's TagAuditContext implementation
      */
     @ApiStatus.Stable
-    public static void registerTagAuditContext(String modId, dev.marie.MariesLib.tagaudit.model.TagAuditContext context) {
-        dev.marie.MariesLib.tagaudit.TagAuditContextRegistry.register(modId, context);
+    public static void registerTagAuditContext(String modId, dev.marie.framework.tagaudit.model.TagAuditContext context) {
+        dev.marie.framework.tagaudit.TagAuditContextRegistry.register(modId, context);
     }
 
     // ───────────────────────────────────────────────────────────────

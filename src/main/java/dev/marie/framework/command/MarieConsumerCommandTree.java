@@ -1,10 +1,10 @@
-package dev.marie.MariesLib.command;
+package dev.marie.framework.command;
 
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.classification.ClassificationTrace;
-import dev.marie.MariesLib.classification.ClassificationTraceFormatter;
-import dev.marie.MariesLib.core.MariesLib;
-import dev.marie.MariesLib.runtime.RuntimeResolver;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.classification.ClassificationTrace;
+import dev.marie.framework.classification.ClassificationTraceFormatter;
+import dev.marie.framework.core.MariesLib;
+import dev.marie.framework.runtime.RuntimeResolver;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.FloatArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;

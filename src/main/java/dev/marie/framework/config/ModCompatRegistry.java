@@ -1,13 +1,13 @@
-package dev.marie.MariesLib.config;
+package dev.marie.framework.config;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.core.IMarieLibConfig;
-import dev.marie.MariesLib.core.MariesLib;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.core.IMarieLibConfig;
+import dev.marie.framework.core.MariesLib;
 import net.neoforged.fml.ModList;
 
 import java.io.InputStream;

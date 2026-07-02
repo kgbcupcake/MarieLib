@@ -1,6 +1,6 @@
-package dev.marie.MariesLib.api;
+package dev.marie.framework.api;
 
-import dev.marie.MariesLib.api.impl.SimpleValueSourceTrigger;
+import dev.marie.framework.api.impl.SimpleValueSourceTrigger;
 import net.minecraft.resources.ResourceLocation;
 
 /**

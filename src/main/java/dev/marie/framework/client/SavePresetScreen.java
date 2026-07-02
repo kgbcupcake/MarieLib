@@ -1,8 +1,8 @@
-package dev.marie.MariesLib.client;
+package dev.marie.framework.client;
 
-import dev.marie.MariesLib.core.IMarieLibConfig;
-import dev.marie.MariesLib.config.PresetRegistry;
-import dev.marie.MariesLib.core.MariesLib;
+import dev.marie.framework.core.IMarieLibConfig;
+import dev.marie.framework.config.PresetRegistry;
+import dev.marie.framework.core.MariesLib;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;

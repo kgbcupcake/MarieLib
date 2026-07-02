@@ -1,8 +1,8 @@
-package dev.marie.MariesLib.compat.rei;
+package dev.marie.framework.compat.rei;
 
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.compat.MarieTooltipHelper;
-import dev.marie.MariesLib.core.MarieLibContext;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.compat.MarieTooltipHelper;
+import dev.marie.framework.core.MarieLibContext;
 import me.shedaniel.rei.api.client.plugins.REIClientPlugin;
 import me.shedaniel.rei.api.client.entry.renderer.EntryRendererRegistry;
 import me.shedaniel.rei.api.common.entry.type.VanillaEntryTypes;

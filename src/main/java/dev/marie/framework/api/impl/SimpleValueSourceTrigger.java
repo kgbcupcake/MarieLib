@@ -1,7 +1,7 @@
-package dev.marie.MariesLib.api.impl;
+package dev.marie.framework.api.impl;
 
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.api.ValueSourceTrigger;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.api.ValueSourceTrigger;
 
 @ApiStatus.Internal
 public record SimpleValueSourceTrigger(

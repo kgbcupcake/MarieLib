@@ -1,4 +1,4 @@
-package dev.marie.MariesLib.scan;
+package dev.marie.framework.scan;
 
 /**
  * Identifies which stage of the runtime inference cascade produced a classification.

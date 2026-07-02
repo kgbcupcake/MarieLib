@@ -1,4 +1,4 @@
-package dev.marie.MariesLib.core;
+package dev.marie.framework.core;
 
 import java.util.HashMap;
 import java.util.List;
@@ -16,21 +16,21 @@ import javax.annotation.Nullable;
 
 import com.google.gson.JsonObject;
 
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.api.ValueDefinition;
-import dev.marie.MariesLib.api.ValueModifierContext;
-import dev.marie.MariesLib.api.ValueSourceTrigger;
-import dev.marie.MariesLib.api.registry.ValueRegistry;
-import dev.marie.MariesLib.config.MariesLibConfigBridge;
-import dev.marie.MariesLib.config.PresetRegistry;
-import dev.marie.MariesLib.tracking.AttachmentTrackingDataProvider;
-import dev.marie.MariesLib.runtime.SourceClassificationRegistry;
-import dev.marie.MariesLib.util.MarieRegistryUtils;
-import dev.marie.MariesLib.util.MarieValidation;
-import dev.marie.MariesLib.scan.ResolutionStageHandler;
-import dev.marie.MariesLib.tracking.TrackingData;
-import dev.marie.MariesLib.tracking.DiminishingReturnsConfig;
-import dev.marie.MariesLib.tracking.DeathNutritionBehavior;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.api.ValueDefinition;
+import dev.marie.framework.api.ValueModifierContext;
+import dev.marie.framework.api.ValueSourceTrigger;
+import dev.marie.framework.api.registry.ValueRegistry;
+import dev.marie.framework.config.MariesLibConfigBridge;
+import dev.marie.framework.config.PresetRegistry;
+import dev.marie.framework.tracking.AttachmentTrackingDataProvider;
+import dev.marie.framework.runtime.SourceClassificationRegistry;
+import dev.marie.framework.util.MarieRegistryUtils;
+import dev.marie.framework.util.MarieValidation;
+import dev.marie.framework.scan.ResolutionStageHandler;
+import dev.marie.framework.tracking.TrackingData;
+import dev.marie.framework.tracking.DiminishingReturnsConfig;
+import dev.marie.framework.tracking.DeathNutritionBehavior;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
@@ -565,7 +565,7 @@ public final class MarieLibContext implements MarieLibSettings, IMarieLibConfig 
     }
 
     /**
-     * @deprecated Use {@link dev.marie.MariesLib.api.MarieAPI#registerValue} and related
+     * @deprecated Use {@link dev.marie.framework.api.MarieAPI#registerValue} and related
      *             {@code MarieAPI.register*} methods directly instead of supplying a delegate.
      */
     @Nullable
@@ -842,7 +842,7 @@ public final class MarieLibContext implements MarieLibSettings, IMarieLibConfig 
         @ApiStatus.Stable
         public Builder dataProvider(MarieLibDataProvider p) { this.dataProvider = p; return this; }
         /**
-         * @deprecated Use {@link dev.marie.MariesLib.api.MarieAPI#registerValue} and related
+         * @deprecated Use {@link dev.marie.framework.api.MarieAPI#registerValue} and related
          *             {@code MarieAPI.register*} methods directly instead of supplying a delegate.
          */
         @Deprecated

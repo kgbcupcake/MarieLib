@@ -1,6 +1,6 @@
-package dev.marie.MariesLib.config;
+package dev.marie.framework.config;
 
-import dev.marie.MariesLib.api.ApiStatus;
+import dev.marie.framework.api.ApiStatus;
 
 /**
  * Immutable snapshot of feature flags supplied by the consuming Marie mod.

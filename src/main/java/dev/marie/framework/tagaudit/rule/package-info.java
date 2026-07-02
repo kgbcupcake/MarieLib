@@ -1,6 +1,6 @@
 /**
  * The TagRule interface consuming mods implement to define audit logic.
  */
-package dev.marie.MariesLib.tagaudit.rule;
+package dev.marie.framework.tagaudit.rule;
 
-import dev.marie.MariesLib.api.ApiStatus;
+import dev.marie.framework.api.ApiStatus;

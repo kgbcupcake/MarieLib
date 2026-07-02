@@ -1,4 +1,4 @@
 /**
  * HUD/UI color registry.
  */
-package dev.marie.MariesLib.color;
+package dev.marie.framework.color;

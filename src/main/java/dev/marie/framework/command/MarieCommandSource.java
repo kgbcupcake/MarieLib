@@ -1,10 +1,10 @@
-package dev.marie.MariesLib.command;
+package dev.marie.framework.command;
 
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.api.ReportProvider;
-import dev.marie.MariesLib.api.registry.ReportProviderRegistry;
-import dev.marie.MariesLib.core.IMarieLibConfig;
-import dev.marie.MariesLib.tracking.TrackingData;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.api.ReportProvider;
+import dev.marie.framework.api.registry.ReportProviderRegistry;
+import dev.marie.framework.core.IMarieLibConfig;
+import dev.marie.framework.tracking.TrackingData;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;

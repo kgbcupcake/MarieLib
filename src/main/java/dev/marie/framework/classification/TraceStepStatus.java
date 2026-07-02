@@ -1,4 +1,4 @@
-package dev.marie.MariesLib.classification;
+package dev.marie.framework.classification;
 
 /**
  * Status outcome of a single classification trace step.

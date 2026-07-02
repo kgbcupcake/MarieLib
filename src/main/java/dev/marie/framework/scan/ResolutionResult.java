@@ -1,4 +1,4 @@
-package dev.marie.MariesLib.scan;
+package dev.marie.framework.scan;
 
 import java.util.LinkedHashMap;
 import java.util.List;

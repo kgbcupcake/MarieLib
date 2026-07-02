@@ -1,14 +1,14 @@
-package dev.marie.MariesLib.kubejs;
+package dev.marie.framework.kubejs;
 
 import dev.latvian.mods.kubejs.event.EventGroupRegistry;
 import dev.latvian.mods.kubejs.plugin.KubeJSPlugin;
 import dev.latvian.mods.kubejs.script.BindingRegistry;
 import dev.latvian.mods.kubejs.script.ScriptManager;
 import dev.latvian.mods.kubejs.script.ScriptType;
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.kubejs.bindings.MarieKubeBindings;
-import dev.marie.MariesLib.kubejs.bindings.MarieKubeServerBindings;
-import dev.marie.MariesLib.kubejs.internal.KubeGuard;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.kubejs.bindings.MarieKubeBindings;
+import dev.marie.framework.kubejs.bindings.MarieKubeServerBindings;
+import dev.marie.framework.kubejs.internal.KubeGuard;
 
 /**
  * KubeJS plugin entry point for MarieLib scripting integration.

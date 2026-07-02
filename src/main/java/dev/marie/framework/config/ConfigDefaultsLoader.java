@@ -1,9 +1,9 @@
-package dev.marie.MariesLib.config;
+package dev.marie.framework.config;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import dev.marie.MariesLib.core.MariesLib;
-import dev.marie.MariesLib.util.MarieJsonUtils;
+import dev.marie.framework.core.MariesLib;
+import dev.marie.framework.util.MarieJsonUtils;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;

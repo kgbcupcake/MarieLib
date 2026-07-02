@@ -1,4 +1,4 @@
-package dev.marie.MariesLib.core;
+package dev.marie.framework.core;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -7,7 +7,7 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
-import dev.marie.MariesLib.api.ApiStatus;
+import dev.marie.framework.api.ApiStatus;
 
 /**
  * Insertion-ordered registry of all mods that have registered a

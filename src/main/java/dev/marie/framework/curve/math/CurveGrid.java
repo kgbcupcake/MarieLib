@@ -1,6 +1,6 @@
-package dev.marie.MariesLib.curve.math;
+package dev.marie.framework.curve.math;
 
-import dev.marie.MariesLib.api.ApiStatus;
+import dev.marie.framework.api.ApiStatus;
 
 /**
  * A 2D grid of float multipliers, evaluated via bilinear interpolation.

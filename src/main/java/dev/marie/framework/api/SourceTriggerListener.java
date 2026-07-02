@@ -1,4 +1,4 @@
-package dev.marie.MariesLib.api;
+package dev.marie.framework.api;
 
 import net.neoforged.bus.api.IEventBus;
 

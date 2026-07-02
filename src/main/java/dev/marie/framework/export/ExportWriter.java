@@ -1,14 +1,14 @@
-package dev.marie.MariesLib.export;
+package dev.marie.framework.export;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.core.IMarieLibConfig;
-import dev.marie.MariesLib.core.MariesLib;
-import dev.marie.MariesLib.util.MarieValidation;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.core.IMarieLibConfig;
+import dev.marie.framework.core.MariesLib;
+import dev.marie.framework.util.MarieValidation;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.fml.loading.FMLPaths;
 

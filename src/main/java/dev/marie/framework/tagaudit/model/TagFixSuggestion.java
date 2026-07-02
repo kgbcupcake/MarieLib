@@ -1,10 +1,10 @@
-package dev.marie.MariesLib.tagaudit.model;
+package dev.marie.framework.tagaudit.model;
 
-import dev.marie.MariesLib.api.ApiStatus;
+import dev.marie.framework.api.ApiStatus;
 
 /**
  * A suggested fix for a {@link TagIssue}, produced by a
- * {@link dev.marie.MariesLib.tagaudit.rule.TagRule}.
+ * {@link dev.marie.framework.tagaudit.rule.TagRule}.
  *
  * @param issueId      the issue this suggestion addresses
  * @param suggestedTag the tag category the item should be moved to

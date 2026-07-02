@@ -1,12 +1,12 @@
-package dev.marie.MariesLib.compat;
+package dev.marie.framework.compat;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
-import dev.marie.MariesLib.core.MariesLib;
-import dev.marie.MariesLib.core.MarieLibContext;
-import dev.marie.MariesLib.util.MarieValidation;
-import dev.marie.MariesLib.util.MarieRegistryUtils;
+import dev.marie.framework.core.MariesLib;
+import dev.marie.framework.core.MarieLibContext;
+import dev.marie.framework.util.MarieValidation;
+import dev.marie.framework.util.MarieRegistryUtils;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;

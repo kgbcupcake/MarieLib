@@ -1,11 +1,11 @@
-package dev.marie.MariesLib.compat.emi;
+package dev.marie.framework.compat.emi;
 
 import dev.emi.emi.api.EmiPlugin;
 import dev.emi.emi.api.EmiRegistry;
 import dev.emi.emi.api.stack.Comparison;
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.compat.MarieTooltipHelper;
-import dev.marie.MariesLib.core.MarieLibContext;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.compat.MarieTooltipHelper;
+import dev.marie.framework.core.MarieLibContext;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;

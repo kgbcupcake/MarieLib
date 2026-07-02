@@ -1,12 +1,12 @@
-package dev.marie.MariesLib.tracking;
+package dev.marie.framework.tracking;
 
-import dev.marie.MariesLib.api.ApiStatus;
+import dev.marie.framework.api.ApiStatus;
 
 import java.util.Locale;
 
 /**
  * Server-side policy for tracking bar values when a player respawns after death.
- * Consumed via {@link dev.marie.MariesLib.core.MarieLibContext#deathNutritionBehavior()}.
+ * Consumed via {@link dev.marie.framework.core.MarieLibContext#deathNutritionBehavior()}.
  */
 @ApiStatus.Stable
 public enum DeathNutritionBehavior {

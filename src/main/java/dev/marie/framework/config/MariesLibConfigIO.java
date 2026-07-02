@@ -1,11 +1,11 @@
-package dev.marie.MariesLib.config;
+package dev.marie.framework.config;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 
-import dev.marie.MariesLib.core.MariesLib;
-import dev.marie.MariesLib.scanner.ScannerSpecRegistry;
+import dev.marie.framework.core.MariesLib;
+import dev.marie.framework.scanner.ScannerSpecRegistry;
 import net.neoforged.fml.loading.FMLPaths;
 
 import java.io.IOException;

@@ -1,8 +1,8 @@
-package dev.marie.MariesLib.client;
+package dev.marie.framework.client;
 
-import dev.marie.MariesLib.client.config.MariesLibClothConfig;
-import dev.marie.MariesLib.core.MariesLib;
-import dev.marie.MariesLib.core.MariesLibBootstrap;
+import dev.marie.framework.client.config.MariesLibClothConfig;
+import dev.marie.framework.core.MariesLib;
+import dev.marie.framework.core.MariesLibBootstrap;
 import net.minecraft.client.gui.screens.Screen;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.fml.ModContainer;

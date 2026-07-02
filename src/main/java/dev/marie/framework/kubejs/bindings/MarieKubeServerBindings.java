@@ -1,13 +1,13 @@
-package dev.marie.MariesLib.kubejs.bindings;
+package dev.marie.framework.kubejs.bindings;
 
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.api.MarieAPI;
-import dev.marie.MariesLib.api.ValueDefinition;
-import dev.marie.MariesLib.api.ValueSourceTrigger;
-import dev.marie.MariesLib.api.registry.ValueRegistry;
-import dev.marie.MariesLib.handler.SourceApplicationPipeline;
-import dev.marie.MariesLib.tracking.TrackingAttachment;
-import dev.marie.MariesLib.tracking.TrackingData;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.api.MarieAPI;
+import dev.marie.framework.api.ValueDefinition;
+import dev.marie.framework.api.ValueSourceTrigger;
+import dev.marie.framework.api.registry.ValueRegistry;
+import dev.marie.framework.handler.SourceApplicationPipeline;
+import dev.marie.framework.tracking.TrackingAttachment;
+import dev.marie.framework.tracking.TrackingData;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;

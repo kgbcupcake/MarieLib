@@ -1,10 +1,10 @@
-package dev.marie.MariesLib.scanner;
+package dev.marie.framework.scanner;
 
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.util.MarieRegistryUtils;
-import dev.marie.MariesLib.classification.ClassificationTraceStep;
-import dev.marie.MariesLib.classification.TraceStepId;
-import dev.marie.MariesLib.classification.TraceStepStatus;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.util.MarieRegistryUtils;
+import dev.marie.framework.classification.ClassificationTraceStep;
+import dev.marie.framework.classification.TraceStepId;
+import dev.marie.framework.classification.TraceStepStatus;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;

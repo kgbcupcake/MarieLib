@@ -1,4 +1,4 @@
-package dev.marie.MariesLib.tracking;
+package dev.marie.framework.tracking;
 
 import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Codec;
@@ -8,7 +8,7 @@ import com.mojang.serialization.DynamicOps;
 import com.mojang.serialization.MapLike;
 import com.mojang.serialization.RecordBuilder;
 
-import dev.marie.MariesLib.api.ApiStatus;
+import dev.marie.framework.api.ApiStatus;
 
 import java.util.HashSet;
 import java.util.LinkedHashMap;

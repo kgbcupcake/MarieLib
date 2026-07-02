@@ -1,14 +1,14 @@
-package dev.marie.MariesLib.handler;
+package dev.marie.framework.handler;
 
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.config.FeatureFlagCache;
-import dev.marie.MariesLib.core.IMarieLibConfig;
-import dev.marie.MariesLib.core.MarieLibContext;
-import dev.marie.MariesLib.core.KubeIntegration;
-import dev.marie.MariesLib.tracking.DiminishingReturnsConfig;
-import dev.marie.MariesLib.tracking.TrackingAttachment;
-import dev.marie.MariesLib.tracking.TrackingData;
-import dev.marie.MariesLib.tracking.TrackingResetSupport;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.config.FeatureFlagCache;
+import dev.marie.framework.core.IMarieLibConfig;
+import dev.marie.framework.core.MarieLibContext;
+import dev.marie.framework.core.KubeIntegration;
+import dev.marie.framework.tracking.DiminishingReturnsConfig;
+import dev.marie.framework.tracking.TrackingAttachment;
+import dev.marie.framework.tracking.TrackingData;
+import dev.marie.framework.tracking.TrackingResetSupport;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.server.ServerStoppedEvent;

@@ -1,17 +1,17 @@
-package dev.marie.MariesLib.scanner;
+package dev.marie.framework.scanner;
 
 // High-level orchestrator — the correct entry point for scanning all loaded items.
 
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.api.ValueDefinition;
-import dev.marie.MariesLib.api.registry.ValueRegistry;
-import dev.marie.MariesLib.core.MariesLib;
-import dev.marie.MariesLib.core.IMarieLibConfig;
-import dev.marie.MariesLib.core.MarieLibContext;
-import dev.marie.MariesLib.runtime.SourceRegistry;
-import dev.marie.MariesLib.util.MarieRegistryUtils;
-import dev.marie.MariesLib.classification.ClassificationTraceStep;
-import dev.marie.MariesLib.scanner.analysis.MultiValueAnalysisPipeline;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.api.ValueDefinition;
+import dev.marie.framework.api.registry.ValueRegistry;
+import dev.marie.framework.core.MariesLib;
+import dev.marie.framework.core.IMarieLibConfig;
+import dev.marie.framework.core.MarieLibContext;
+import dev.marie.framework.runtime.SourceRegistry;
+import dev.marie.framework.util.MarieRegistryUtils;
+import dev.marie.framework.classification.ClassificationTraceStep;
+import dev.marie.framework.scanner.analysis.MultiValueAnalysisPipeline;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;

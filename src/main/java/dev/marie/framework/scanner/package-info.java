@@ -17,4 +17,4 @@
  * bulk scan behaviour (caching, diff reporting, recipe inheritance) does not
  * bleed into the per-item signal logic.</p>
  */
-package dev.marie.MariesLib.scanner;
+package dev.marie.framework.scanner;

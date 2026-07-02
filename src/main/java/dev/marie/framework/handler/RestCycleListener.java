@@ -1,12 +1,12 @@
-package dev.marie.MariesLib.handler;
+package dev.marie.framework.handler;
 
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.api.SleepBonusEvaluator;
-import dev.marie.MariesLib.api.registry.SleepBonusEvaluatorRegistry;
-import dev.marie.MariesLib.config.FeatureFlagCache;
-import dev.marie.MariesLib.core.MariesLib;
-import dev.marie.MariesLib.tracking.TrackingAttachment;
-import dev.marie.MariesLib.tracking.TrackingData;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.api.SleepBonusEvaluator;
+import dev.marie.framework.api.registry.SleepBonusEvaluatorRegistry;
+import dev.marie.framework.config.FeatureFlagCache;
+import dev.marie.framework.core.MariesLib;
+import dev.marie.framework.tracking.TrackingAttachment;
+import dev.marie.framework.tracking.TrackingData;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.neoforged.bus.api.SubscribeEvent;

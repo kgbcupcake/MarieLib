@@ -1,9 +1,9 @@
-package dev.marie.MariesLib.tracking;
+package dev.marie.framework.tracking;
 
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.core.IMarieLibConfig;
-import dev.marie.MariesLib.core.MarieLibContext;
-import dev.marie.MariesLib.handler.SourceApplicationPipeline;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.core.IMarieLibConfig;
+import dev.marie.framework.core.MarieLibContext;
+import dev.marie.framework.handler.SourceApplicationPipeline;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 

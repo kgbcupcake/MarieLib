@@ -1,6 +1,6 @@
-package dev.marie.MariesLib.util;
+package dev.marie.framework.util;
 
-import dev.marie.MariesLib.core.MarieLibContext;
+import dev.marie.framework.core.MarieLibContext;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;

@@ -1,4 +1,4 @@
-package dev.marie.MariesLib.config;
+package dev.marie.framework.config;
 
 import com.google.gson.JsonObject;
 

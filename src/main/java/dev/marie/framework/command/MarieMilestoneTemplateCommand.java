@@ -1,13 +1,13 @@
-package dev.marie.MariesLib.command;
+package dev.marie.framework.command;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.mojang.brigadier.context.CommandContext;
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.api.ValueDefinition;
-import dev.marie.MariesLib.api.registry.ValueRegistry;
-import dev.marie.MariesLib.util.MarieValidation;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.api.ValueDefinition;
+import dev.marie.framework.api.registry.ValueRegistry;
+import dev.marie.framework.util.MarieValidation;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;

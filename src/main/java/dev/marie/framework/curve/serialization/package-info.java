@@ -1,6 +1,6 @@
 /**
- * JSON (de)serialization for curve types in {@link dev.marie.MariesLib.curve.math}.
+ * JSON (de)serialization for curve types in {@link dev.marie.framework.curve.math}.
  */
-package dev.marie.MariesLib.curve.serialization;
+package dev.marie.framework.curve.serialization;
 
-import dev.marie.MariesLib.api.ApiStatus;
+import dev.marie.framework.api.ApiStatus;

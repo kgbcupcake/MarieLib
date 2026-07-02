@@ -1,4 +1,4 @@
-package dev.marie.MariesLib.util;
+package dev.marie.framework.util;
 
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;

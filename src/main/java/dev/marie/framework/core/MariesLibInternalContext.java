@@ -1,7 +1,7 @@
-package dev.marie.MariesLib.core;
+package dev.marie.framework.core;
 
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.config.MariesLibConfigHolder;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.config.MariesLibConfigHolder;
 
 @ApiStatus.Internal
 final class MariesLibInternalContext implements MarieLibSettings {

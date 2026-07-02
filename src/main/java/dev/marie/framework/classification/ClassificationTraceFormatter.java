@@ -1,6 +1,6 @@
-package dev.marie.MariesLib.classification;
+package dev.marie.framework.classification;
 
-import dev.marie.MariesLib.core.MarieLibContext;
+import dev.marie.framework.core.MarieLibContext;
 import net.minecraft.world.item.ItemStack;
 
 import javax.annotation.Nullable;

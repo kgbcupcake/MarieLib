@@ -1,6 +1,6 @@
-package dev.marie.MariesLib.data;
+package dev.marie.framework.data;
 
-import dev.marie.MariesLib.core.IMarieLibConfig;
+import dev.marie.framework.core.IMarieLibConfig;
 
 /**
  * Constants describing MarieLib datapack schema locations and keys.

@@ -1,7 +1,7 @@
-package dev.marie.MariesLib.scanner;
+package dev.marie.framework.scanner;
 
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.core.MariesLib;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.core.MariesLib;
 
 import java.util.ArrayList;
 import java.util.HashMap;

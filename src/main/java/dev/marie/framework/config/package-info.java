@@ -1,4 +1,4 @@
 /**
  * Config snapshot and reload pattern.
  */
-package dev.marie.MariesLib.config;
+package dev.marie.framework.config;

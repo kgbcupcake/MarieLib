@@ -1,8 +1,8 @@
-package dev.marie.MariesLib.tracking;
+package dev.marie.framework.tracking;
 
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.config.FeatureFlagCache;
-import dev.marie.MariesLib.core.IMarieLibConfig;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.config.FeatureFlagCache;
+import dev.marie.framework.core.IMarieLibConfig;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.attachment.AttachmentType;

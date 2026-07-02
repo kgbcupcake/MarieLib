@@ -1,11 +1,11 @@
-package dev.marie.MariesLib.api;
+package dev.marie.framework.api;
 
-import dev.marie.MariesLib.api.ApiStatus;
+import dev.marie.framework.api.ApiStatus;
 
 /**
  * Marker for custom HUD rendering implementations.
  *
- * <p>Client-side implementations should extend {@code dev.marie.MariesLib.client.GuiValueRenderer}
+ * <p>Client-side implementations should extend {@code dev.marie.framework.client.GuiValueRenderer}
  * which adds the {@code GuiGraphics}-based draw contract.</p>
  */
 @ApiStatus.Experimental

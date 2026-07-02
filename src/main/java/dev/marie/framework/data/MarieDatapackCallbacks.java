@@ -1,16 +1,16 @@
-package dev.marie.MariesLib.data;
+package dev.marie.framework.data;
 
-import dev.marie.MariesLib.api.MarieAPI;
-import dev.marie.MariesLib.api.MilestoneDefinition;
-import dev.marie.MariesLib.api.ProfileDefinition;
-import dev.marie.MariesLib.api.SourcePairSynergy;
-import dev.marie.MariesLib.api.SynergyDefinition;
-import dev.marie.MariesLib.api.ThresholdEffect;
-import dev.marie.MariesLib.api.ValueDefinition;
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.compat.CompatDefinition;
-import dev.marie.MariesLib.config.LockRegistry;
-import dev.marie.MariesLib.runtime.FamilyResolver;
+import dev.marie.framework.api.MarieAPI;
+import dev.marie.framework.api.MilestoneDefinition;
+import dev.marie.framework.api.ProfileDefinition;
+import dev.marie.framework.api.SourcePairSynergy;
+import dev.marie.framework.api.SynergyDefinition;
+import dev.marie.framework.api.ThresholdEffect;
+import dev.marie.framework.api.ValueDefinition;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.compat.CompatDefinition;
+import dev.marie.framework.config.LockRegistry;
+import dev.marie.framework.runtime.FamilyResolver;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.List;

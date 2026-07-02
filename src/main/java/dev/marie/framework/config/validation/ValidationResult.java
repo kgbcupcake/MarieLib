@@ -1,11 +1,11 @@
-package dev.marie.MariesLib.config.validation;
+package dev.marie.framework.config.validation;
 
-import dev.marie.MariesLib.api.ApiStatus;
+import dev.marie.framework.api.ApiStatus;
 
 import java.util.List;
 
 /**
- * Outcome of a single {@link dev.marie.MariesLib.api.ConfigValidator} run.
+ * Outcome of a single {@link dev.marie.framework.api.ConfigValidator} run.
  */
 @ApiStatus.Stable
 public final class ValidationResult {

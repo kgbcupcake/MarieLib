@@ -1,6 +1,6 @@
-package dev.marie.MariesLib.scanner;
+package dev.marie.framework.scanner;
 
-import dev.marie.MariesLib.api.ApiStatus;
+import dev.marie.framework.api.ApiStatus;
 import java.util.Map;
 
 /**

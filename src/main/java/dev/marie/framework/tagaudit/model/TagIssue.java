@@ -1,10 +1,10 @@
-package dev.marie.MariesLib.tagaudit.model;
+package dev.marie.framework.tagaudit.model;
 
-import dev.marie.MariesLib.api.ApiStatus;
+import dev.marie.framework.api.ApiStatus;
 import net.minecraft.resources.ResourceLocation;
 
 /**
- * A single issue detected by a {@link dev.marie.MariesLib.tagaudit.rule.TagRule}.
+ * A single issue detected by a {@link dev.marie.framework.tagaudit.rule.TagRule}.
  *
  * @param issueId    stable identifier for this specific issue instance
  * @param itemId     the item that has the issue

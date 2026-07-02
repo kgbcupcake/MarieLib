@@ -1,18 +1,18 @@
-package dev.marie.MariesLib.handler;
+package dev.marie.framework.handler;
 
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.api.MarieEvents;
-import dev.marie.MariesLib.api.MarieSeasonHook;
-import dev.marie.MariesLib.api.ValueDefinition;
-import dev.marie.MariesLib.api.registry.SeasonHookRegistry;
-import dev.marie.MariesLib.api.registry.ValueRegistry;
-import dev.marie.MariesLib.config.FeatureFlagCache;
-import dev.marie.MariesLib.core.IMarieLibConfig;
-import dev.marie.MariesLib.core.MarieLibContext;
-import dev.marie.MariesLib.tracking.TrackingAttachment;
-import dev.marie.MariesLib.tracking.TrackingData;
-import dev.marie.MariesLib.core.KubeIntegration;
-import dev.marie.MariesLib.registry.MarieAttributes;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.api.MarieEvents;
+import dev.marie.framework.api.MarieSeasonHook;
+import dev.marie.framework.api.ValueDefinition;
+import dev.marie.framework.api.registry.SeasonHookRegistry;
+import dev.marie.framework.api.registry.ValueRegistry;
+import dev.marie.framework.config.FeatureFlagCache;
+import dev.marie.framework.core.IMarieLibConfig;
+import dev.marie.framework.core.MarieLibContext;
+import dev.marie.framework.tracking.TrackingAttachment;
+import dev.marie.framework.tracking.TrackingData;
+import dev.marie.framework.core.KubeIntegration;
+import dev.marie.framework.registry.MarieAttributes;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.common.NeoForge;
@@ -105,7 +105,7 @@ public class ValueDecayListener {
     }
 
     private record DiminishingReturnsConfigOrSkip(
-            dev.marie.MariesLib.tracking.DiminishingReturnsConfig config,
+            dev.marie.framework.tracking.DiminishingReturnsConfig config,
             boolean skipDecay
     ) {}
 }

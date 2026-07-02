@@ -1,9 +1,9 @@
-package dev.marie.MariesLib.tracking;
+package dev.marie.framework.tracking;
 
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.api.ApplicationHistoryView;
-import dev.marie.MariesLib.core.IMarieLibConfig;
-import dev.marie.MariesLib.core.MariesLib;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.api.ApplicationHistoryView;
+import dev.marie.framework.core.IMarieLibConfig;
+import dev.marie.framework.core.MariesLib;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.Comparator;

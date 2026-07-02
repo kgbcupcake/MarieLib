@@ -1,4 +1,4 @@
-package dev.marie.MariesLib.scan;
+package dev.marie.framework.scan;
 
 /**
  * Identifies the final authoritative stage that produced the resolved value map for an item

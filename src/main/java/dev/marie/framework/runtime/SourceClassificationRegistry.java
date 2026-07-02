@@ -1,4 +1,4 @@
-package dev.marie.MariesLib.runtime;
+package dev.marie.framework.runtime;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -6,11 +6,11 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.mojang.logging.LogUtils;
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.core.IMarieLibConfig;
-import dev.marie.MariesLib.data.DatapackSchema;
-import dev.marie.MariesLib.registry.AbstractRegistry;
-import dev.marie.MariesLib.util.MarieResourceLoader;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.core.IMarieLibConfig;
+import dev.marie.framework.data.DatapackSchema;
+import dev.marie.framework.registry.AbstractRegistry;
+import dev.marie.framework.util.MarieResourceLoader;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.neoforged.fml.loading.FMLPaths;

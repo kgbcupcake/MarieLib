@@ -1,4 +1,4 @@
-package dev.marie.MariesLib.data;
+package dev.marie.framework.data;
 
 public record DatapackDiagnostic(Severity severity, String filePath, String field, String message) {
 

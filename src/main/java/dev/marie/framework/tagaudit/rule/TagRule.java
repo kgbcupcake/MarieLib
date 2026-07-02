@@ -1,9 +1,9 @@
-package dev.marie.MariesLib.tagaudit.rule;
+package dev.marie.framework.tagaudit.rule;
 
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.tagaudit.model.TagAuditContext;
-import dev.marie.MariesLib.tagaudit.model.TagFixSuggestion;
-import dev.marie.MariesLib.tagaudit.model.TagIssue;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.tagaudit.model.TagAuditContext;
+import dev.marie.framework.tagaudit.model.TagFixSuggestion;
+import dev.marie.framework.tagaudit.model.TagIssue;
 
 import java.util.List;
 

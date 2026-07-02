@@ -1,16 +1,16 @@
-package dev.marie.MariesLib.command;
+package dev.marie.framework.command;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.classification.ClassificationTrace;
-import dev.marie.MariesLib.classification.ClassificationTraceFormatter;
-import dev.marie.MariesLib.classification.ClassificationTraceStep;
-import dev.marie.MariesLib.core.MariesLib;
-import dev.marie.MariesLib.runtime.RuntimeResolver;
-import dev.marie.MariesLib.scan.CacheStats;
-import dev.marie.MariesLib.util.MarieRegistryUtils;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.classification.ClassificationTrace;
+import dev.marie.framework.classification.ClassificationTraceFormatter;
+import dev.marie.framework.classification.ClassificationTraceStep;
+import dev.marie.framework.core.MariesLib;
+import dev.marie.framework.runtime.RuntimeResolver;
+import dev.marie.framework.scan.CacheStats;
+import dev.marie.framework.util.MarieRegistryUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;

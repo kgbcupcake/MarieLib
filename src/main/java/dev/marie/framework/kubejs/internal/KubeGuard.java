@@ -1,8 +1,8 @@
-package dev.marie.MariesLib.kubejs.internal;
+package dev.marie.framework.kubejs.internal;
 
 import dev.latvian.mods.kubejs.event.EventHandler;
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.kubejs.MarieKubeEvents;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.kubejs.MarieKubeEvents;
 import net.neoforged.fml.ModList;
 
 import java.util.concurrent.ConcurrentHashMap;

@@ -1,14 +1,14 @@
-package dev.marie.MariesLib.kubejs.internal;
+package dev.marie.framework.kubejs.internal;
 
 import dev.latvian.mods.kubejs.script.ScriptsLoadedEvent;
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.api.MarieEvents;
-import dev.marie.MariesLib.kubejs.MarieKubeEvents;
-import dev.marie.MariesLib.kubejs.events.MarieMilestoneTriggeredEvent;
-import dev.marie.MariesLib.kubejs.events.MarieSourceConsumedEvent;
-import dev.marie.MariesLib.kubejs.events.MarieValueChangedEvent;
-import dev.marie.MariesLib.kubejs.events.MarieValueCriticalEvent;
-import dev.marie.MariesLib.kubejs.events.MarieValueExcessEvent;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.api.MarieEvents;
+import dev.marie.framework.kubejs.MarieKubeEvents;
+import dev.marie.framework.kubejs.events.MarieMilestoneTriggeredEvent;
+import dev.marie.framework.kubejs.events.MarieSourceConsumedEvent;
+import dev.marie.framework.kubejs.events.MarieValueChangedEvent;
+import dev.marie.framework.kubejs.events.MarieValueCriticalEvent;
+import dev.marie.framework.kubejs.events.MarieValueExcessEvent;
 import net.neoforged.neoforge.common.NeoForge;
 
 /**

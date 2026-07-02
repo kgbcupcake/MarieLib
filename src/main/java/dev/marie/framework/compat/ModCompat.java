@@ -1,10 +1,10 @@
-package dev.marie.MariesLib.compat;
+package dev.marie.framework.compat;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.core.MariesLib;
-import dev.marie.MariesLib.core.MarieLibContext;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.core.MariesLib;
+import dev.marie.framework.core.MarieLibContext;
 import net.neoforged.fml.ModList;
 import net.neoforged.fml.loading.FMLPaths;
 import net.neoforged.neoforgespi.language.IModInfo;

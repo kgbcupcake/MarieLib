@@ -1,10 +1,10 @@
-package dev.marie.MariesLib.runtime;
+package dev.marie.framework.runtime;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
-import dev.marie.MariesLib.api.ApiStatus;
+import dev.marie.framework.api.ApiStatus;
 
 /**
  * Blend helper that merges tag-derived and runtime-resolver-derived value maps,

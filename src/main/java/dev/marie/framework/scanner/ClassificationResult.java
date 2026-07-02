@@ -1,6 +1,6 @@
-package dev.marie.MariesLib.scanner;
+package dev.marie.framework.scanner;
 
-import dev.marie.MariesLib.api.ApiStatus;
+import dev.marie.framework.api.ApiStatus;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.Collections;

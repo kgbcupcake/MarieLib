@@ -1,8 +1,8 @@
-package dev.marie.MariesLib.client.config;
+package dev.marie.framework.client.config;
 
-import dev.marie.MariesLib.client.ImportExportButtonsWidget;
-import dev.marie.MariesLib.config.MariesLibConfigHolder;
-import dev.marie.MariesLib.config.MariesLibConfigKeys;
+import dev.marie.framework.client.ImportExportButtonsWidget;
+import dev.marie.framework.config.MariesLibConfigHolder;
+import dev.marie.framework.config.MariesLibConfigKeys;
 import me.shedaniel.clothconfig2.api.AbstractConfigListEntry;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.ConfigCategory;

@@ -1,9 +1,9 @@
-package dev.marie.MariesLib.api.registry;
+package dev.marie.framework.api.registry;
 
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.api.SourcePairSynergy;
-import dev.marie.MariesLib.api.SynergyDefinition;
-import dev.marie.MariesLib.registry.ListRegistry;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.api.SourcePairSynergy;
+import dev.marie.framework.api.SynergyDefinition;
+import dev.marie.framework.registry.ListRegistry;
 
 import java.util.List;
 

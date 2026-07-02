@@ -1,6 +1,6 @@
-package dev.marie.MariesLib.export;
+package dev.marie.framework.export;
 
-import dev.marie.MariesLib.api.ApiStatus;
+import dev.marie.framework.api.ApiStatus;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.Map;

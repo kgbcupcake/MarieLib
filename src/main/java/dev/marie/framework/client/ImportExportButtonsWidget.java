@@ -1,6 +1,6 @@
-package dev.marie.MariesLib.client;
+package dev.marie.framework.client;
 
-import dev.marie.MariesLib.core.MariesLib;
+import dev.marie.framework.core.MariesLib;
 import me.shedaniel.clothconfig2.gui.ClothConfigScreen;
 import me.shedaniel.clothconfig2.gui.entries.TooltipListEntry;
 import net.minecraft.client.Minecraft;

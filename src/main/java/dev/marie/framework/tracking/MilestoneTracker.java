@@ -1,12 +1,12 @@
-package dev.marie.MariesLib.tracking;
+package dev.marie.framework.tracking;
 
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.api.MarieEvents;
-import dev.marie.MariesLib.api.MilestoneDefinition;
-import dev.marie.MariesLib.api.registry.MilestoneRegistry;
-import dev.marie.MariesLib.config.FeatureFlagCache;
-import dev.marie.MariesLib.core.MarieLibContext;
-import dev.marie.MariesLib.core.MariesLib;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.api.MarieEvents;
+import dev.marie.framework.api.MilestoneDefinition;
+import dev.marie.framework.api.registry.MilestoneRegistry;
+import dev.marie.framework.config.FeatureFlagCache;
+import dev.marie.framework.core.MarieLibContext;
+import dev.marie.framework.core.MariesLib;
 import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;

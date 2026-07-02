@@ -1,6 +1,6 @@
-package dev.marie.MariesLib.scan;
+package dev.marie.framework.scan;
 
-import dev.marie.MariesLib.core.IMarieLibConfig;
+import dev.marie.framework.core.IMarieLibConfig;
 
 import java.util.LinkedHashMap;
 import java.util.Map;

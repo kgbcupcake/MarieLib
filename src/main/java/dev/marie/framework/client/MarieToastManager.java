@@ -1,8 +1,8 @@
-package dev.marie.MariesLib.client;
+package dev.marie.framework.client;
 
-import dev.marie.MariesLib.config.FeatureFlagCache;
-import dev.marie.MariesLib.core.MarieLibContext;
-import dev.marie.MariesLib.tracking.TrackingData;
+import dev.marie.framework.config.FeatureFlagCache;
+import dev.marie.framework.core.MarieLibContext;
+import dev.marie.framework.tracking.TrackingData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;

@@ -1,7 +1,7 @@
-package dev.marie.MariesLib.tagaudit;
+package dev.marie.framework.tagaudit;
 
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.tagaudit.model.TagAuditContext;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.tagaudit.model.TagAuditContext;
 
 import javax.annotation.Nullable;
 import java.util.Collections;

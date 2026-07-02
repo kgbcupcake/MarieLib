@@ -1,8 +1,8 @@
-package dev.marie.MariesLib.scanner.analysis;
+package dev.marie.framework.scanner.analysis;
 
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.core.MariesLib;
-import dev.marie.MariesLib.scanner.ClassificationResult;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.core.MariesLib;
+import dev.marie.framework.scanner.ClassificationResult;
 
 import java.io.IOException;
 import java.nio.file.Files;

@@ -1,4 +1,4 @@
 /**
  * Generic classification and scanning pipeline.
  */
-package dev.marie.MariesLib.scan;
+package dev.marie.framework.scan;

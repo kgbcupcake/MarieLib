@@ -1,8 +1,8 @@
-package dev.marie.MariesLib.client;
+package dev.marie.framework.client;
 
-import dev.marie.MariesLib.core.IMarieLibConfig;
-import dev.marie.MariesLib.tracking.TrackingData;
-import dev.marie.MariesLib.tracking.DiminishingReturnsConfig;
+import dev.marie.framework.core.IMarieLibConfig;
+import dev.marie.framework.tracking.TrackingData;
+import dev.marie.framework.tracking.DiminishingReturnsConfig;
 import net.minecraft.util.Mth;
 
 import java.util.List;

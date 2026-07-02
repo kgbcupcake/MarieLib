@@ -1,16 +1,16 @@
-package dev.marie.MariesLib.registry;
+package dev.marie.framework.registry;
 
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.config.validation.ConfigValidatorRegistry;
-import dev.marie.MariesLib.api.registry.AbsorptionModifierRegistry;
-import dev.marie.MariesLib.api.registry.ProfileRegistry;
-import dev.marie.MariesLib.api.registry.MilestoneRegistry;
-import dev.marie.MariesLib.api.registry.ReportProviderRegistry;
-import dev.marie.MariesLib.api.registry.SeasonHookRegistry;
-import dev.marie.MariesLib.api.registry.SleepBonusEvaluatorRegistry;
-import dev.marie.MariesLib.api.registry.SourcePropertySignalRegistry;
-import dev.marie.MariesLib.api.registry.SynergyRegistry;
-import dev.marie.MariesLib.runtime.TriggerHandlerRegistry;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.config.validation.ConfigValidatorRegistry;
+import dev.marie.framework.api.registry.AbsorptionModifierRegistry;
+import dev.marie.framework.api.registry.ProfileRegistry;
+import dev.marie.framework.api.registry.MilestoneRegistry;
+import dev.marie.framework.api.registry.ReportProviderRegistry;
+import dev.marie.framework.api.registry.SeasonHookRegistry;
+import dev.marie.framework.api.registry.SleepBonusEvaluatorRegistry;
+import dev.marie.framework.api.registry.SourcePropertySignalRegistry;
+import dev.marie.framework.api.registry.SynergyRegistry;
+import dev.marie.framework.runtime.TriggerHandlerRegistry;
 
 /**
  * Coordinates freeze/reset for API definition registries around bootstrap and datapack reload.
@@ -36,7 +36,7 @@ public final class MarieApiRegistries {
     }
 
     /**
-     * Called at the start of each {@link dev.marie.MariesLib.data.MarieDataLoader} apply pass.
+     * Called at the start of each {@link dev.marie.framework.data.MarieDataLoader} apply pass.
      * On the first pass, mod-constructor entries are preserved; on later passes, datapack-backed
      * registries are cleared before JSON is re-applied.
      */

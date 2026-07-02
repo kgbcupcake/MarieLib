@@ -1,7 +1,7 @@
-package dev.marie.MariesLib.core;
+package dev.marie.framework.core;
 
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.api.ValueModifierContext;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.api.ValueModifierContext;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.fml.ModList;
 
@@ -14,9 +14,9 @@ public final class KubeIntegration {
 
     private static final boolean PRESENT = ModList.get().isLoaded("kubejs");
     private static final String PIPELINE_HOOKS =
-            "dev.marie.MariesLib.kubejs.internal.KubePipelineHooks";
+            "dev.marie.framework.kubejs.internal.KubePipelineHooks";
     private static final String EVENT_BRIDGE =
-            "dev.marie.MariesLib.kubejs.internal.KubeEventBridge";
+            "dev.marie.framework.kubejs.internal.KubeEventBridge";
 
     private KubeIntegration() {}
 

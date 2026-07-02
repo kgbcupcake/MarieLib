@@ -1,4 +1,4 @@
-package dev.marie.MariesLib.classification;
+package dev.marie.framework.classification;
 
 // Called by ItemClassifier for each item — do not call directly from addon code.
 

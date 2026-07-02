@@ -1,6 +1,6 @@
-package dev.marie.MariesLib.compat;
+package dev.marie.framework.compat;
 
-import dev.marie.MariesLib.api.ApiStatus;
+import dev.marie.framework.api.ApiStatus;
 import org.jetbrains.annotations.Nullable;
 
 @ApiStatus.Internal

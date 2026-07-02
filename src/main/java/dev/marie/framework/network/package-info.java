@@ -1,4 +1,4 @@
 /**
  * Network sync utilities.
  */
-package dev.marie.MariesLib.network;
+package dev.marie.framework.network;

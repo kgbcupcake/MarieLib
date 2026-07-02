@@ -1,10 +1,10 @@
-package dev.marie.MariesLib.core;
+package dev.marie.framework.core;
 
 import com.google.gson.JsonObject;
 
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.config.PresetRegistry;
-import dev.marie.MariesLib.tracking.DiminishingReturnsConfig;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.config.PresetRegistry;
+import dev.marie.framework.tracking.DiminishingReturnsConfig;
 
 /**
  * @deprecated Use {@link MarieLibSettings} for scanner/debug settings,

@@ -1,11 +1,11 @@
-package dev.marie.MariesLib.client;
+package dev.marie.framework.client;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 
-import dev.marie.MariesLib.config.MariesLibConfigBridge;
-import dev.marie.MariesLib.core.MariesLib;
+import dev.marie.framework.config.MariesLibConfigBridge;
+import dev.marie.framework.core.MariesLib;
 import net.minecraft.network.chat.Component;
 import net.neoforged.fml.loading.FMLPaths;
 

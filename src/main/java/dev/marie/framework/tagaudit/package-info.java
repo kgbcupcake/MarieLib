@@ -9,6 +9,6 @@
  * (the orchestrator) and an {@code apply} subpackage for writing approved
  * fixes back to datapack overrides or bundled source.</p>
  */
-package dev.marie.MariesLib.tagaudit;
+package dev.marie.framework.tagaudit;
 
-import dev.marie.MariesLib.api.ApiStatus;
+import dev.marie.framework.api.ApiStatus;

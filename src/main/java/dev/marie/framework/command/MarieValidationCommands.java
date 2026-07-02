@@ -1,10 +1,10 @@
-package dev.marie.MariesLib.command;
+package dev.marie.framework.command;
 
 import com.mojang.brigadier.context.CommandContext;
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.config.validation.Finding;
-import dev.marie.MariesLib.config.validation.ValidationResult;
-import dev.marie.MariesLib.config.validation.ValidationRunner;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.config.validation.Finding;
+import dev.marie.framework.config.validation.ValidationResult;
+import dev.marie.framework.config.validation.ValidationRunner;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;

@@ -1,6 +1,6 @@
-package dev.marie.MariesLib.client;
+package dev.marie.framework.client;
 
-import dev.marie.MariesLib.api.ValueRenderer;
+import dev.marie.framework.api.ValueRenderer;
 import net.minecraft.client.gui.GuiGraphics;
 
 /**

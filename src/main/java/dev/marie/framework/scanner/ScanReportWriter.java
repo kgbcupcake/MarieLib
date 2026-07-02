@@ -1,12 +1,12 @@
-package dev.marie.MariesLib.scanner;
+package dev.marie.framework.scanner;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.core.MarieLibContext;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.core.MarieLibContext;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.fml.loading.FMLPaths;
 
@@ -46,7 +46,7 @@ public final class ScanReportWriter {
             @Nullable ScanCache.ScanDiff diff
     ) throws IOException {
         Path outputDir = FMLPaths.CONFIGDIR.get().resolve(MarieLibContext.get().modId());
-        dev.marie.MariesLib.util.MarieValidation.assertPathUnder(outputDir, FMLPaths.CONFIGDIR.get(), "ScanReportWriter.writeReports");
+        dev.marie.framework.util.MarieValidation.assertPathUnder(outputDir, FMLPaths.CONFIGDIR.get(), "ScanReportWriter.writeReports");
         Files.createDirectories(outputDir);
 
         writeTextReport(results, summary, diff, outputDir.resolve("unassigned_sources_report.txt"));

@@ -1,12 +1,12 @@
-package dev.marie.MariesLib.client.config;
+package dev.marie.framework.client.config;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
-import dev.marie.MariesLib.api.registry.ValueRegistry;
-import dev.marie.MariesLib.core.MarieLibContext;
-import dev.marie.MariesLib.core.MarieModRegistry;
-import dev.marie.MariesLib.core.MariesLib;
+import dev.marie.framework.api.registry.ValueRegistry;
+import dev.marie.framework.core.MarieLibContext;
+import dev.marie.framework.core.MarieModRegistry;
+import dev.marie.framework.core.MariesLib;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.ConfigCategory;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;

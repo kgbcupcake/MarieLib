@@ -1,4 +1,4 @@
-package dev.marie.MariesLib.api;
+package dev.marie.framework.api;
 
 @ApiStatus.Stable
 public final class MarieAPIVersion {

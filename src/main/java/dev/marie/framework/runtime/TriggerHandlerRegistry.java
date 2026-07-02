@@ -1,8 +1,8 @@
-package dev.marie.MariesLib.runtime;
+package dev.marie.framework.runtime;
 
-import dev.marie.MariesLib.api.ApiStatus;
-import dev.marie.MariesLib.api.SourceTriggerListener;
-import dev.marie.MariesLib.registry.ListRegistry;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.api.SourceTriggerListener;
+import dev.marie.framework.registry.ListRegistry;
 
 import java.util.List;
 
