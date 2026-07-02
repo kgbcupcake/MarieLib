@@ -11,4 +11,16 @@ neoForge {
 
 dependencies {
     implementation project(':marie-core')
+
+    // marie-core depends on cloth-config as 'implementation' (not exposed
+    // transitively), but the moved client/config/* classes reference its
+    // API types directly, so marie-ui needs its own declaration.
+    implementation "me.shedaniel.cloth:cloth-config-neoforge:${cloth_config_version}"
+
+    // compat/{emi,jei,rei} plugin classes, matching marie-core's declarations
+    // for the same three integrations.
+    compileOnly "mezz.jei:jei-${minecraft_version}-common-api:${jei_version}"
+    compileOnly "mezz.jei:jei-${minecraft_version}-neoforge-api:${jei_version}"
+    compileOnly "me.shedaniel:RoughlyEnoughItems-neoforge:${rei_version}"
+    compileOnly "dev.emi:emi-neoforge:${emi_version}"
 }

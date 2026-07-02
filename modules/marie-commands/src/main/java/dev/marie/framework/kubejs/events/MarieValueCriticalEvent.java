@@ -1,0 +1,29 @@
+package dev.marie.framework.kubejs.events;
+
+// TODO(marie-core migration): depends on dev.marie.framework.{api} (not yet migrated to marie-core; module will not compile until that lands)
+
+import dev.latvian.mods.kubejs.event.KubeEvent;
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.api.MarieEvents;
+
+@ApiStatus.Experimental
+public class MarieValueCriticalEvent implements KubeEvent {
+
+    private String playerId;
+    private String valueKey;
+
+    public MarieValueCriticalEvent() {}
+
+    public MarieValueCriticalEvent(MarieEvents.ValueCriticalEvent event) {
+        this.playerId = event.getPlayer().getUUID().toString();
+        this.valueKey = event.getValueKey();
+    }
+
+    public String getPlayerId() {
+        return playerId;
+    }
+
+    public String getValueKey() {
+        return valueKey;
+    }
+}

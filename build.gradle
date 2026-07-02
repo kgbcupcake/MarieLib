@@ -1,5 +1,7 @@
 plugins {
     id 'base'
+    id 'java-base'
+    id 'maven-publish'
     id 'com.gradleup.shadow' version '9.4.3'
 }
 
@@ -77,4 +79,58 @@ tasks.register('shadowJar', com.github.jengelman.gradle.plugins.shadow.tasks.Sha
 
 tasks.named('build') {
     dependsOn tasks.named('shadowJar')
+}
+
+// Consumable variants so composite-build project substitution (e.g. from
+// Nourished's settings.gradle) resolves real classes instead of an empty
+// classpath. The root has no 'java' plugin (only 'java-base'), so these are
+// defined by hand rather than coming from the default apiElements/
+// runtimeElements produced by the 'java' plugin.
+configurations {
+    shadowRuntimeElements {
+        canBeConsumed = true
+        canBeResolved = false
+        attributes {
+            attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage, Usage.JAVA_RUNTIME))
+            attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category, Category.LIBRARY))
+            attribute(Bundling.BUNDLING_ATTRIBUTE, objects.named(Bundling, Bundling.SHADOWED))
+        }
+        outgoing.artifact(tasks.named('shadowJar'))
+    }
+    shadowApiElements {
+        canBeConsumed = true
+        canBeResolved = false
+        attributes {
+            attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage, Usage.JAVA_API))
+            attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category, Category.LIBRARY))
+            attribute(Bundling.BUNDLING_ATTRIBUTE, objects.named(Bundling, Bundling.SHADOWED))
+        }
+        outgoing.artifact(tasks.named('shadowJar'))
+    }
+}
+
+// Only the aggregated shadowJar is a publishable artifact — the four
+// subprojects have no publishing configuration of their own, so their
+// individual jars (needed only as shadowJar's merge inputs) never reach
+// a publish task.
+publishing {
+    publications {
+        register('mavenJava', MavenPublication) {
+            artifact tasks.named('shadowJar')
+            groupId = mod_group_id
+            artifactId = mod_id
+            version = mod_version
+        }
+    }
+    repositories {
+        mavenLocal()
+        maven {
+            name = 'GitHubPackages'
+            url = 'https://maven.pkg.github.com/kgbcupcake/MarieLib'
+            credentials {
+                username = System.getenv('GITHUB_ACTOR') ?: project.findProperty('GITHUB_ACTOR')
+                password = System.getenv('GITHUB_TOKEN') ?: project.findProperty('GITHUB_TOKEN')
+            }
+        }
+    }
 }

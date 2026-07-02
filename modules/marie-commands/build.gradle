@@ -11,4 +11,7 @@ neoForge {
 
 dependencies {
     implementation project(':marie-core')
+
+    // marie-commands owns the kubejs/ package (KubeJS event/plugin bindings).
+    compileOnly "dev.latvian.mods:kubejs-neoforge:${kubejs_version}"
 }

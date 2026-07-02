@@ -1,1 +1,1 @@
-dev.marie.MariesLib.kubejs.MarieKubePlugin marieslib
+dev.marie.framework.kubejs.MarieKubePlugin marieslib
