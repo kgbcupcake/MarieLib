@@ -7,7 +7,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.mojang.logging.LogUtils;
 import dev.marie.framework.api.ApiStatus;
-import dev.marie.framework.core.IMarieLibConfig;
+import dev.marie.framework.core.IMarieConfig;
 import dev.marie.framework.data.DatapackSchema;
 import dev.marie.framework.registry.AbstractRegistry;
 import dev.marie.framework.util.MarieResourceLoader;
@@ -83,7 +83,7 @@ public class SourceClassificationRegistry {
     }
 
     public static void load() {
-        Path configDir = FMLPaths.CONFIGDIR.get().resolve(IMarieLibConfig.get().modId());
+        Path configDir = FMLPaths.CONFIGDIR.get().resolve(IMarieConfig.get().modId());
         Path newFile = configDir.resolve("source_classifications.json");
         Path oldOverrides = configDir.resolve("source_overrides.json");
         Path oldValues = configDir.resolve("source_values.json");
@@ -195,7 +195,7 @@ public class SourceClassificationRegistry {
     }
 
     public static void save() {
-        Path configDir = FMLPaths.CONFIGDIR.get().resolve(IMarieLibConfig.get().modId());
+        Path configDir = FMLPaths.CONFIGDIR.get().resolve(IMarieConfig.get().modId());
         Path file = configDir.resolve("source_classifications.json");
         try {
             writeRegistry(file);

@@ -3,7 +3,7 @@ package dev.marie.framework.handler;
 import dev.marie.framework.api.ApiStatus;
 import dev.marie.framework.api.registry.EffectRegistry;
 import dev.marie.framework.config.FeatureFlagCache;
-import dev.marie.framework.core.MarieLibContext;
+import dev.marie.framework.core.MarieContext;
 import dev.marie.framework.tracking.TrackingAttachment;
 import dev.marie.framework.tracking.TrackingData;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -23,11 +23,11 @@ public class ValueEffectsListener {
         if (player.level().getGameTime() % APPLY_INTERVAL_TICKS != 0) return;
         if (ReloadGuardListener.isReloadInProgress()) return;
         if (!TrackingAttachment.isRegistered()) return;
-        if (!MarieLibContext.isRegistered()) return;
+        if (!MarieContext.isRegistered()) return;
 
         if (FeatureFlagCache.enableEffects()) {
             TrackingData data = TrackingAttachment.getData(player);
-            MarieLibContext.get().effectApplier().accept(player, data);
+            MarieContext.get().effectApplier().accept(player, data);
             for (String oldId : EffectRegistry.legacyCleanupEffectIds()) {
                 if (oldId == null || oldId.isBlank()) {
                     continue;
@@ -43,7 +43,7 @@ public class ValueEffectsListener {
                 }
             }
         } else {
-            MarieLibContext.get().effectClearer().accept(player);
+            MarieContext.get().effectClearer().accept(player);
         }
     }
 }

@@ -1,6 +1,6 @@
 package dev.marie.framework.client;
 
-import dev.marie.framework.core.IMarieLibConfig;
+import dev.marie.framework.core.IMarieConfig;
 import dev.marie.framework.tracking.TrackingData;
 import dev.marie.framework.tracking.DiminishingReturnsConfig;
 import net.minecraft.util.Mth;
@@ -63,7 +63,7 @@ public class MarieClientCache {
     private static boolean firstClientSync = true;
 
     private static DiminishingReturnsConfig injectClientMemoryConfig() {
-        return IMarieLibConfig.get().trackingMemoryConfig();
+        return IMarieConfig.get().trackingMemoryConfig();
     }
 
     /** Resets client-side snapshot diagnostics, e.g. on disconnect. */

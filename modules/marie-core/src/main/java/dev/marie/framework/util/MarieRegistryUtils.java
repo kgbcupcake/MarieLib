@@ -1,6 +1,6 @@
 package dev.marie.framework.util;
 
-import dev.marie.framework.core.MarieLibContext;
+import dev.marie.framework.core.MarieContext;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
@@ -34,10 +34,10 @@ public final class MarieRegistryUtils {
      * Validates a value key is registered, throws {@link IllegalArgumentException} if not.
      */
     public static void requireValueKey(String key, String context) {
-        if (!MarieLibContext.isRegistered()) {
-            throw new IllegalStateException("MarieLibContext not registered");
+        if (!MarieContext.isRegistered()) {
+            throw new IllegalStateException("MarieContext not registered");
         }
-        if (!MarieLibContext.get().valueKeys().contains(key)) {
+        if (!MarieContext.get().valueKeys().contains(key)) {
             throw new IllegalArgumentException(
                     "Unknown value key '" + key + "' in " + context);
         }

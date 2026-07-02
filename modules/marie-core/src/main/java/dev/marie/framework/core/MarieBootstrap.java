@@ -56,25 +56,25 @@ import net.neoforged.neoforge.common.NeoForge;
  * }</pre>
  *
  * <h2>Advanced setup</h2>
- * <p>Use {@link MarieLibContext#builder(String)} for custom resolvers,
+ * <p>Use {@link MarieContext#builder(String)} for custom resolvers,
  * signal overrides, or advanced compat hooks.</p>
  */
-public final class MariesLibBootstrap {
+public final class MarieBootstrap {
 
     private static volatile Supplier<Object> configScreenFactory = () -> null;
     private static volatile Function<Object, Object> exportScreenFactory = parent -> null;
     private static volatile Function<Object, Object> importScreenFactory = parent -> null;
     private static volatile IEventBus attachedModEventBus;
 
-    private MariesLibBootstrap() {}
+    private MarieBootstrap() {}
 
     /**
      * Attaches MarieLib to a consuming mod with sensible defaults.
      * Call this from your mod constructor before registries freeze.
      *
-     * <p>This registers a MarieLibContext for your mod using all internal
+     * <p>This registers a MarieContext for your mod using all internal
      * default resolvers. For advanced configuration use
-     * {@link MarieLibContext#builder(String)} directly.</p>
+     * {@link MarieContext#builder(String)} directly.</p>
      *
      * @param modId       your mod's ID
      * @param modEventBus your mod's IEventBus (from the mod constructor)
@@ -88,8 +88,8 @@ public final class MariesLibBootstrap {
             throw new IllegalArgumentException("modEventBus cannot be null");
         }
 
-        MarieLibContext ctx = MarieLibContext.builder(modId).build();
-        MarieLibContext.register(ctx);
+        MarieContext ctx = MarieContext.builder(modId).build();
+        MarieContext.register(ctx);
         MarieDataManager.setCallbacks(MarieDatapackCallbacks.INSTANCE);
         FeatureFlagCache.sync(MarieModFeatureFlags.disabled());
 
@@ -98,8 +98,8 @@ public final class MariesLibBootstrap {
         MilestoneProgressAttachment.register(modEventBus);
 
         attachedModEventBus = modEventBus;
-        modEventBus.addListener(MariesLibBootstrap::onCommonSetup);
-        modEventBus.addListener(MariesLibBootstrap::onLoadComplete);
+        modEventBus.addListener(MarieBootstrap::onCommonSetup);
+        modEventBus.addListener(MarieBootstrap::onLoadComplete);
 
         MariesLib.LOGGER.info("[MarieLib] Attached to mod: {}", modId);
     }

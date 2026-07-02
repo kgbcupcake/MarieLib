@@ -2,7 +2,7 @@ package dev.marie.framework.tracking;
 
 import dev.marie.framework.api.ApiStatus;
 import dev.marie.framework.api.ApplicationHistoryView;
-import dev.marie.framework.core.IMarieLibConfig;
+import dev.marie.framework.core.IMarieConfig;
 import dev.marie.framework.core.MariesLib;
 import net.minecraft.resources.ResourceLocation;
 
@@ -25,7 +25,7 @@ public final class TrackingDataApplicationHistoryView implements ApplicationHist
 
     @Override
     public List<ResourceLocation> getRecentSources() {
-        long halfLifeMs = IMarieLibConfig.get().memoryWindowMinutes() * 60_000L;
+        long halfLifeMs = IMarieConfig.get().memoryWindowMinutes() * 60_000L;
         long gameTimeMs = trackingData.lastTickTime > 0 ? trackingData.lastTickTime : System.currentTimeMillis();
 
         return trackingData.sourceMemory.entrySet().stream()
@@ -50,7 +50,7 @@ public final class TrackingDataApplicationHistoryView implements ApplicationHist
         SourceMemoryEntry entry = trackingData.sourceMemory.get(key);
         if (entry == null) return false;
 
-        long halfLifeMs = IMarieLibConfig.get().memoryWindowMinutes() * 60_000L;
+        long halfLifeMs = IMarieConfig.get().memoryWindowMinutes() * 60_000L;
         long gameTimeMs = trackingData.lastTickTime > 0 ? trackingData.lastTickTime : System.currentTimeMillis();
         return !entry.isEffectivelyExpired(halfLifeMs, gameTimeMs, 0.1f);
     }

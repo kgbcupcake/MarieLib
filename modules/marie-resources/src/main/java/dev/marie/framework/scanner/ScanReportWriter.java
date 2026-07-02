@@ -6,7 +6,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 import dev.marie.framework.api.ApiStatus;
-import dev.marie.framework.core.MarieLibContext;
+import dev.marie.framework.core.MarieContext;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.fml.loading.FMLPaths;
 
@@ -52,7 +52,7 @@ public final class ScanReportWriter implements ScanReportSink {
             ScanCache.ScanSummary summary,
             @Nullable ScanCache.ScanDiff diff
     ) throws IOException {
-        Path outputDir = FMLPaths.CONFIGDIR.get().resolve(MarieLibContext.get().modId());
+        Path outputDir = FMLPaths.CONFIGDIR.get().resolve(MarieContext.get().modId());
         dev.marie.framework.util.MarieValidation.assertPathUnder(outputDir, FMLPaths.CONFIGDIR.get(), "ScanReportWriter.writeReports");
         Files.createDirectories(outputDir);
 
@@ -137,7 +137,7 @@ public final class ScanReportWriter implements ScanReportSink {
                 writer.write("                          UNCERTAIN (NEEDS REVIEW)\n");
                 writer.write("═══════════════════════════════════════════════════════════════════════════════\n\n");
                 writer.write("These items have low confidence spread and need manual classification.\n");
-                writer.write("Add them to data/" + MarieLibContext.get().modId() + "/tags/item/values/<category>.json\n\n");
+                writer.write("Add them to data/" + MarieContext.get().modId() + "/tags/item/values/<category>.json\n\n");
 
                 Map<String, List<ClassificationResult>> uncertainByNs = groupByNamespace(uncertain);
                 for (Map.Entry<String, List<ClassificationResult>> nsEntry : uncertainByNs.entrySet()) {

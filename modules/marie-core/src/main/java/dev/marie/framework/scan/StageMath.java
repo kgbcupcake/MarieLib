@@ -1,6 +1,6 @@
 package dev.marie.framework.scan;
 
-import dev.marie.framework.core.IMarieLibConfig;
+import dev.marie.framework.core.IMarieConfig;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -118,6 +118,6 @@ public final class StageMath {
     }
 
     public static float scannerConfidenceSpreadThreshold() {
-        return IMarieLibConfig.get().scannerConfidenceSpreadThreshold();
+        return IMarieConfig.get().scannerConfidenceSpreadThreshold();
     }
 }

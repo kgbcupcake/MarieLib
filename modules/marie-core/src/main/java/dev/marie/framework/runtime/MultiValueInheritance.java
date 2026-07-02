@@ -1,7 +1,7 @@
 package dev.marie.framework.runtime;
 
 import dev.marie.framework.api.ApiStatus;
-import dev.marie.framework.core.IMarieLibConfig;
+import dev.marie.framework.core.IMarieConfig;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -54,6 +54,6 @@ public final class MultiValueInheritance {
     }
 
     public static float threshold() {
-        return (float) IMarieLibConfig.get().multiValueInheritanceThreshold();
+        return (float) IMarieConfig.get().multiValueInheritanceThreshold();
     }
 }

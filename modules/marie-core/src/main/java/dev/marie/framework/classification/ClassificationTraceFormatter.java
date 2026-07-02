@@ -1,6 +1,6 @@
 package dev.marie.framework.classification;
 
-import dev.marie.framework.core.MarieLibContext;
+import dev.marie.framework.core.MarieContext;
 import net.minecraft.world.item.ItemStack;
 
 import javax.annotation.Nullable;
@@ -48,8 +48,8 @@ public final class ClassificationTraceFormatter {
         appendLine(sb, SEP_HALF);
         String itemId = trace.itemId();
         String namespace = itemId.contains(":") ? itemId.substring(0, itemId.indexOf(':')) : itemId;
-        boolean sourceCapable = MarieLibContext.isRegistered()
-                && MarieLibContext.get().sourceItemFilter().test(stack);
+        boolean sourceCapable = MarieContext.isRegistered()
+                && MarieContext.get().sourceItemFilter().test(stack);
         appendKv(sb, "ID", itemId);
         appendKv(sb, "Namespace", namespace);
         appendKv(sb, "Source-capable", sourceCapable ? "YES" : "NO");

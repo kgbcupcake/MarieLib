@@ -1,7 +1,7 @@
 package dev.marie.framework.client;
 
 import dev.marie.framework.config.FeatureFlagCache;
-import dev.marie.framework.core.MarieLibContext;
+import dev.marie.framework.core.MarieContext;
 import dev.marie.framework.tracking.TrackingData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -38,11 +38,11 @@ public final class MarieToastManager {
     }
 
     private static void processValueUpdate(Map<String, Float> nextValues) {
-        if (!MarieLibContext.isRegistered()) {
+        if (!MarieContext.isRegistered()) {
             return;
         }
         List<String> keys = TrackingData.barOrder();
-        MarieLibContext ctx = MarieLibContext.get();
+        MarieContext ctx = MarieContext.get();
 
         if (firstClientSync) {
             firstClientSync = false;
@@ -60,7 +60,7 @@ public final class MarieToastManager {
             for (String key : keys) {
                 float before = lastValues.getOrDefault(key, 0f);
                 float after = nextValues.getOrDefault(key, 0f);
-                boolean beneficial = MarieLibContext.isValueBeneficial(key);
+                boolean beneficial = MarieContext.isValueBeneficial(key);
 
                 boolean showToast = false;
                 if (beneficial) {

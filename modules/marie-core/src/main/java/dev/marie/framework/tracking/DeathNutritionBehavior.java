@@ -6,7 +6,7 @@ import java.util.Locale;
 
 /**
  * Server-side policy for tracking bar values when a player respawns after death.
- * Consumed via {@link dev.marie.framework.core.MarieLibContext#deathNutritionBehavior()}.
+ * Consumed via {@link dev.marie.framework.core.MarieContext#deathNutritionBehavior()}.
  */
 @ApiStatus.Stable
 public enum DeathNutritionBehavior {

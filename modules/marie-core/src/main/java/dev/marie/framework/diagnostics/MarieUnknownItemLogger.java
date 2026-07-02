@@ -19,8 +19,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import dev.marie.framework.core.IMarieLibConfig;
-import dev.marie.framework.core.MarieLibContext;
+import dev.marie.framework.core.IMarieConfig;
+import dev.marie.framework.core.MarieContext;
 import dev.marie.framework.core.MariesLib;
 import dev.marie.framework.scan.ResolutionResult;
 import dev.marie.framework.scan.RuntimeCascadeStage;
@@ -60,7 +60,7 @@ public final class MarieUnknownItemLogger {
             return;
         }
         boolean isHardFallback = result.stage() == RuntimeCascadeStage.HARD_FALLBACK;
-        float threshold = IMarieLibConfig.get().scannerConfidenceSpreadThreshold();
+        float threshold = IMarieConfig.get().scannerConfidenceSpreadThreshold();
         boolean belowThreshold = result.confidence() < threshold;
         if (!isHardFallback && !belowThreshold) {
             return;
@@ -129,7 +129,7 @@ public final class MarieUnknownItemLogger {
             return logPath;
         }
         try {
-            logPath = FMLPaths.GAMEDIR.get().resolve("config").resolve(IMarieLibConfig.get().modId()).resolve("unknown_sources.log");
+            logPath = FMLPaths.GAMEDIR.get().resolve("config").resolve(IMarieConfig.get().modId()).resolve("unknown_sources.log");
             return logPath;
         } catch (Exception e) {
             MariesLib.LOGGER.warn("[MarieUnknownItemLogger] Failed to resolve log path, disabling logger: {}", e.getMessage());

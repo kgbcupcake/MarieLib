@@ -11,9 +11,9 @@ import com.mojang.serialization.RecordBuilder;
 import dev.marie.framework.api.ApiStatus;
 
 
-import dev.marie.framework.core.IMarieLibConfig;
+import dev.marie.framework.core.IMarieConfig;
 import dev.marie.framework.core.MariesLib;
-import dev.marie.framework.core.MarieLibContext;
+import dev.marie.framework.core.MarieContext;
 import net.minecraft.util.Mth;
 
 import java.util.Comparator;
@@ -26,7 +26,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Tracks daily-style value totals. Value keys are driven by {@link MarieLibContext#valueKeys()}.
+ * Tracks daily-style value totals. Value keys are driven by {@link MarieContext#valueKeys()}.
  * <p>
  * SCHEMA CHANGE: legacy attachment removed in this version. Existing player saves will reset tracking data.
  * Acceptable for alpha.
@@ -62,43 +62,43 @@ public class TrackingData {
     /** Display / bar order — delegates to the registry so it stays in sync. */
     @ApiStatus.Experimental
     public static List<String> barOrder() {
-        return MarieLibContext.isRegistered() ? MarieLibContext.get().valueKeys() : List.of();
+        return MarieContext.isRegistered() ? MarieContext.get().valueKeys() : List.of();
     }
 
     private static boolean isValueBeneficial(String key) {
-        return MarieLibContext.isRegistered() && MarieLibContext.isValueBeneficial(key);
+        return MarieContext.isRegistered() && MarieContext.isValueBeneficial(key);
     }
 
     private static int configuredMemoryWindowCount() {
-        return IMarieLibConfig.get().memoryWindowCount();
+        return IMarieConfig.get().memoryWindowCount();
     }
 
     private static long configuredStreakWindowMs() {
-        return IMarieLibConfig.get().streakWindowMs();
+        return IMarieConfig.get().streakWindowMs();
     }
 
     private static float configuredStreakWeight() {
-        return IMarieLibConfig.get().streakWeight();
+        return IMarieConfig.get().streakWeight();
     }
 
     private static boolean configuredDebugMemoryLogging() {
-        return IMarieLibConfig.get().debugMemoryLogging();
+        return IMarieConfig.get().debugMemoryLogging();
     }
 
     private static float configuredDebtThreshold() {
-        return IMarieLibConfig.get().debtThreshold();
+        return IMarieConfig.get().debtThreshold();
     }
 
     private static float configuredDebtDecayRate() {
-        return IMarieLibConfig.get().debtDecayRate();
+        return IMarieConfig.get().debtDecayRate();
     }
 
     private static double configuredDiminishingSteepness() {
-        return IMarieLibConfig.get().diminishingSteepness();
+        return IMarieConfig.get().diminishingSteepness();
     }
 
     private static double configuredDiminishingMidpoint() {
-        return IMarieLibConfig.get().diminishingMidpoint();
+        return IMarieConfig.get().diminishingMidpoint();
     }
 
     // ── Codec ─────────────────────────────────────────────────────────────────

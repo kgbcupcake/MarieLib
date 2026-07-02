@@ -2,7 +2,7 @@ package dev.marie.framework.compat.rei;
 
 import dev.marie.framework.api.ApiStatus;
 import dev.marie.framework.compat.MarieTooltipHelper;
-import dev.marie.framework.core.MarieLibContext;
+import dev.marie.framework.core.MarieContext;
 import me.shedaniel.rei.api.client.plugins.REIClientPlugin;
 import me.shedaniel.rei.api.client.entry.renderer.EntryRendererRegistry;
 import me.shedaniel.rei.api.common.entry.type.VanillaEntryTypes;
@@ -22,7 +22,7 @@ public final class MarieReiPlugin implements REIClientPlugin {
             if (itemStack.isEmpty()) {
                 return tooltip;
             }
-            if (!MarieLibContext.isRegistered() || !MarieLibContext.get().sourceItemFilter().test(itemStack)) {
+            if (!MarieContext.isRegistered() || !MarieContext.get().sourceItemFilter().test(itemStack)) {
                 return tooltip;
             }
             tooltip.addAllTexts(MarieTooltipHelper.getTooltipLines(itemStack));

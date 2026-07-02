@@ -1,35 +1,35 @@
 package dev.marie.framework.client;
 
-import dev.marie.framework.core.MarieLibContext;
-import dev.marie.framework.core.MariesLibBootstrap;
+import dev.marie.framework.core.MarieContext;
+import dev.marie.framework.core.MarieBootstrap;
 import net.minecraft.client.gui.screens.Screen;
 
 /**
- * Client-only casts for screen factories registered on {@link MarieLibContext}
- * or {@link MariesLibBootstrap}.
+ * Client-only casts for screen factories registered on {@link MarieContext}
+ * or {@link MarieBootstrap}.
  */
 public final class ClientScreenFactories {
 
     private ClientScreenFactories() {}
 
     public static Screen getConfigScreen() {
-        Object screen = MarieLibContext.isRegistered()
-                ? MarieLibContext.get().configScreenFactory()
-                : MariesLibBootstrap.getConfigScreenFactory().get();
+        Object screen = MarieContext.isRegistered()
+                ? MarieContext.get().configScreenFactory()
+                : MarieBootstrap.getConfigScreenFactory().get();
         return (Screen) screen;
     }
 
     public static Screen exportScreen(Screen parent) {
-        Object screen = MarieLibContext.isRegistered()
-                ? MarieLibContext.get().exportScreenFactory(parent)
-                : MariesLibBootstrap.getExportScreenFactory().apply(parent);
+        Object screen = MarieContext.isRegistered()
+                ? MarieContext.get().exportScreenFactory(parent)
+                : MarieBootstrap.getExportScreenFactory().apply(parent);
         return (Screen) screen;
     }
 
     public static Screen importScreen(Screen parent) {
-        Object screen = MarieLibContext.isRegistered()
-                ? MarieLibContext.get().importScreenFactory(parent)
-                : MariesLibBootstrap.getImportScreenFactory().apply(parent);
+        Object screen = MarieContext.isRegistered()
+                ? MarieContext.get().importScreenFactory(parent)
+                : MarieBootstrap.getImportScreenFactory().apply(parent);
         return (Screen) screen;
     }
 }

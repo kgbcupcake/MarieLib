@@ -1,7 +1,7 @@
 package dev.marie.framework.scanner;
 
 import dev.marie.framework.api.ApiStatus;
-import dev.marie.framework.core.IMarieLibConfig;
+import dev.marie.framework.core.IMarieConfig;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.List;
@@ -103,7 +103,7 @@ public final class ConfidenceValidator {
      */
     public static ConfidenceValidator withDefaultThreshold() {
         return new ConfidenceValidator(
-            IMarieLibConfig.get().scannerConfidenceSpreadThreshold()
+            IMarieConfig.get().scannerConfidenceSpreadThreshold()
         );
     }
 }

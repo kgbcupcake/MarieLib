@@ -11,11 +11,11 @@ import dev.marie.framework.config.PresetRegistry;
 import dev.marie.framework.tracking.DiminishingReturnsConfig;
 
 /**
- * Fallback when no consuming mod has registered a {@link MarieLibContext}.
+ * Fallback when no consuming mod has registered a {@link MarieContext}.
  * Provides library-owned scanner/debug values and safe no-op defaults for gameplay methods.
  */
 @ApiStatus.Internal
-enum FallbackConfig implements IMarieLibConfig {
+enum FallbackConfig implements IMarieConfig {
     INSTANCE;
 
     @Override public String modId() { return MariesLib.MOD_ID; }

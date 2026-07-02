@@ -45,10 +45,10 @@ import net.minecraft.world.level.Level;
  * Holds the mod ID and optional overrides that MarieLib cannot own.
  *
  * <p>Only {@link Builder#build()} requires {@code modId}; every other builder field has a
- * safe lib-owned default. Use {@link MariesLibBootstrap#attach} for zero-config wiring.</p>
+ * safe lib-owned default. Use {@link MarieBootstrap#attach} for zero-config wiring.</p>
  */
 @ApiStatus.Internal
-public final class MarieLibContext implements MarieLibSettings, IMarieLibConfig {
+public final class MarieContext implements MarieLibSettings, IMarieConfig {
 
     @ApiStatus.Internal
     public record SourceDelta(float total, Map<String, Float> values) {}
@@ -72,7 +72,7 @@ public final class MarieLibContext implements MarieLibSettings, IMarieLibConfig 
                 Map<String, Float> matchedBars);
     }
 
-    private static volatile MarieLibContext instance;
+    private static volatile MarieContext instance;
 
     private final String modId;
     private final Supplier<Float> scannerConfidenceSpreadThreshold;
@@ -130,14 +130,14 @@ public final class MarieLibContext implements MarieLibSettings, IMarieLibConfig 
     @Nullable
     private final BiConsumer<ServerPlayer, TrackingData> deathNutritionHandler;
     @Nullable
-    private final MarieLibDataProvider dataProvider;
+    private final MarieDataProvider dataProvider;
     @Nullable
-    private final MarieLibRegistrationDelegate registrationDelegate;
+    private final MarieRegistrationDelegate registrationDelegate;
     private final Runnable cacheInvalidatedHook;
     private final Consumer<MinecraftServer> reloadBroadcastHook;
     private final BiFunction<ValueModifierContext, Float, Float> postValueModifierHook;
 
-    private MarieLibContext(Builder builder) {
+    private MarieContext(Builder builder) {
         this.modId = builder.modId;
         this.scannerConfidenceSpreadThreshold = builder.scannerConfidenceSpreadThreshold;
         this.compositeRatioThreshold = builder.compositeRatioThreshold;
@@ -202,16 +202,16 @@ public final class MarieLibContext implements MarieLibSettings, IMarieLibConfig 
     }
 
     @ApiStatus.Stable
-    public static void register(MarieLibContext context) {
+    public static void register(MarieContext context) {
         instance = context;
         MarieModRegistry.register(context);
     }
 
     @ApiStatus.Stable
-    public static MarieLibContext get() {
-        MarieLibContext ctx = instance;
+    public static MarieContext get() {
+        MarieContext ctx = instance;
         if (ctx == null) {
-            throw new IllegalStateException("MarieLibContext not registered");
+            throw new IllegalStateException("MarieContext not registered");
         }
         return ctx;
     }
@@ -560,7 +560,7 @@ public final class MarieLibContext implements MarieLibSettings, IMarieLibConfig 
 
     @Nullable
     @ApiStatus.Internal
-    public MarieLibDataProvider dataProvider() {
+    public MarieDataProvider dataProvider() {
         return dataProvider;
     }
 
@@ -571,7 +571,7 @@ public final class MarieLibContext implements MarieLibSettings, IMarieLibConfig 
     @Nullable
     @Deprecated
     @ApiStatus.Internal
-    public MarieLibRegistrationDelegate registrationDelegate() {
+    public MarieRegistrationDelegate registrationDelegate() {
         return registrationDelegate;
     }
 
@@ -682,7 +682,7 @@ public final class MarieLibContext implements MarieLibSettings, IMarieLibConfig 
         private Function<Object, Object> exportScreenFactory = parent -> null;
         private Function<Object, Object> importScreenFactory = parent -> null;
         private Consumer<Map<String, Float>> onValuesDeltaReceived = delta -> {};
-        private Supplier<DiminishingReturnsConfig> clientMemoryConfigProvider = MarieLibContext::defaultDiminishingReturnsConfig;
+        private Supplier<DiminishingReturnsConfig> clientMemoryConfigProvider = MarieContext::defaultDiminishingReturnsConfig;
         private Supplier<JsonObject> configExporter = MariesLibConfigBridge::buildExportRoot;
         private Consumer<JsonObject> configImporter = MariesLibConfigBridge::applyImport;
         private Supplier<PresetRegistry.PresetValues> currentConfigPresetValues = PresetRegistry.PresetValues::empty;
@@ -691,7 +691,7 @@ public final class MarieLibContext implements MarieLibSettings, IMarieLibConfig 
         private Runnable enableAllEffectsForPresets = () -> {};
         private Function<String, String> valueIconProvider = key -> "minecraft:barrier";
         private BiFunction<ItemStack, Player, Map<String, Float>> tooltipValueResolver =
-                MarieLibContext::defaultTooltipValueResolver;
+                MarieContext::defaultTooltipValueResolver;
         private Supplier<TrackingData> clientTrackingDataProvider = TrackingData::new;
         private Function<ResourceLocation, String> sourceFamilyResolver = id -> null;
         private Function<Item, Map<String, Float>> valueTagScoresProvider = item -> Map.of();
@@ -702,10 +702,10 @@ public final class MarieLibContext implements MarieLibSettings, IMarieLibConfig 
                 (player, trigger) -> false;
         private DoubleSupplier multiValueInheritanceThreshold = () -> 0.20;
         private ResolutionStageHandler[] runtimeResolverStages = new ResolutionStageHandler[0];
-        private Supplier<DiminishingReturnsConfig> trackingMemoryConfigProvider = MarieLibContext::defaultDiminishingReturnsConfig;
+        private Supplier<DiminishingReturnsConfig> trackingMemoryConfigProvider = MarieContext::defaultDiminishingReturnsConfig;
         private BiFunction<ItemStack, Level, Map<String, Float>> sourceValueResolver =
-                MarieLibContext::defaultSourceValueResolver;
-        private SourceDeltaResolver sourceDeltaResolver = MarieLibContext::defaultSourceDeltaResolver;
+                MarieContext::defaultSourceValueResolver;
+        private SourceDeltaResolver sourceDeltaResolver = MarieContext::defaultSourceDeltaResolver;
         private BiConsumer<ServerPlayer, TrackingData> effectApplier = (p, d) -> {};
         private Consumer<ServerPlayer> effectClearer = p -> {};
         private Supplier<Integer> decayIntervalTicks = () -> 20;
@@ -722,9 +722,9 @@ public final class MarieLibContext implements MarieLibSettings, IMarieLibConfig 
         @Nullable
         private BiConsumer<ServerPlayer, TrackingData> deathNutritionHandler = null;
         @Nullable
-        private MarieLibDataProvider dataProvider;
+        private MarieDataProvider dataProvider;
         @Nullable
-        private MarieLibRegistrationDelegate registrationDelegate;
+        private MarieRegistrationDelegate registrationDelegate;
         private Runnable cacheInvalidatedHook = () -> {};
         private Consumer<MinecraftServer> reloadBroadcastHook = server -> {};
         private BiFunction<ValueModifierContext, Float, Float> postValueModifierHook = (ctx, amount) -> amount;
@@ -840,22 +840,22 @@ public final class MarieLibContext implements MarieLibSettings, IMarieLibConfig 
             return this;
         }
         @ApiStatus.Stable
-        public Builder dataProvider(MarieLibDataProvider p) { this.dataProvider = p; return this; }
+        public Builder dataProvider(MarieDataProvider p) { this.dataProvider = p; return this; }
         /**
          * @deprecated Use {@link dev.marie.framework.api.MarieAPI#registerValue} and related
          *             {@code MarieAPI.register*} methods directly instead of supplying a delegate.
          */
         @Deprecated
         @ApiStatus.Internal
-        public Builder registrationDelegate(MarieLibRegistrationDelegate d) { this.registrationDelegate = d; return this; }
+        public Builder registrationDelegate(MarieRegistrationDelegate d) { this.registrationDelegate = d; return this; }
 
         @ApiStatus.Stable
-        public MarieLibContext build() {
+        public MarieContext build() {
             if (!MarieValidation.sanitizeModId(modId)) {
                 throw new IllegalArgumentException(
                         "modId must match [a-z0-9_]{1,64}, got: '" + modId + "'");
             }
-            return new MarieLibContext(this);
+            return new MarieContext(this);
         }
     }
 }

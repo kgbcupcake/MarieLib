@@ -20,7 +20,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
-import dev.marie.framework.core.IMarieLibConfig;
+import dev.marie.framework.core.IMarieConfig;
 import dev.marie.framework.core.MariesLib;
 import net.neoforged.fml.loading.FMLPaths;
 
@@ -56,7 +56,7 @@ public final class MarieDebugLogger {
     private MarieDebugLogger() {}
 
     public static void submitSourceLog(JsonObject entry) {
-        if (!IMarieLibConfig.get().enableDebugLogging()) {
+        if (!IMarieConfig.get().enableDebugLogging()) {
             return;
         }
         String jsonLine = GSON_COMPACT.toJson(entry);
@@ -102,7 +102,7 @@ public final class MarieDebugLogger {
 
     private static Path debugDir() throws IOException {
         Path base = FMLPaths.GAMEDIR.get().resolve("config");
-        Path dir = base.resolve(IMarieLibConfig.get().modId()).resolve("debug");
+        Path dir = base.resolve(IMarieConfig.get().modId()).resolve("debug");
         dev.marie.framework.util.MarieValidation.assertPathUnder(dir, base, "MarieDebugLogger.debugDir");
         Files.createDirectories(dir);
         return dir;

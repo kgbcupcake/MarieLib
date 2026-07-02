@@ -3,8 +3,8 @@ package dev.marie.framework.tracking;
 import dev.marie.framework.api.ApiStatus;
 import dev.marie.framework.api.ApplicationHistoryView;
 import dev.marie.framework.api.impl.EmptyApplicationHistoryView;
-import dev.marie.framework.core.IMarieLibConfig;
-import dev.marie.framework.core.MarieLibContext;
+import dev.marie.framework.core.IMarieConfig;
+import dev.marie.framework.core.MarieContext;
 import dev.marie.framework.core.MariesLib;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.attachment.AttachmentType;
@@ -34,7 +34,7 @@ public final class TrackingAttachment {
             return;
         }
         registered = true;
-        String modId = IMarieLibConfig.get().modId();
+        String modId = IMarieConfig.get().modId();
         DeferredRegister<AttachmentType<?>> attachmentTypes =
                 DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, modId);
         TRACKING = attachmentTypes.register(ATTACHMENT_ID, () ->
@@ -72,7 +72,7 @@ public final class TrackingAttachment {
     }
 
     private static String trackingAttachmentNbtPrefix() {
-        String modId = IMarieLibConfig.get().modId();
+        String modId = IMarieConfig.get().modId();
         return NBT_ATTACHMENTS_PREFIX + modId + ":" + ATTACHMENT_ID;
     }
 
@@ -85,10 +85,10 @@ public final class TrackingAttachment {
     }
 
     public static void logAllValueNbtPaths() {
-        if (!MarieLibContext.isRegistered()) {
+        if (!MarieContext.isRegistered()) {
             return;
         }
-        List<String> valueKeys = MarieLibContext.get().valueKeys();
+        List<String> valueKeys = MarieContext.get().valueKeys();
         for (String valueKey : valueKeys) {
             MariesLib.LOGGER.info("[MarieLib] Value NBT path: {}", getValueNbtPath(valueKey));
         }

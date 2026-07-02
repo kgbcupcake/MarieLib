@@ -6,7 +6,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import dev.marie.framework.api.ApiStatus;
-import dev.marie.framework.core.IMarieLibConfig;
+import dev.marie.framework.core.IMarieConfig;
 import dev.marie.framework.core.MariesLib;
 import dev.marie.framework.registry.AbstractRegistry;
 import dev.marie.framework.data.DatapackSchema;
@@ -52,7 +52,7 @@ public final class ScannerSpecRegistry {
     private static final String CONFIG_FILE_NAME = "scanner_spec.json";
 
     private static String bundledResourcePath() {
-        return "/data/" + IMarieLibConfig.get().modId() + "/" + DatapackSchema.root() + "/scanner/scanner_spec.json";
+        return "/data/" + IMarieConfig.get().modId() + "/" + DatapackSchema.root() + "/scanner/scanner_spec.json";
     }
     private static final String SPEC_KEY = "active";
 
@@ -72,7 +72,7 @@ public final class ScannerSpecRegistry {
     }
 
     public static void load() {
-        Path configDir = FMLPaths.CONFIGDIR.get().resolve(IMarieLibConfig.get().modId());
+        Path configDir = FMLPaths.CONFIGDIR.get().resolve(IMarieConfig.get().modId());
         Path file = configDir.resolve(CONFIG_FILE_NAME);
         try {
             Files.createDirectories(configDir);

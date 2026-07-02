@@ -6,7 +6,7 @@ import dev.marie.framework.api.registry.SourcePropertySignalRegistry;
 import dev.marie.framework.classification.ClassificationTraceStep;
 import dev.marie.framework.classification.TraceStepId;
 import dev.marie.framework.classification.TraceStepStatus;
-import dev.marie.framework.core.MarieLibContext;
+import dev.marie.framework.core.MarieContext;
 import dev.marie.framework.core.MariesLib;
 import dev.marie.framework.scanner.ScannerSpecRegistry.Multipliers;
 import dev.marie.framework.scanner.ScannerSpecRegistry.ScannerSpec;
@@ -71,8 +71,8 @@ public final class ItemClassifier {
          Holder<Item> holder = stack.getItemHolder();
          String namespace = itemId.getNamespace();
          String path = itemId.getPath();
-         boolean hasSourceProperties = !MarieLibContext.isRegistered()
-                 || MarieLibContext.get().sourceItemFilter().test(stack);
+         boolean hasSourceProperties = !MarieContext.isRegistered()
+                 || MarieContext.get().sourceItemFilter().test(stack);
          if (traceOut.isPresent()) {
             Map<String, Object> discoveryDetail = new LinkedHashMap<>();
             discoveryDetail.put("itemId", itemId.toString());

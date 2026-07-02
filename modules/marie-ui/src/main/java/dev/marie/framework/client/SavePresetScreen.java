@@ -1,6 +1,6 @@
 package dev.marie.framework.client;
 
-import dev.marie.framework.core.IMarieLibConfig;
+import dev.marie.framework.core.IMarieConfig;
 import dev.marie.framework.config.PresetRegistry;
 import dev.marie.framework.core.MariesLib;
 import net.minecraft.client.Minecraft;
@@ -67,7 +67,7 @@ public final class SavePresetScreen extends Screen {
         String author = mc.player != null ? mc.player.getGameProfile().getName() : "";
         String desc = descriptionBox.getValue().trim();
         try {
-            PresetRegistry.saveUserPreset(name, desc, author, IMarieLibConfig.get().currentConfigPresetValues());
+            PresetRegistry.saveUserPreset(name, desc, author, IMarieConfig.get().currentConfigPresetValues());
         } catch (Exception e) {
             MariesLib.LOGGER.warn("[SavePresetScreen] Failed to save preset", e);
             return;

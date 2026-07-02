@@ -6,7 +6,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import dev.marie.framework.api.ApiStatus;
-import dev.marie.framework.core.IMarieLibConfig;
+import dev.marie.framework.core.IMarieConfig;
 import dev.marie.framework.core.MariesLib;
 import dev.marie.framework.util.MarieValidation;
 import net.minecraft.resources.ResourceLocation;
@@ -40,7 +40,7 @@ public final class ExportWriter {
             return null;
         }
 
-        Path configDir = FMLPaths.CONFIGDIR.get().resolve(IMarieLibConfig.get().modId());
+        Path configDir = FMLPaths.CONFIGDIR.get().resolve(IMarieConfig.get().modId());
         Path file = configDir.resolve(resolverId + "_export.json");
 
         Map<String, Map<String, Object>> sorted = new TreeMap<>();

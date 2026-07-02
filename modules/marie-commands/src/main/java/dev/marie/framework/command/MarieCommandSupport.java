@@ -1,12 +1,11 @@
 package dev.marie.framework.command;
 
-// TODO(marie-core migration): depends on dev.marie.framework.{api, core, data, handler, runtime, scanner, tracking} (not yet migrated to marie-core; module will not compile until that lands)
 
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import dev.marie.framework.api.ValueDefinition;
 import dev.marie.framework.api.registry.ProfileRegistry;
 import dev.marie.framework.api.registry.ValueRegistry;
-import dev.marie.framework.core.MarieLibContext;
+import dev.marie.framework.core.MarieContext;
 import dev.marie.framework.data.SchemaDefinition;
 import dev.marie.framework.handler.SourceApplicationPipeline;
 import dev.marie.framework.runtime.SourceRegistry;
@@ -82,7 +81,7 @@ final class MarieCommandSupport {
     }
 
     static boolean ensureConsumerRegistered(CommandSourceStack source) {
-        if (!MarieLibContext.isRegistered()) {
+        if (!MarieContext.isRegistered()) {
             source.sendFailure(NO_CONSUMER_MESSAGE);
             return false;
         }

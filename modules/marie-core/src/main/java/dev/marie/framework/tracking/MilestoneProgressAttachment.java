@@ -2,7 +2,7 @@ package dev.marie.framework.tracking;
 
 import dev.marie.framework.api.ApiStatus;
 import dev.marie.framework.config.FeatureFlagCache;
-import dev.marie.framework.core.IMarieLibConfig;
+import dev.marie.framework.core.IMarieConfig;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.attachment.AttachmentType;
@@ -34,7 +34,7 @@ public final class MilestoneProgressAttachment {
             return;
         }
         registered = true;
-        String modId = IMarieLibConfig.get().modId();
+        String modId = IMarieConfig.get().modId();
         DeferredRegister<AttachmentType<?>> attachmentTypes =
                 DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, modId);
         MILESTONE_PROGRESS = attachmentTypes.register(ATTACHMENT_ID, () ->

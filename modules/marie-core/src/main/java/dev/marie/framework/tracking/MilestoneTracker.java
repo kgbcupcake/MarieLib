@@ -5,7 +5,7 @@ import dev.marie.framework.api.MarieEvents;
 import dev.marie.framework.api.MilestoneDefinition;
 import dev.marie.framework.api.registry.MilestoneRegistry;
 import dev.marie.framework.config.FeatureFlagCache;
-import dev.marie.framework.core.MarieLibContext;
+import dev.marie.framework.core.MarieContext;
 import dev.marie.framework.core.MariesLib;
 import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -68,7 +68,7 @@ public final class MilestoneTracker {
                 continue;
             }
 
-            List<String> valueKeys = MarieLibContext.get().valueKeys();
+            List<String> valueKeys = MarieContext.get().valueKeys();
             if (valueKeys.isEmpty()) {
                 continue;
             }

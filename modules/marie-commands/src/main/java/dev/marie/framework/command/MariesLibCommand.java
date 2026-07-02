@@ -7,7 +7,7 @@ import dev.marie.framework.api.ApiStatus;
 import dev.marie.framework.api.MarieAPIState;
 import dev.marie.framework.api.MarieAPIVersion;
 import dev.marie.framework.config.ConfigValidatorRegistry;
-import dev.marie.framework.core.MarieLibContext;
+import dev.marie.framework.core.MarieContext;
 import dev.marie.framework.core.MarieModRegistry;
 import dev.marie.framework.core.MariesLib;
 import dev.marie.framework.export.ExportResolverRegistry;
@@ -119,7 +119,7 @@ public final class MariesLibCommand {
 
         String apiVersion = MarieAPIVersion.VERSION;
         int modCount = MarieModRegistry.getAll().size();
-        String bootstrapMode = MarieLibContext.isRegistered() ? "consumer-driven" : "standalone";
+        String bootstrapMode = MarieContext.isRegistered() ? "consumer-driven" : "standalone";
 
         source.sendSuccess(() -> Component.literal("[MariesLib Status]").withStyle(ChatFormatting.GOLD), false);
         source.sendSuccess(() -> Component.literal("Library version: " + libVersion).withStyle(ChatFormatting.WHITE), false);
@@ -132,7 +132,7 @@ public final class MariesLibCommand {
 
     private static int showMods(CommandContext<CommandSourceStack> ctx) {
         CommandSourceStack source = ctx.getSource();
-        List<MarieLibContext> mods = MarieModRegistry.getAll();
+        List<MarieContext> mods = MarieModRegistry.getAll();
 
         if (mods.isEmpty()) {
             source.sendSuccess(() -> Component.literal("[MariesLib] No Marie mods registered.").withStyle(ChatFormatting.YELLOW), false);
@@ -141,8 +141,8 @@ public final class MariesLibCommand {
 
         source.sendSuccess(() -> Component.literal("[MariesLib Registered Mods]").withStyle(ChatFormatting.GOLD), false);
 
-        MarieLibContext primary = MarieModRegistry.getPrimaryOrNull();
-        for (MarieLibContext mod : mods) {
+        MarieContext primary = MarieModRegistry.getPrimaryOrNull();
+        for (MarieContext mod : mods) {
             String modId = mod.modId();
             boolean isPrimary = primary != null && modId.equals(primary.modId());
             String label = isPrimary ? modId + " (primary)" : modId;

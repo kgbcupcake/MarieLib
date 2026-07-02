@@ -7,8 +7,8 @@ import dev.marie.framework.api.ValueDefinition;
 import dev.marie.framework.api.registry.SeasonHookRegistry;
 import dev.marie.framework.api.registry.ValueRegistry;
 import dev.marie.framework.config.FeatureFlagCache;
-import dev.marie.framework.core.IMarieLibConfig;
-import dev.marie.framework.core.MarieLibContext;
+import dev.marie.framework.core.IMarieConfig;
+import dev.marie.framework.core.MarieContext;
 import dev.marie.framework.tracking.TrackingAttachment;
 import dev.marie.framework.tracking.TrackingData;
 import dev.marie.framework.core.KubeIntegration;
@@ -37,12 +37,12 @@ public class ValueDecayListener {
             return;
         }
         data.setMemoryConfig(configOrSkip.config());
-        int interval = Math.max(1, IMarieLibConfig.get().decayIntervalTicks());
+        int interval = Math.max(1, IMarieConfig.get().decayIntervalTicks());
         if (player.level().getGameTime() % interval != 0) return;
         boolean changed = false;
         for (ValueDefinition def : ValueRegistry.getAll()) {
             String key = def.getId();
-            float rate = IMarieLibConfig.get().decayRateFor(key);
+            float rate = IMarieConfig.get().decayRateFor(key);
             rate = applySeasonalDecayModifier(key, rate);
             rate *= MarieAttributes.valueDecayMultiplier(player);
             float current = data.values.getOrDefault(key, 0f);
@@ -62,8 +62,8 @@ public class ValueDecayListener {
                     NeoForge.EVENT_BUS.post(new MarieEvents.ValueChangedEvent(
                             player, key, current, newValue));
 
-                    if (MarieLibContext.isValueBeneficial(key)) {
-                        float criticalThreshold = IMarieLibConfig.get().criticalThresholdFor(key);
+                    if (MarieContext.isValueBeneficial(key)) {
+                        float criticalThreshold = IMarieConfig.get().criticalThresholdFor(key);
                         if (newValue <= criticalThreshold && current > criticalThreshold) {
                             NeoForge.EVENT_BUS.post(new MarieEvents.ValueCriticalEvent(player, key));
                         }
@@ -74,8 +74,8 @@ public class ValueDecayListener {
 
         if (changed) {
             TrackingAttachment.setData(player, data);
-            if (MarieLibContext.isRegistered()) {
-                MarieLibContext.get().trackingDeltaSyncer().accept(player, data);
+            if (MarieContext.isRegistered()) {
+                MarieContext.get().trackingDeltaSyncer().accept(player, data);
             }
         }
     }
@@ -88,7 +88,7 @@ public class ValueDecayListener {
     }
 
     private static DiminishingReturnsConfigOrSkip resolveConfigOrSkip() {
-        return new DiminishingReturnsConfigOrSkip(IMarieLibConfig.get().trackingMemoryConfig(), false);
+        return new DiminishingReturnsConfigOrSkip(IMarieConfig.get().trackingMemoryConfig(), false);
     }
 
     private float applySeasonalDecayModifier(String valueKey, float baseRate) {

@@ -1,7 +1,7 @@
 package dev.marie.framework.handler;
 
 import dev.marie.framework.api.ApiStatus;
-import dev.marie.framework.core.MarieLibContext;
+import dev.marie.framework.core.MarieContext;
 import dev.marie.framework.core.MariesLib;
 import dev.marie.framework.data.MarieDataManager;
 import dev.marie.framework.registry.RegistryLifecycleManager;
@@ -30,8 +30,8 @@ public class ReloadGuardListener {
     }
 
     public static void reloadAndBroadcast(MinecraftServer server) {
-        if (MarieLibContext.isRegistered()) {
-            MarieLibContext.get().reloadBroadcastHook().accept(server);
+        if (MarieContext.isRegistered()) {
+            MarieContext.get().reloadBroadcastHook().accept(server);
         }
     }
 

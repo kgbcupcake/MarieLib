@@ -5,7 +5,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
-import dev.marie.framework.core.MarieLibContext;
+import dev.marie.framework.core.MarieContext;
 import dev.marie.framework.core.MarieModRegistry;
 import dev.marie.framework.core.MariesLib;
 import net.neoforged.fml.loading.FMLPaths;
@@ -23,7 +23,7 @@ import java.util.stream.Stream;
 
 /**
  * Loads and writes gameplay presets under {@code config/<modid>/presets/}.
- * Marie mods may seed locked presets via {@link MarieLibContext#ensureBuiltInPresetsOnDisk()}.
+ * Marie mods may seed locked presets via {@link MarieContext#ensureBuiltInPresetsOnDisk()}.
  */
 public final class PresetRegistry {
 
@@ -79,8 +79,8 @@ public final class PresetRegistry {
         } catch (IOException e) {
             MariesLib.LOGGER.error("[MarieLib] Failed to create presets directory", e);
         }
-        if (MarieLibContext.isRegistered()) {
-            MarieLibContext.get().ensureBuiltInPresetsOnDisk();
+        if (MarieContext.isRegistered()) {
+            MarieContext.get().ensureBuiltInPresetsOnDisk();
         }
     }
 
@@ -154,8 +154,8 @@ public final class PresetRegistry {
     }
 
     public static void applyPresetValues(PresetValues v) {
-        if (MarieLibContext.isRegistered()) {
-            MarieLibContext.get().applyPresetValues(v);
+        if (MarieContext.isRegistered()) {
+            MarieContext.get().applyPresetValues(v);
         }
     }
 

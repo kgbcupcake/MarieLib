@@ -2,13 +2,13 @@ package dev.marie.framework.tracking;
 
 import dev.marie.framework.api.ApiStatus;
 import dev.marie.framework.api.ApplicationHistoryView;
-import dev.marie.framework.core.MarieLibDataProvider;
+import dev.marie.framework.core.MarieDataProvider;
 import dev.marie.framework.handler.SourceApplicationPipeline;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 
 @ApiStatus.Internal
-public final class AttachmentTrackingDataProvider implements MarieLibDataProvider {
+public final class AttachmentTrackingDataProvider implements MarieDataProvider {
 
     @Override
     public float getAggregateLevel(Player player) {

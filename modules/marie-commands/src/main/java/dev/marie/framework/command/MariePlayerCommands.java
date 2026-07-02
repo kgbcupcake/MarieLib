@@ -1,6 +1,5 @@
 package dev.marie.framework.command;
 
-// TODO(marie-core migration): depends on dev.marie.framework.{api, core, handler, tracking} (not yet migrated to marie-core; module will not compile until that lands)
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -10,8 +9,8 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import dev.marie.framework.api.registry.ProfileRegistry;
-import dev.marie.framework.core.IMarieLibConfig;
-import dev.marie.framework.core.MarieLibContext;
+import dev.marie.framework.core.IMarieConfig;
+import dev.marie.framework.core.MarieContext;
 import dev.marie.framework.handler.SourceApplicationPipeline;
 import dev.marie.framework.tracking.TrackingAttachment;
 import dev.marie.framework.tracking.TrackingData;
@@ -205,10 +204,10 @@ final class MariePlayerCommands {
 
         TrackingData data = TrackingAttachment.getData(target);
         float value = data.values.getOrDefault(key, 0f);
-        float decay = IMarieLibConfig.get().decayRateFor(key);
-        float critical = IMarieLibConfig.get().criticalThresholdFor(key);
-        float low = IMarieLibConfig.get().lowThreshold();
-        float excess = IMarieLibConfig.get().excessThreshold();
+        float decay = IMarieConfig.get().decayRateFor(key);
+        float critical = IMarieConfig.get().criticalThresholdFor(key);
+        float low = IMarieConfig.get().lowThreshold();
+        float excess = IMarieConfig.get().excessThreshold();
         Component chip = MarieCommandSource.statusChip(MarieCommandSource.statusFor(value, key));
 
         source.sendSuccess(() -> Component.literal("Value: " + key + " (" + target.getName().getString() + ")")

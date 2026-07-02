@@ -4,7 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import dev.marie.framework.core.MariesLib;
-import dev.marie.framework.core.MarieLibContext;
+import dev.marie.framework.core.MarieContext;
 import dev.marie.framework.util.MarieValidation;
 import dev.marie.framework.util.MarieRegistryUtils;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -39,7 +39,7 @@ public final class AutoCompatDiscovery {
     public static void discover() {
         MariesLib.LOGGER.info("[MarieLib] AutoCompatDiscovery.discover() called — evaluating {} mods", ModList.get().getMods().size());
         try {
-            Path autoCompatDir = FMLPaths.CONFIGDIR.get().resolve(MarieLibContext.get().modId() + "/auto_compat");
+            Path autoCompatDir = FMLPaths.CONFIGDIR.get().resolve(MarieContext.get().modId() + "/auto_compat");
             Files.createDirectories(autoCompatDir);
             Set<String> registeredModIds = new HashSet<>(ModCompat.getDetected().keySet());
 
@@ -92,7 +92,7 @@ public final class AutoCompatDiscovery {
             }
 
             ItemStack stack = new ItemStack(item);
-            if (!MarieLibContext.get().sourceItemFilter().test(stack)) {
+            if (!MarieContext.get().sourceItemFilter().test(stack)) {
                 continue;
             }
 
@@ -125,7 +125,7 @@ public final class AutoCompatDiscovery {
         }
 
         JsonObject root = new JsonObject();
-        root.addProperty(MarieLibContext.get().modId() + "_schema_version", 1);
+        root.addProperty(MarieContext.get().modId() + "_schema_version", 1);
         root.addProperty("mod_id", modId);
         root.addProperty("category", "SOURCE_MOD");
         root.addProperty("auto_detected", true);

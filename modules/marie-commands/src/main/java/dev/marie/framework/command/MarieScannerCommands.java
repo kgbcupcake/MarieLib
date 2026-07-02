@@ -1,11 +1,10 @@
 package dev.marie.framework.command;
 
-// TODO(marie-core migration): depends on dev.marie.framework.{api, core, runtime, scanner, tracking} (not yet migrated to marie-core; module will not compile until that lands)
 
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import dev.marie.framework.api.ApiStatus;
-import dev.marie.framework.core.MarieLibContext;
+import dev.marie.framework.core.MarieContext;
 import dev.marie.framework.core.MariesLib;
 import dev.marie.framework.runtime.RuntimeResolver;
 import dev.marie.framework.runtime.SourceCollector;
@@ -42,8 +41,8 @@ final class MarieScannerCommands {
         CommandSourceStack source = ctx.getSource();
         ItemScanner.invalidateCache();
         RuntimeResolver.getInstance().invalidateCache();
-        if (MarieLibContext.isRegistered()) {
-            MarieLibContext.get().cacheInvalidatedHook().run();
+        if (MarieContext.isRegistered()) {
+            MarieContext.get().cacheInvalidatedHook().run();
         }
         ItemScanner.scanAndApply(source.getServer().getRecipeManager());
         source.sendSuccess(() -> Component.literal(
@@ -75,7 +74,7 @@ final class MarieScannerCommands {
 
         for (Item item : BuiltInRegistries.ITEM) {
             ItemStack stack = new ItemStack(item);
-            if (!MarieLibContext.get().sourceItemFilter().test(stack)) {
+            if (!MarieContext.get().sourceItemFilter().test(stack)) {
                 continue;
             }
             ResourceLocation itemId = item.builtInRegistryHolder().key().location();

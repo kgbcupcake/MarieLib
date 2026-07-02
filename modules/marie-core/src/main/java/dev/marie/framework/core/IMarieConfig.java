@@ -8,16 +8,16 @@ import dev.marie.framework.tracking.DiminishingReturnsConfig;
 
 /**
  * @deprecated Use {@link MarieLibSettings} for scanner/debug settings,
- * or {@link MarieLibContext#get()} for gameplay methods.
+ * or {@link MarieContext#get()} for gameplay methods.
  */
 @Deprecated
 @ApiStatus.Internal
-public interface IMarieLibConfig extends MarieLibSettings {
+public interface IMarieConfig extends MarieLibSettings {
 
     @ApiStatus.Internal
-    static IMarieLibConfig get() {
-        if (MarieLibContext.isRegistered()) {
-            return MarieLibContext.get();
+    static IMarieConfig get() {
+        if (MarieContext.isRegistered()) {
+            return MarieContext.get();
         }
         return FallbackConfig.INSTANCE;
     }

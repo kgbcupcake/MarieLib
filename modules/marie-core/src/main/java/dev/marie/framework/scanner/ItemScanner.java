@@ -6,8 +6,8 @@ import dev.marie.framework.api.ApiStatus;
 import dev.marie.framework.api.ValueDefinition;
 import dev.marie.framework.api.registry.ValueRegistry;
 import dev.marie.framework.core.MariesLib;
-import dev.marie.framework.core.IMarieLibConfig;
-import dev.marie.framework.core.MarieLibContext;
+import dev.marie.framework.core.IMarieConfig;
+import dev.marie.framework.core.MarieContext;
 import dev.marie.framework.runtime.SourceRegistry;
 import dev.marie.framework.util.MarieRegistryUtils;
 import dev.marie.framework.classification.ClassificationTraceStep;
@@ -36,7 +36,7 @@ import java.util.function.Consumer;
  *
  * <p>Pipeline stages:</p>
  * <ol>
- *   <li>Registry Scan - Find items matching {@link MarieLibContext#sourceItemFilter()}</li>
+ *   <li>Registry Scan - Find items matching {@link MarieContext#sourceItemFilter()}</li>
  *   <li>Signal Analysis - Multi-signal, weighted classification</li>
  *   <li>Confidence Validation - Spread-based, not threshold-based</li>
  *   <li>Tag Recommendation - Auto-generate JSON entries for high-confidence hits</li>
@@ -94,8 +94,8 @@ public final class ItemScanner {
             boolean recipeInheritance = DEFAULT_ENABLE_RECIPE_INHERITANCE;
             float spreadThreshold = DEFAULT_SPREAD_THRESHOLD;
             try {
-                recipeInheritance = IMarieLibConfig.get().scannerEnableRecipeInheritance();
-                spreadThreshold = IMarieLibConfig.get().scannerConfidenceSpreadThreshold();
+                recipeInheritance = IMarieConfig.get().scannerEnableRecipeInheritance();
+                spreadThreshold = IMarieConfig.get().scannerConfidenceSpreadThreshold();
             } catch (IllegalStateException ignored) {
                 // Config not initialized yet; keep safe zero-default behavior.
             }
@@ -195,7 +195,7 @@ public final class ItemScanner {
         if (SourceRegistry.hasAuthoritativeClassification(itemId)) {
             return true;
         }
-        String modId = IMarieLibConfig.get().modId();
+        String modId = IMarieConfig.get().modId();
         for (ValueDefinition valueDef : ValueRegistry.getAll()) {
             String valueKey = valueDef.getId();
             TagKey<Item> tag = TagKey.create(
@@ -262,7 +262,7 @@ public final class ItemScanner {
                 Map<String, Float> toApply;
                 if (isComposite(r) && r.values() != null && !r.values().isEmpty()) {
                     float top = r.values().values().stream().max(Float::compare).orElse(0f);
-                    float threshold = top * IMarieLibConfig.get().compositeRatioThreshold();
+                    float threshold = top * IMarieConfig.get().compositeRatioThreshold();
                     Map<String, Float> composite = new HashMap<>();
                     for (Map.Entry<String, Float> e : r.values().entrySet()) {
                         if (e.getValue() >= threshold) {
@@ -309,7 +309,7 @@ public final class ItemScanner {
 
         return top > 0f
                 && second > 0f
-                && second / top >= IMarieLibConfig.get().compositeRatioThreshold();
+                && second / top >= IMarieConfig.get().compositeRatioThreshold();
     }
 
     /**
@@ -503,8 +503,8 @@ public final class ItemScanner {
     }
 
     private static boolean passesSourceFilter(ItemStack stack) {
-        if (MarieLibContext.isRegistered()) {
-            return MarieLibContext.get().sourceItemFilter().test(stack);
+        if (MarieContext.isRegistered()) {
+            return MarieContext.get().sourceItemFilter().test(stack);
         }
         return true;
     }

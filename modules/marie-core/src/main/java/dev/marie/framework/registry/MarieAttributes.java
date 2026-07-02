@@ -1,7 +1,7 @@
 package dev.marie.framework.registry;
 
 import dev.marie.framework.api.ApiStatus;
-import dev.marie.framework.core.IMarieLibConfig;
+import dev.marie.framework.core.IMarieConfig;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EntityType;
@@ -25,7 +25,7 @@ public final class MarieAttributes {
 
     private static void ensureInitialized() {
         if (ATTRIBUTES != null) return;
-        String modId = IMarieLibConfig.get().modId();
+        String modId = IMarieConfig.get().modId();
         ATTRIBUTES = DeferredRegister.create(Registries.ATTRIBUTE, modId);
         VALUE_REGEN_MULTIPLIER = ATTRIBUTES.register(
                 "value_regen_multiplier",

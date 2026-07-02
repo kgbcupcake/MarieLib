@@ -5,7 +5,7 @@ import dev.emi.emi.api.EmiRegistry;
 import dev.emi.emi.api.stack.Comparison;
 import dev.marie.framework.api.ApiStatus;
 import dev.marie.framework.compat.MarieTooltipHelper;
-import dev.marie.framework.core.MarieLibContext;
+import dev.marie.framework.core.MarieContext;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -21,7 +21,7 @@ public final class MarieEmiPlugin implements EmiPlugin {
         }
         for (Item item : BuiltInRegistries.ITEM) {
             ItemStack stack = new ItemStack(item);
-            if (!MarieLibContext.isRegistered() || !MarieLibContext.get().sourceItemFilter().test(stack)) {
+            if (!MarieContext.isRegistered() || !MarieContext.get().sourceItemFilter().test(stack)) {
                 continue;
             }
             int tooltipHash = MarieTooltipHelper.getTooltipLines(stack).hashCode();

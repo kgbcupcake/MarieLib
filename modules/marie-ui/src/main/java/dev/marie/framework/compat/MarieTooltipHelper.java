@@ -14,8 +14,8 @@ import dev.marie.framework.api.registry.MilestoneRegistry;
 import dev.marie.framework.api.registry.SynergyRegistry;
 import dev.marie.framework.client.MarieValueColors;
 import dev.marie.framework.config.FeatureFlagCache;
-import dev.marie.framework.core.IMarieLibConfig;
-import dev.marie.framework.core.MarieLibContext;
+import dev.marie.framework.core.IMarieConfig;
+import dev.marie.framework.core.MarieContext;
 import dev.marie.framework.tracking.TrackingData;
 import dev.marie.framework.util.MarieRegistryUtils;
 import net.minecraft.ChatFormatting;
@@ -47,7 +47,7 @@ public final class MarieTooltipHelper {
         if (FMLEnvironment.dist != Dist.CLIENT) {
             return lines;
         }
-        if (!MarieLibContext.isRegistered()) {
+        if (!MarieContext.isRegistered()) {
             return lines;
         }
 
@@ -57,12 +57,12 @@ public final class MarieTooltipHelper {
         }
 
         Player player = mc.player;
-        Map<String, Float> valueBars = MarieLibContext.get().tooltipValueResolver().apply(stack, player);
-        if (!MarieLibContext.get().sourceItemFilter().test(stack) && valueBars.isEmpty()) {
+        Map<String, Float> valueBars = MarieContext.get().tooltipValueResolver().apply(stack, player);
+        if (!MarieContext.get().sourceItemFilter().test(stack) && valueBars.isEmpty()) {
             return lines;
         }
 
-        String modId = MarieLibContext.get().modId();
+        String modId = MarieContext.get().modId();
         String itemId = MarieRegistryUtils.itemKey(stack).toString();
         String dominantCategory = valueBars.isEmpty()
                 ? null
@@ -70,8 +70,8 @@ public final class MarieTooltipHelper {
                         .max(Map.Entry.comparingByValue())
                         .map(Map.Entry::getKey)
                         .orElse(null);
-        String familyKey = MarieLibContext.get().sourceFamilyResolver().apply(MarieRegistryUtils.itemKey(stack));
-        TrackingData tracking = MarieLibContext.get().clientTrackingDataProvider().get();
+        String familyKey = MarieContext.get().sourceFamilyResolver().apply(MarieRegistryUtils.itemKey(stack));
+        TrackingData tracking = MarieContext.get().clientTrackingDataProvider().get();
         long gameTimeMs = tracking.lastTickTime > 0 ? tracking.lastTickTime : 0L;
         float multiplier = player != null ? tracking.peekMultiplier(itemId, dominantCategory, familyKey, gameTimeMs) : 1.0f;
 
@@ -93,7 +93,7 @@ public final class MarieTooltipHelper {
         String highestKey = null;
         float highestValue = Float.NEGATIVE_INFINITY;
         if (!valueBars.isEmpty()) {
-            for (String key : MarieLibContext.get().valueKeys()) {
+            for (String key : MarieContext.get().valueKeys()) {
                 float v = valueBars.getOrDefault(key, 0f);
                 if (v > highestValue) {
                     highestValue = v;
@@ -103,7 +103,7 @@ public final class MarieTooltipHelper {
         }
 
         boolean renderedAny = false;
-        for (String key : MarieLibContext.get().valueKeys()) {
+        for (String key : MarieContext.get().valueKeys()) {
             float base = valueBars.getOrDefault(key, 0f);
             if (base < minLine) {
                 continue;
@@ -134,7 +134,7 @@ public final class MarieTooltipHelper {
             lines.add(Component.literal(
                     "  → " + (int) (fin * 100) + "% value gain (memory blend)")
                     .withStyle(fin < 1.0f ? ChatFormatting.GOLD : ChatFormatting.GREEN));
-        } else if (IMarieLibConfig.get().debugMemoryLogging() && player != null) {
+        } else if (IMarieConfig.get().debugMemoryLogging() && player != null) {
             var breakdown = tracking.getMultiplierBreakdown(itemId, dominantCategory, familyKey, gameTimeMs);
             lines.add(Component.empty());
             lines.add(Component.literal("  → " + (int) (breakdown.finalMultiplier() * 100) + "% value gain")
@@ -195,15 +195,15 @@ public final class MarieTooltipHelper {
     private static final int COL_GOOD = 0xFF55FF55;
 
     private static int computeTooltipColor(String key, TrackingData tracking, float gain) {
-        boolean beneficial = MarieLibContext.isValueBeneficial(key);
+        boolean beneficial = MarieContext.isValueBeneficial(key);
         float current = tracking.values.getOrDefault(key, 0f);
         float projected = current + gain;
 
         if (beneficial) {
             return MarieValueColors.baseColorArgb(key);
         }
-        float excess = IMarieLibConfig.get().excessThreshold();
-        float low = IMarieLibConfig.get().lowThreshold();
+        float excess = IMarieConfig.get().excessThreshold();
+        float low = IMarieConfig.get().lowThreshold();
         if (projected > excess) {
             return COL_CRITICAL;
         } else if (projected > low) {

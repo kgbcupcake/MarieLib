@@ -6,7 +6,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import dev.marie.framework.api.ApiStatus;
-import dev.marie.framework.core.IMarieLibConfig;
+import dev.marie.framework.core.IMarieConfig;
 import dev.marie.framework.core.MariesLib;
 import net.neoforged.fml.ModList;
 
@@ -27,7 +27,7 @@ public final class ModCompatRegistry {
     private static final Gson GSON = new Gson();
 
     private static String resourcePath() {
-        return "/data/" + IMarieLibConfig.get().modId() + "/config/mod_compat.json";
+        return "/data/" + IMarieConfig.get().modId() + "/config/mod_compat.json";
     }
 
     private static final Map<String, IntegrationEntry> INTEGRATIONS = new LinkedHashMap<>();

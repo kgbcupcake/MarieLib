@@ -2,7 +2,7 @@ package dev.marie.framework.command;
 
 import com.mojang.brigadier.CommandDispatcher;
 import dev.marie.framework.api.ApiStatus;
-import dev.marie.framework.core.MarieLibContext;
+import dev.marie.framework.core.MarieContext;
 import dev.marie.framework.core.MarieModRegistry;
 import dev.marie.framework.core.MariesLib;
 import net.minecraft.commands.CommandSourceStack;
@@ -27,7 +27,7 @@ public final class MarieCommand {
     @SubscribeEvent
     public static void onRegisterCommands(RegisterCommandsEvent event) {
         CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
-        for (MarieLibContext ctx : MarieModRegistry.getAll()) {
+        for (MarieContext ctx : MarieModRegistry.getAll()) {
             String modId = ctx.modId();
             if (!modId.equals(MariesLib.MOD_ID)) {
                 MarieConsumerCommandTree.register(dispatcher, modId);

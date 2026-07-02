@@ -1,8 +1,8 @@
 package dev.marie.framework.tracking;
 
 import dev.marie.framework.api.ApiStatus;
-import dev.marie.framework.core.IMarieLibConfig;
-import dev.marie.framework.core.MarieLibContext;
+import dev.marie.framework.core.IMarieConfig;
+import dev.marie.framework.core.MarieContext;
 import dev.marie.framework.handler.SourceApplicationPipeline;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
@@ -20,7 +20,7 @@ public final class TrackingResetSupport {
     public static boolean resetAllBarValues(ServerPlayer player, TrackingData tracking, float fill) {
         float clamped = Mth.clamp(fill, 0f, 1f);
         boolean changed = false;
-        for (String key : MarieLibContext.get().valueKeys()) {
+        for (String key : MarieContext.get().valueKeys()) {
             if (SourceApplicationPipeline.writeDirectValue(player, tracking, key, clamped)) {
                 changed = true;
             }
@@ -38,7 +38,7 @@ public final class TrackingResetSupport {
     }
 
     public static float resolveStartingFill() {
-        DiminishingReturnsConfig cfg = IMarieLibConfig.get().trackingMemoryConfig();
+        DiminishingReturnsConfig cfg = IMarieConfig.get().trackingMemoryConfig();
         if (cfg != null) {
             return Mth.clamp((float) cfg.startingValueFill(), 0f, 1f);
         }
@@ -57,14 +57,14 @@ public final class TrackingResetSupport {
     }
 
     /**
-     * Applies death respawn policy from {@link MarieLibContext}. When a custom
-     * {@link MarieLibContext#deathNutritionHandler()} is registered, it fully replaces the enum policy.
+     * Applies death respawn policy from {@link MarieContext}. When a custom
+     * {@link MarieContext#deathNutritionHandler()} is registered, it fully replaces the enum policy.
      */
     public static void applyDeathNutritionOnRespawn(ServerPlayer player, TrackingData tracking) {
-        if (!MarieLibContext.isRegistered()) {
+        if (!MarieContext.isRegistered()) {
             return;
         }
-        MarieLibContext ctx = MarieLibContext.get();
+        MarieContext ctx = MarieContext.get();
 
         var custom = ctx.deathNutritionHandler();
         if (custom != null) {
@@ -86,11 +86,11 @@ public final class TrackingResetSupport {
 
     /** Baseline fill for brand-new {@link TrackingData} instances. */
     public static float resolveInitialBarFill() {
-        if (MarieLibContext.isRegistered()) {
+        if (MarieContext.isRegistered()) {
             return resolveStartingFill();
         }
         try {
-            DiminishingReturnsConfig cfg = IMarieLibConfig.get().trackingMemoryConfig();
+            DiminishingReturnsConfig cfg = IMarieConfig.get().trackingMemoryConfig();
             if (cfg != null) {
                 return Mth.clamp((float) cfg.startingValueFill(), 0f, 1f);
             }

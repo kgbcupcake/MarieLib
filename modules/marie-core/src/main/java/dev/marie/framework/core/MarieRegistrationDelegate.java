@@ -13,7 +13,7 @@ import java.util.List;
  * Registered by the consuming mod at bootstrap.
  */
 @ApiStatus.Internal
-public interface MarieLibRegistrationDelegate {
+public interface MarieRegistrationDelegate {
 
     List<String> getValueKeys();
 

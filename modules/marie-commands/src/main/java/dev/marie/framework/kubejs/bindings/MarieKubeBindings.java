@@ -1,6 +1,5 @@
 package dev.marie.framework.kubejs.bindings;
 
-// TODO(marie-core migration): depends on dev.marie.framework.{api, runtime, util} (not yet migrated to marie-core; module will not compile until that lands)
 
 import dev.marie.framework.api.ApiStatus;
 import dev.marie.framework.api.MarieAPI;

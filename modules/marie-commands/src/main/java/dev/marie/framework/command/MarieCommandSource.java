@@ -1,11 +1,10 @@
 package dev.marie.framework.command;
 
-// TODO(marie-core migration): depends on dev.marie.framework.{api, core, tracking} (not yet migrated to marie-core; module will not compile until that lands)
 
 import dev.marie.framework.api.ApiStatus;
 import dev.marie.framework.api.ReportProvider;
 import dev.marie.framework.api.registry.ReportProviderRegistry;
-import dev.marie.framework.core.IMarieLibConfig;
+import dev.marie.framework.core.IMarieConfig;
 import dev.marie.framework.tracking.TrackingData;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
@@ -42,9 +41,9 @@ public final class MarieCommandSource {
     }
 
     public static ValueStatus statusFor(float value, String key) {
-        float critical = IMarieLibConfig.get().criticalThresholdFor(key);
-        float low = IMarieLibConfig.get().lowThreshold();
-        float excess = IMarieLibConfig.get().excessThreshold();
+        float critical = IMarieConfig.get().criticalThresholdFor(key);
+        float low = IMarieConfig.get().lowThreshold();
+        float excess = IMarieConfig.get().excessThreshold();
         if (value < critical) return ValueStatus.CRITICAL;
         if (value < low) return ValueStatus.LOW;
         if (value > excess) return ValueStatus.EXCESS;
@@ -74,7 +73,7 @@ public final class MarieCommandSource {
             java.util.function.Function<String, Float> decayRateFor,
             java.util.function.BiFunction<Float, String, ValueStatus> statusFor) {
         List<Component> lines = new ArrayList<>();
-        lines.add(Component.literal("=== " + IMarieLibConfig.get().modId() + " Report ===").withStyle(ChatFormatting.GOLD));
+        lines.add(Component.literal("=== " + IMarieConfig.get().modId() + " Report ===").withStyle(ChatFormatting.GOLD));
         lines.add(Component.literal("Player: ").withStyle(ChatFormatting.GRAY)
                 .append(target.getName().copy().withStyle(ChatFormatting.WHITE)));
         lines.add(Component.literal("Active Profile: ").withStyle(ChatFormatting.GRAY)
@@ -109,7 +108,7 @@ public final class MarieCommandSource {
     }
 
     private static float decayRateFor(String key) {
-        return IMarieLibConfig.get().decayRateFor(key);
+        return IMarieConfig.get().decayRateFor(key);
     }
 
     private static Component chip(String text, ChatFormatting color) {

@@ -2,8 +2,8 @@ package dev.marie.framework.handler;
 
 import dev.marie.framework.api.ApiStatus;
 import dev.marie.framework.config.FeatureFlagCache;
-import dev.marie.framework.core.IMarieLibConfig;
-import dev.marie.framework.core.MarieLibContext;
+import dev.marie.framework.core.IMarieConfig;
+import dev.marie.framework.core.MarieContext;
 import dev.marie.framework.core.KubeIntegration;
 import dev.marie.framework.tracking.DiminishingReturnsConfig;
 import dev.marie.framework.tracking.TrackingAttachment;
@@ -24,15 +24,15 @@ public class PlayerTrackingLifecycle {
         tracking.tick();
         TrackingAttachment.setData(player, tracking);
         tracking.setMemoryConfig(DiminishingReturnsSupport.resolveMemoryConfig());
-        if (MarieLibContext.isRegistered()) {
-            MarieLibContext.get().syncOnJoin().accept(player);
+        if (MarieContext.isRegistered()) {
+            MarieContext.get().syncOnJoin().accept(player);
             KubeIntegration.firePlayerSynced(player);
             if (FeatureFlagCache.enableEffects()) {
-                MarieLibContext.get().effectApplier().accept(player, tracking);
+                MarieContext.get().effectApplier().accept(player, tracking);
             }
-            if (MarieLibContext.get().showJoinMessage()) {
-                player.sendSystemMessage(MarieLibContext.get().joinMessageLine1());
-                player.sendSystemMessage(MarieLibContext.get().joinMessageLine2());
+            if (MarieContext.get().showJoinMessage()) {
+                player.sendSystemMessage(MarieContext.get().joinMessageLine1());
+                player.sendSystemMessage(MarieContext.get().joinMessageLine2());
             }
         }
     }
@@ -46,11 +46,11 @@ public class PlayerTrackingLifecycle {
         TrackingAttachment.setData(player, tracking);
         tracking.setMemoryConfig(DiminishingReturnsSupport.resolveMemoryConfig());
         TrackingResetSupport.applyDeathNutritionOnRespawn(player, tracking);
-        if (MarieLibContext.isRegistered()) {
-            MarieLibContext.get().syncOnJoin().accept(player);
+        if (MarieContext.isRegistered()) {
+            MarieContext.get().syncOnJoin().accept(player);
             KubeIntegration.firePlayerSynced(player);
             if (FeatureFlagCache.enableEffects()) {
-                MarieLibContext.get().effectApplier().accept(player, tracking);
+                MarieContext.get().effectApplier().accept(player, tracking);
             }
         }
     }
@@ -65,11 +65,11 @@ public class PlayerTrackingLifecycle {
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
         if (!TrackingAttachment.isRegistered()) return;
         TrackingData tracking = TrackingAttachment.getData(player);
-        if (MarieLibContext.isRegistered()) {
-            MarieLibContext.get().trackingDeltaSyncer().accept(player, tracking);
+        if (MarieContext.isRegistered()) {
+            MarieContext.get().trackingDeltaSyncer().accept(player, tracking);
             KubeIntegration.firePlayerSynced(player);
             if (FeatureFlagCache.enableEffects()) {
-                MarieLibContext.get().effectApplier().accept(player, tracking);
+                MarieContext.get().effectApplier().accept(player, tracking);
             }
         }
     }

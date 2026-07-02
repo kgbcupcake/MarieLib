@@ -1,6 +1,5 @@
 package dev.marie.framework.command;
 
-// TODO(marie-core migration): depends on dev.marie.framework.{api, classification, core, runtime, scan, util} (not yet migrated to marie-core; module will not compile until that lands)
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;

@@ -7,7 +7,7 @@ import com.google.gson.JsonObject;
 
 import dev.marie.framework.api.ApiStatus;
 import dev.marie.framework.core.MariesLib;
-import dev.marie.framework.core.MarieLibContext;
+import dev.marie.framework.core.MarieContext;
 import dev.marie.framework.util.MarieValidation;
 import net.neoforged.fml.loading.FMLPaths;
 
@@ -38,7 +38,7 @@ final class MultiValueAnalysisWriter {
     private MultiValueAnalysisWriter() {}
 
     static Path resolveOutputDir() {
-        return FMLPaths.CONFIGDIR.get().resolve(MarieLibContext.get().modId()).resolve(OUTPUT_SUBDIR);
+        return FMLPaths.CONFIGDIR.get().resolve(MarieContext.get().modId()).resolve(OUTPUT_SUBDIR);
     }
 
     static void writeAll(
@@ -106,13 +106,13 @@ final class MultiValueAnalysisWriter {
         }
 
         root.addProperty("note", "Secondary value tag recommendations for multi-value sources. "
-                + "Copy entries to data/" + MarieLibContext.get().modId() + "/tags/item/values/<category>.json");
+                + "Copy entries to data/" + MarieContext.get().modId() + "/tags/item/values/<category>.json");
 
         JsonObject categories = new JsonObject();
         for (Map.Entry<String, List<MultiValueEntry>> entry : result.secondaryByValue().entrySet()) {
             JsonObject categoryObj = new JsonObject();
             categoryObj.addProperty("target_file",
-                    "data/" + MarieLibContext.get().modId() + "/tags/item/values/" + entry.getKey() + ".json");
+                    "data/" + MarieContext.get().modId() + "/tags/item/values/" + entry.getKey() + ".json");
 
             JsonArray entries = new JsonArray();
             for (MultiValueEntry e : entry.getValue()) {
@@ -156,7 +156,7 @@ final class MultiValueAnalysisWriter {
             writer.write("Generated: " + LocalDateTime.now().format(TIMESTAMP_FORMAT) + "\n\n");
             writer.write("Instructions:\n");
             writer.write("  Add items below to their secondary value tag file:\n");
-            writer.write("  data/" + MarieLibContext.get().modId() + "/tags/item/values/<category>.json\n\n");
+            writer.write("  data/" + MarieContext.get().modId() + "/tags/item/values/<category>.json\n\n");
 
             if (result.secondaryByValue().isEmpty()) {
                 writer.write("  (no multi-value recommendations)\n");
@@ -168,7 +168,7 @@ final class MultiValueAnalysisWriter {
 
                 writer.write("─────────────────────────────────────────────────────────────────────────────────\n");
                 writer.write("  SECONDARY: " + value.toUpperCase() + " (" + items.size() + " items)\n");
-                writer.write("  Target: data/" + MarieLibContext.get().modId() + "/tags/item/values/" + value + ".json\n");
+                writer.write("  Target: data/" + MarieContext.get().modId() + "/tags/item/values/" + value + ".json\n");
                 writer.write("─────────────────────────────────────────────────────────────────────────────────\n\n");
 
                 for (MultiValueEntry e : items) {
@@ -314,7 +314,7 @@ final class MultiValueAnalysisWriter {
         JsonObject root = new JsonObject();
         JsonObject pack = new JsonObject();
         pack.addProperty("pack_format", 48);
-        pack.addProperty("description", MarieLibContext.get().modId() + " auto-generated multi-value tags");
+        pack.addProperty("description", MarieContext.get().modId() + " auto-generated multi-value tags");
         root.add("pack", pack);
         try (Writer w = Files.newBufferedWriter(packMeta)) {
             GSON.toJson(root, w);
@@ -322,7 +322,7 @@ final class MultiValueAnalysisWriter {
 
         Path tagsDir = datapackRoot
                 .resolve("data")
-                .resolve(MarieLibContext.get().modId())
+                .resolve(MarieContext.get().modId())
                 .resolve("tags")
                 .resolve("item")
                 .resolve("values");

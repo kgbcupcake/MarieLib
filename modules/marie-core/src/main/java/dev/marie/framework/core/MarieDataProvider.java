@@ -9,7 +9,7 @@ import net.minecraft.world.entity.player.Player;
  * Registered by the consuming mod at bootstrap.
  */
 @ApiStatus.Stable
-public interface MarieLibDataProvider {
+public interface MarieDataProvider {
 
     float getAggregateLevel(Player player);
 

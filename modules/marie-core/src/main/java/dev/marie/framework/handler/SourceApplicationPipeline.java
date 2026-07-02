@@ -28,8 +28,8 @@ import dev.marie.framework.tracking.TrackingDataApplicationHistoryView;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.effect.MobEffectInstance;
 import dev.marie.framework.config.FeatureFlagCache;
-import dev.marie.framework.core.IMarieLibConfig;
-import dev.marie.framework.core.MarieLibContext;
+import dev.marie.framework.core.IMarieConfig;
+import dev.marie.framework.core.MarieContext;
 import dev.marie.framework.core.MariesLib;
 import dev.marie.framework.debug.MarieDebugLogger;
 import dev.marie.framework.runtime.SourceClassificationRegistry;
@@ -82,7 +82,7 @@ public final class SourceApplicationPipeline {
             return;
         }
 
-        var ctx = MarieLibContext.get();
+        var ctx = MarieContext.get();
 
         MarieEvents.SourceTriggerEvent triggerEvent =
                 new MarieEvents.SourceTriggerEvent(player, trigger);
@@ -131,13 +131,13 @@ public final class SourceApplicationPipeline {
                     sourceKey, totalAdded, valueDeltas);
         } else if (stack == null || stack.isEmpty()) {
             matchedBars = Map.of();
-            MarieLibContext.SourceDelta delta = ctx.sourceDeltaResolver().resolve(
+            MarieContext.SourceDelta delta = ctx.sourceDeltaResolver().resolve(
                     stack, player.level(), trigger.payload(), matchedBars);
             totalAdded = delta.total();
             valueDeltas = new HashMap<>(delta.values());
         } else {
             matchedBars = new LinkedHashMap<>(ctx.sourceValueResolver().apply(stack, player.level()));
-            MarieLibContext.SourceDelta delta = ctx.sourceDeltaResolver().resolve(
+            MarieContext.SourceDelta delta = ctx.sourceDeltaResolver().resolve(
                     stack, player.level(), trigger.payload(), matchedBars);
             totalAdded = delta.total();
             valueDeltas = new HashMap<>(delta.values());
@@ -176,7 +176,7 @@ public final class SourceApplicationPipeline {
 
         for (String key : ctx.valueKeys()) {
             float valueDelta = valueDeltas.getOrDefault(key, 0f);
-            ValueDefinition valueDef = MarieLibContext.get().valueDefinitionFor(key);
+            ValueDefinition valueDef = MarieContext.get().valueDefinitionFor(key);
             if (valueDef != null && valueDef.getAmountScale() != 1.0) {
                 valueDelta = (float) (valueDelta / valueDef.getAmountScale());
             }
@@ -198,7 +198,7 @@ public final class SourceApplicationPipeline {
                 }
 
                 float finalDelta = modifierEvent.getAmount();
-                finalDelta = MarieLibContext.get().applyPostValueModifier(modifierCtx, finalDelta);
+                finalDelta = MarieContext.get().applyPostValueModifier(modifierCtx, finalDelta);
                 if (!Float.isFinite(finalDelta)) {
                     MariesLib.LOGGER.warn("[MarieLib] non-finite finalDelta {} for player={} source={} value={} — skipping",
                             finalDelta, player.getName().getString(), sourceKey, key);
@@ -259,7 +259,7 @@ public final class SourceApplicationPipeline {
                         continue;
                     }
                     float finalBonus = bonusEvent.getAmount();
-                    finalBonus = MarieLibContext.get().applyPostValueModifier(bonusCtx, finalBonus);
+                    finalBonus = MarieContext.get().applyPostValueModifier(bonusCtx, finalBonus);
                     if (!Float.isFinite(finalBonus) || finalBonus == 0f) {
                         continue;
                     }
@@ -291,8 +291,8 @@ public final class SourceApplicationPipeline {
                 for (SynergyDefinition synergy : valueSynergies) {
                     String keyA = synergy.getValueKeyA();
                     String keyB = synergy.getValueKeyB();
-                    ValueDefinition defA = MarieLibContext.get().valueDefinitionFor(keyA);
-                    ValueDefinition defB = MarieLibContext.get().valueDefinitionFor(keyB);
+                    ValueDefinition defA = MarieContext.get().valueDefinitionFor(keyA);
+                    ValueDefinition defB = MarieContext.get().valueDefinitionFor(keyB);
                     if (defA == null || defB == null) {
                         continue;
                     }
@@ -402,21 +402,21 @@ public final class SourceApplicationPipeline {
     @ApiStatus.Internal
     public static void finalizeDirectWrite(ServerPlayer player, TrackingData tracking) {
         TrackingAttachment.setData(player, tracking);
-        if (!MarieLibContext.isRegistered()) {
+        if (!MarieContext.isRegistered()) {
             return;
         }
-        var ctx = MarieLibContext.get();
+        var ctx = MarieContext.get();
         ctx.trackingDeltaSyncer().accept(player, tracking);
         ctx.effectApplier().accept(player, tracking);
     }
 
     private static DiminishingReturnsConfigOrNull resolveMemoryConfig() {
-        return new DiminishingReturnsConfigOrNull(IMarieLibConfig.get().trackingMemoryConfig(), false);
+        return new DiminishingReturnsConfigOrNull(IMarieConfig.get().trackingMemoryConfig(), false);
     }
 
     private static Map<String, Float> snapshotValues(TrackingData tracking) {
         Map<String, Float> m = new HashMap<>();
-        for (String key : MarieLibContext.get().valueKeys()) {
+        for (String key : MarieContext.get().valueKeys()) {
             m.put(key, tracking.values.getOrDefault(key, 0f));
         }
         return m;
@@ -455,9 +455,9 @@ public final class SourceApplicationPipeline {
 
         JsonArray tagMatch = new JsonArray();
         if (sourceOverride) {
-            String tagPath = MarieLibContext.get().resolveTagRole("source_override");
+            String tagPath = MarieContext.get().resolveTagRole("source_override");
             if (tagPath != null) {
-                tagMatch.add(IMarieLibConfig.get().modId() + ":" + tagPath);
+                tagMatch.add(IMarieConfig.get().modId() + ":" + tagPath);
             }
         } else if (matchedBarWeights.isEmpty()) {
             tagMatch.add("none");
@@ -505,12 +505,12 @@ public final class SourceApplicationPipeline {
     }
 
     private static void checkThresholdCrossings(ServerPlayer player, TrackingData tracking) {
-        float excessThreshold = IMarieLibConfig.get().excessThreshold();
-        for (String key : MarieLibContext.get().valueKeys()) {
+        float excessThreshold = IMarieConfig.get().excessThreshold();
+        for (String key : MarieContext.get().valueKeys()) {
             float current = tracking.values.getOrDefault(key, 0f);
             float previous = tracking.lastValues.getOrDefault(key, 0f);
-            boolean beneficial = MarieLibContext.isValueBeneficial(key);
-            float criticalThreshold = IMarieLibConfig.get().criticalThresholdFor(key);
+            boolean beneficial = MarieContext.isValueBeneficial(key);
+            float criticalThreshold = IMarieConfig.get().criticalThresholdFor(key);
 
             if (beneficial) {
                 if (current <= criticalThreshold && previous > criticalThreshold) {

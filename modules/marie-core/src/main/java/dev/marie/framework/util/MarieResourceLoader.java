@@ -1,7 +1,7 @@
 package dev.marie.framework.util;
 
 import dev.marie.framework.core.MariesLib;
-import dev.marie.framework.core.MarieLibContext;
+import dev.marie.framework.core.MarieContext;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
@@ -22,7 +22,7 @@ public final class MarieResourceLoader {
     private MarieResourceLoader() {}
 
     /**
-     * Resolves {@code ResourceLocation.fromNamespaceAndPath(MarieLibContext.get().modId(), relativePath)},
+     * Resolves {@code ResourceLocation.fromNamespaceAndPath(MarieContext.get().modId(), relativePath)},
      * opens the resource as {@link InputStreamReader}, calls {@code consumer}, logs success,
      * catches {@link IOException}, logs error, then calls {@code fallback}.
      * <p>
@@ -69,14 +69,14 @@ public final class MarieResourceLoader {
             String errorMessage,
             String fallbackInfoLog
     ) {
-        if (!MarieLibContext.isRegistered()) {
+        if (!MarieContext.isRegistered()) {
             fallback.run();
             if (fallbackInfoLog != null) {
                 MariesLib.LOGGER.info(fallbackInfoLog);
             }
             return;
         }
-        ResourceLocation path = ResourceLocation.fromNamespaceAndPath(MarieLibContext.get().modId(), relativePath);
+        ResourceLocation path = ResourceLocation.fromNamespaceAndPath(MarieContext.get().modId(), relativePath);
         Optional<Resource> resource = resourceManager.getResource(path);
         if (resource.isEmpty()) {
             fallback.run();

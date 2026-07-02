@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import dev.marie.framework.api.registry.ValueRegistry;
-import dev.marie.framework.core.MarieLibContext;
+import dev.marie.framework.core.MarieContext;
 import dev.marie.framework.core.MarieModRegistry;
 import dev.marie.framework.core.MariesLib;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
@@ -36,17 +36,17 @@ final class ClothCategoryOverview {
                 Component.translatable(ClothConfigHelper.key("overview.configPath"), "config/marieslib.cfg")
         ).build());
 
-        List<MarieLibContext> mods = MarieModRegistry.getAll();
+        List<MarieContext> mods = MarieModRegistry.getAll();
         int modCount = mods.size();
         String modNames = mods.isEmpty()
                 ? Component.translatable(ClothConfigHelper.key("overview.noMods")).getString()
-                : mods.stream().map(MarieLibContext::modId).collect(Collectors.joining(", "));
+                : mods.stream().map(MarieContext::modId).collect(Collectors.joining(", "));
 
         cat.addEntry(entryBuilder.startTextDescription(
                 Component.translatable(ClothConfigHelper.key("overview.registeredMods"), modCount + " (" + modNames + ")")
         ).build());
 
-        MarieLibContext primary = MarieModRegistry.getPrimaryOrNull();
+        MarieContext primary = MarieModRegistry.getPrimaryOrNull();
         String primaryName = primary != null ? primary.modId() : "none";
         cat.addEntry(entryBuilder.startTextDescription(
                 Component.translatable(ClothConfigHelper.key("overview.primaryMod"), primaryName)

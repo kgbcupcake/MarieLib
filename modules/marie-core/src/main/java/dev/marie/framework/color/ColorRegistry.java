@@ -8,7 +8,7 @@ import com.google.gson.JsonObject;
 
 import dev.marie.framework.api.ValueDefinition;
 import dev.marie.framework.api.registry.ValueRegistry;
-import dev.marie.framework.core.IMarieLibConfig;
+import dev.marie.framework.core.IMarieConfig;
 import dev.marie.framework.core.MariesLib;
 import dev.marie.framework.data.DatapackSchema;
 import dev.marie.framework.registry.AbstractRegistry;
@@ -84,7 +84,7 @@ public final class ColorRegistry {
     }
 
     public static void load() {
-        Path configDir = FMLPaths.CONFIGDIR.get().resolve(IMarieLibConfig.get().modId());
+        Path configDir = FMLPaths.CONFIGDIR.get().resolve(IMarieConfig.get().modId());
         Path file = configDir.resolve("colors.json");
         try {
             Files.createDirectories(configDir);
@@ -107,7 +107,7 @@ public final class ColorRegistry {
     }
 
     public static void save() {
-        Path configDir = FMLPaths.CONFIGDIR.get().resolve(IMarieLibConfig.get().modId());
+        Path configDir = FMLPaths.CONFIGDIR.get().resolve(IMarieConfig.get().modId());
         Path file = configDir.resolve("colors.json");
         try {
             Files.createDirectories(configDir);

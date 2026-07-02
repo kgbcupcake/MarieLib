@@ -11,47 +11,47 @@ import dev.marie.framework.api.ApiStatus;
 
 /**
  * Insertion-ordered registry of all mods that have registered a
- * {@link MarieLibContext}. Supports the upcoming multi-mod config UI
+ * {@link MarieContext}. Supports the upcoming multi-mod config UI
  * and any feature that needs to enumerate consuming mods.
  */
 @ApiStatus.Experimental
 public final class MarieModRegistry {
 
-    private static final Map<String, MarieLibContext> MODS = new LinkedHashMap<>();
+    private static final Map<String, MarieContext> MODS = new LinkedHashMap<>();
 
     private MarieModRegistry() {}
 
-    public static synchronized void register(MarieLibContext ctx) {
+    public static synchronized void register(MarieContext ctx) {
         MODS.put(ctx.modId(), ctx);
     }
 
     @Nullable
-    public static synchronized MarieLibContext get(String modId) {
+    public static synchronized MarieContext get(String modId) {
         return MODS.get(modId);
     }
 
-    public static synchronized MarieLibContext getOrThrow(String modId) {
-        MarieLibContext ctx = MODS.get(modId);
+    public static synchronized MarieContext getOrThrow(String modId) {
+        MarieContext ctx = MODS.get(modId);
         if (ctx == null) {
-            throw new IllegalStateException("No MarieLibContext registered for mod: " + modId);
+            throw new IllegalStateException("No MarieContext registered for mod: " + modId);
         }
         return ctx;
     }
 
-    public static synchronized List<MarieLibContext> getAll() {
+    public static synchronized List<MarieContext> getAll() {
         return Collections.unmodifiableList(List.copyOf(MODS.values()));
     }
 
-    public static synchronized MarieLibContext getPrimary() {
-        MarieLibContext ctx = getPrimaryOrNull();
+    public static synchronized MarieContext getPrimary() {
+        MarieContext ctx = getPrimaryOrNull();
         if (ctx == null) {
-            throw new IllegalStateException("No MarieLibContext has been registered");
+            throw new IllegalStateException("No MarieContext has been registered");
         }
         return ctx;
     }
 
     @Nullable
-    public static synchronized MarieLibContext getPrimaryOrNull() {
+    public static synchronized MarieContext getPrimaryOrNull() {
         if (MODS.isEmpty()) {
             return null;
         }

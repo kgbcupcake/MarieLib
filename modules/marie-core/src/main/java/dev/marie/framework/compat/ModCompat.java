@@ -4,7 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import dev.marie.framework.api.ApiStatus;
 import dev.marie.framework.core.MariesLib;
-import dev.marie.framework.core.MarieLibContext;
+import dev.marie.framework.core.MarieContext;
 import net.neoforged.fml.ModList;
 import net.neoforged.fml.loading.FMLPaths;
 import net.neoforged.neoforgespi.language.IModInfo;
@@ -98,7 +98,7 @@ public final class ModCompat {
     }
 
     private static void loadTier1BuiltIn(Map<String, JsonCompatEntry> merged) {
-        String resourcePath = "data/" + MarieLibContext.get().modId() + "/compat/compat_registry.json";
+        String resourcePath = "data/" + MarieContext.get().modId() + "/compat/compat_registry.json";
         try (InputStream is = openClasspathResource(resourcePath)) {
             if (is == null) {
                 LOGGER.warn("[MarieLib] Built-in compat_registry.json not found in jar");
@@ -125,7 +125,7 @@ public final class ModCompat {
         int count = 0;
         for (IModInfo modInfo : ModList.get().getMods()) {
             String modId = modInfo.getModId();
-            if ("minecraft".equals(modId) || MarieLibContext.get().modId().equals(modId) || "neoforge".equals(modId)) {
+            if ("minecraft".equals(modId) || MarieContext.get().modId().equals(modId) || "neoforge".equals(modId)) {
                 continue;
             }
 
@@ -155,7 +155,7 @@ public final class ModCompat {
     }
 
     private static void loadTier3ModpackOverride(Map<String, JsonCompatEntry> merged) {
-        Path overridePath = FMLPaths.CONFIGDIR.get().resolve(MarieLibContext.get().modId()).resolve("compat_overrides.json");
+        Path overridePath = FMLPaths.CONFIGDIR.get().resolve(MarieContext.get().modId()).resolve("compat_overrides.json");
         if (!Files.exists(overridePath)) {
             LOGGER.debug("[MarieLib] Tier 3 (modpack override): no compat_overrides.json found");
             return;

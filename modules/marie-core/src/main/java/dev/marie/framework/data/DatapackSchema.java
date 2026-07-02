@@ -1,6 +1,6 @@
 package dev.marie.framework.data;
 
-import dev.marie.framework.core.IMarieLibConfig;
+import dev.marie.framework.core.IMarieConfig;
 
 /**
  * Constants describing MarieLib datapack schema locations and keys.
@@ -13,7 +13,7 @@ public final class DatapackSchema {
 
     /** Base directory under a datapack namespace — equals the consuming mod's mod id. */
     public static String root() {
-        return IMarieLibConfig.get().modId();
+        return IMarieConfig.get().modId();
     }
 
     /** Datapack-relative path: {@code config/colors.json}. */

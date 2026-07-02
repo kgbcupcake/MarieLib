@@ -9,7 +9,7 @@ import dev.marie.framework.classification.ClassificationTrace;
 import dev.marie.framework.classification.ClassificationTraceStep;
 import dev.marie.framework.classification.TraceStepId;
 import dev.marie.framework.classification.TraceStepStatus;
-import dev.marie.framework.core.MarieLibContext;
+import dev.marie.framework.core.MarieContext;
 import dev.marie.framework.diagnostics.MarieUnknownItemLogger;
 import dev.marie.framework.scan.CacheStats;
 import dev.marie.framework.scan.ResolutionResult;
@@ -73,19 +73,19 @@ public final class RuntimeResolver {
     }
 
     public Map<String, Float> resolve(ItemStack stack, @Nullable RecipeManager recipeManager) {
-        if (!MarieLibContext.isRegistered()) {
+        if (!MarieContext.isRegistered()) {
             return Map.of();
         }
         if (stack.isEmpty() || stack.getItem() == null) return Map.of();
 
-        List<String> valueKeys = MarieLibContext.get().valueKeys();
+        List<String> valueKeys = MarieContext.get().valueKeys();
         if (valueKeys.isEmpty()) return Map.of();
 
         Item item = stack.getItem();
         ResourceLocation itemId = MarieRegistryUtils.itemKey(item);
         if (itemId == null) return Map.of();
 
-        if (!MarieLibContext.get().sourceItemFilter().test(stack)) return Map.of();
+        if (!MarieContext.get().sourceItemFilter().test(stack)) return Map.of();
 
         ResolutionResult cached = resolvedCache.get(itemId);
         if (cached != null) {
@@ -98,19 +98,19 @@ public final class RuntimeResolver {
     }
 
     public @Nullable ResolutionResult resolveWithResult(ItemStack stack, @Nullable RecipeManager recipeManager) {
-        if (!MarieLibContext.isRegistered()) {
+        if (!MarieContext.isRegistered()) {
             return null;
         }
         if (stack.isEmpty() || stack.getItem() == null) return null;
 
-        List<String> valueKeys = MarieLibContext.get().valueKeys();
+        List<String> valueKeys = MarieContext.get().valueKeys();
         if (valueKeys.isEmpty()) return null;
 
         Item item = stack.getItem();
         ResourceLocation itemId = MarieRegistryUtils.itemKey(item);
         if (itemId == null) return null;
 
-        if (!MarieLibContext.get().sourceItemFilter().test(stack)) return null;
+        if (!MarieContext.get().sourceItemFilter().test(stack)) return null;
 
         ResolutionResult cached = resolvedCache.get(itemId);
         if (cached != null) {
@@ -123,19 +123,19 @@ public final class RuntimeResolver {
     }
 
     public @Nullable ClassificationTrace resolveWithTrace(ItemStack stack, @Nullable RecipeManager recipeManager) {
-        if (!MarieLibContext.isRegistered()) {
+        if (!MarieContext.isRegistered()) {
             return null;
         }
         if (stack.isEmpty() || stack.getItem() == null) return null;
 
-        List<String> valueKeys = MarieLibContext.get().valueKeys();
+        List<String> valueKeys = MarieContext.get().valueKeys();
         if (valueKeys.isEmpty()) return null;
 
         Item item = stack.getItem();
         ResourceLocation itemId = MarieRegistryUtils.itemKey(item);
         if (itemId == null) return null;
 
-        boolean isResolvable = MarieLibContext.get().sourceItemFilter().test(stack);
+        boolean isResolvable = MarieContext.get().sourceItemFilter().test(stack);
 
         List<ClassificationTraceStep> traceOut = new ArrayList<>();
 
@@ -282,7 +282,7 @@ public final class RuntimeResolver {
     ResolutionResult resolveUncached(ItemStack stack, ResourceLocation itemId,
                                      @Nullable RecipeManager recipeManager,
                                      @Nullable List<ClassificationTraceStep> traceOut) {
-        if (!MarieLibContext.isRegistered()) {
+        if (!MarieContext.isRegistered()) {
             return new ResolutionResult(
                     Map.of(), Map.of(), List.of(), Map.of(), Map.of(),
                     false, 0f, RuntimeCascadeStage.HARD_FALLBACK, "context_not_registered");
@@ -307,9 +307,9 @@ public final class RuntimeResolver {
                     cacheDetail));
         }
 
-        ResolutionStageHandler[] stages = MarieLibContext.get().runtimeResolverStages();
+        ResolutionStageHandler[] stages = MarieContext.get().runtimeResolverStages();
 
-        List<String> valueKeys = MarieLibContext.get().valueKeys();
+        List<String> valueKeys = MarieContext.get().valueKeys();
         Holder<Item> holder = stack.getItemHolder();
         Set<String> validKeys = Set.copyOf(valueKeys);
         StageContext ctx = new StageContext(holder, itemId, recipeManager, namespacePeers, validKeys, traceOut);

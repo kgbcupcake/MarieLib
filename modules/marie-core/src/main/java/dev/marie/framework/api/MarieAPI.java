@@ -19,10 +19,10 @@ import dev.marie.framework.api.registry.ValueRegistry;
 import dev.marie.framework.command.CommandCapability;
 import dev.marie.framework.command.CommandCapabilityRegistry;
 import dev.marie.framework.compat.CompatDefinition;
-import dev.marie.framework.core.IMarieLibConfig;
-import dev.marie.framework.core.MarieLibContext;
-import dev.marie.framework.core.MarieLibDataProvider;
-import dev.marie.framework.core.MarieLibRegistrationDelegate;
+import dev.marie.framework.core.IMarieConfig;
+import dev.marie.framework.core.MarieContext;
+import dev.marie.framework.core.MarieDataProvider;
+import dev.marie.framework.core.MarieRegistrationDelegate;
 import dev.marie.framework.handler.SourceApplicationPipeline;
 import dev.marie.framework.runtime.SourceTriggerRegistry;
 import dev.marie.framework.runtime.TriggerHandlerRegistry;
@@ -51,7 +51,7 @@ import net.neoforged.neoforge.common.NeoForge;
 public final class MarieAPI {
 
     private static ResourceLocation apiModifierSource() {
-        String modId = IMarieLibConfig.get().modId();
+        String modId = IMarieConfig.get().modId();
         return ResourceLocation.fromNamespaceAndPath(modId, "api");
     }
 
@@ -74,7 +74,7 @@ public final class MarieAPI {
         if (player == null) {
             return 0f;
         }
-        MarieLibDataProvider provider = MarieLibContext.get().dataProvider();
+        MarieDataProvider provider = MarieContext.get().dataProvider();
         if (provider == null) {
             return 0f;
         }
@@ -94,7 +94,7 @@ public final class MarieAPI {
         if (player == null) {
             return -1.0f;
         }
-        MarieLibDataProvider provider = MarieLibContext.get().dataProvider();
+        MarieDataProvider provider = MarieContext.get().dataProvider();
         if (provider == null) {
             return -1.0f;
         }
@@ -114,7 +114,7 @@ public final class MarieAPI {
         if (player == null) {
             return EmptyApplicationHistoryView.INSTANCE;
         }
-        MarieLibDataProvider provider = MarieLibContext.get().dataProvider();
+        MarieDataProvider provider = MarieContext.get().dataProvider();
         if (provider == null) {
             return EmptyApplicationHistoryView.INSTANCE;
         }
@@ -141,7 +141,7 @@ public final class MarieAPI {
     @ApiStatus.Stable
     public static MariePlayerData getTrackingData(Player player) {
         Map<String, Float> values = new LinkedHashMap<>();
-        MarieLibRegistrationDelegate delegate = MarieLibContext.get().registrationDelegate();
+        MarieRegistrationDelegate delegate = MarieContext.get().registrationDelegate();
         if (delegate != null) {
             for (String valueKey : delegate.getValueKeys()) {
                 values.put(valueKey, getValueLevel(player, valueKey));
@@ -165,7 +165,7 @@ public final class MarieAPI {
     @ApiStatus.Stable
     public static void modifyValue(Player player, String valueKey, float delta) {
         MarieRegistryUtils.requireValueKey(valueKey, "MarieAPI.modifyValue");
-        MarieLibDataProvider provider = MarieLibContext.get().dataProvider();
+        MarieDataProvider provider = MarieContext.get().dataProvider();
         if (provider == null) {
             return;
         }
@@ -200,7 +200,7 @@ public final class MarieAPI {
     @ApiStatus.Stable
     public static void registerValue(ValueDefinition definition) {
         MarieAPIState.assertRegistrationAllowed("registerValue");
-        MarieLibRegistrationDelegate delegate = MarieLibContext.get().registrationDelegate();
+        MarieRegistrationDelegate delegate = MarieContext.get().registrationDelegate();
         if (delegate == null) {
             throw new IllegalStateException("MarieLib registration delegate not configured");
         }
@@ -249,7 +249,7 @@ public final class MarieAPI {
             org.slf4j.LoggerFactory.getLogger(MarieAPI.class).warn("[MarieAPI] registerSourceClassification: item '{}' not found in BuiltInRegistries.ITEM", sourceId);
         }
         MarieRegistryUtils.requireValueKey(valueKey, "MarieAPI.registerSourceClassification");
-        MarieLibRegistrationDelegate delegate = MarieLibContext.get().registrationDelegate();
+        MarieRegistrationDelegate delegate = MarieContext.get().registrationDelegate();
         if (delegate == null) {
             throw new IllegalStateException("MarieLib registration delegate not configured");
         }
@@ -281,7 +281,7 @@ public final class MarieAPI {
     @ApiStatus.Stable
     public static void registerCustomEffect(ThresholdEffect definition) {
         MarieAPIState.assertRegistrationAllowed("registerCustomEffect");
-        MarieLibRegistrationDelegate delegate = MarieLibContext.get().registrationDelegate();
+        MarieRegistrationDelegate delegate = MarieContext.get().registrationDelegate();
         if (delegate == null) {
             throw new IllegalStateException("MarieLib registration delegate not configured");
         }

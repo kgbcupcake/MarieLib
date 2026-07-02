@@ -2,7 +2,7 @@ package dev.marie.framework.client;
 
 import dev.marie.framework.api.ValueDefinition;
 import dev.marie.framework.color.ColorRegistry;
-import dev.marie.framework.core.MarieLibContext;
+import dev.marie.framework.core.MarieContext;
 import dev.marie.framework.api.registry.ValueRegistry;
 
 import java.util.List;
@@ -48,7 +48,7 @@ public final class MarieValueColors {
 
     /** Default palette entry for a key (no {@link ColorRegistry} or transient override). */
     public static int paletteOnlyArgb(String key) {
-        List<String> keys = MarieLibContext.get().valueKeys();
+        List<String> keys = MarieContext.get().valueKeys();
         int idx = keys.indexOf(key);
         if (idx < 0) {
             return PALETTE[0];

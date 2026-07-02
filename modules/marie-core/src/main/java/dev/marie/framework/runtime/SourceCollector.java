@@ -1,7 +1,7 @@
 package dev.marie.framework.runtime;
 
 import dev.marie.framework.api.ApiStatus;
-import dev.marie.framework.core.MarieLibContext;
+import dev.marie.framework.core.MarieContext;
 import dev.marie.framework.scanner.ClassificationResult;
 import dev.marie.framework.scanner.ScannerSpecRegistry;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -29,11 +29,11 @@ public final class SourceCollector {
     public static List<ClassificationResult> collectAllClassifiedSources() {
         List<ClassificationResult> out = new ArrayList<>();
         var excluded = ScannerSpecRegistry.get().excludedItems();
-        var tagScoresProvider = MarieLibContext.get().valueTagScoresProvider();
+        var tagScoresProvider = MarieContext.get().valueTagScoresProvider();
 
         for (Item item : BuiltInRegistries.ITEM) {
             ItemStack stack = new ItemStack(item);
-            if (!MarieLibContext.get().sourceItemFilter().test(stack)) {
+            if (!MarieContext.get().sourceItemFilter().test(stack)) {
                 continue;
             }
             ResourceLocation itemId = item.builtInRegistryHolder().key().location();
