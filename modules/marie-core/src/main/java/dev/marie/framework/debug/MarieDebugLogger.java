@@ -21,7 +21,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import dev.marie.framework.core.IMarieConfig;
-import dev.marie.framework.core.MariesLib;
+import dev.marie.framework.core.MarieCore;
 import net.neoforged.fml.loading.FMLPaths;
 
 /**
@@ -79,7 +79,7 @@ public final class MarieDebugLogger {
 
         int depth = WORK_QUEUE.size();
         if (depth >= QUEUE_CAPACITY * 80 / 100) {
-            MariesLib.LOGGER.warn("[MarieLib] Debug log queue at {}% capacity", depth * 100 / QUEUE_CAPACITY);
+            MarieCore.LOGGER.warn("[MarieLib] Debug log queue at {}% capacity", depth * 100 / QUEUE_CAPACITY);
         }
 
         EXECUTOR.execute(() -> {
@@ -90,7 +90,7 @@ public final class MarieDebugLogger {
                     mergeUnclassifiedItem(itemId, namespace);
                 }
             } catch (Exception e) {
-                MariesLib.LOGGER.error("[MarieLib] Value debug log write failed", e);
+                MarieCore.LOGGER.error("[MarieLib] Value debug log write failed", e);
             }
         });
     }

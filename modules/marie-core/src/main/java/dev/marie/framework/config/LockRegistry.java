@@ -7,7 +7,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import dev.marie.framework.core.IMarieConfig;
-import dev.marie.framework.core.MariesLib;
+import dev.marie.framework.core.MarieCore;
 import dev.marie.framework.data.DatapackSchema;
 import dev.marie.framework.registry.AbstractRegistry;
 import dev.marie.framework.util.MarieResourceLoader;
@@ -101,13 +101,13 @@ public class LockRegistry {
             Files.createDirectories(configDir);
             if (!Files.exists(file)) {
                 writeDefaults(file);
-                MariesLib.LOGGER.info("[MarieLib] Wrote default locks.json");
+                MarieCore.LOGGER.info("[MarieLib] Wrote default locks.json");
             }
             parse(file);
-            MariesLib.LOGGER.info("[MarieLib] Loaded {} locked, {} server_only from config folder",
+            MarieCore.LOGGER.info("[MarieLib] Loaded {} locked, {} server_only from config folder",
                     LOCKED.size(), SERVER_ONLY.size());
         } catch (IOException e) {
-            MariesLib.LOGGER.error("[MarieLib] Failed to load locks.json", e);
+            MarieCore.LOGGER.error("[MarieLib] Failed to load locks.json", e);
             LOCKED.reset();
             SERVER_ONLY.reset();
             LOCKED.freeze();
@@ -116,7 +116,7 @@ public class LockRegistry {
     }
 
     public static void reload() {
-        MariesLib.LOGGER.info("[MarieLib] Reloading locks.json");
+        MarieCore.LOGGER.info("[MarieLib] Reloading locks.json");
         load();
     }
 

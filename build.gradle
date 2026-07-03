@@ -62,7 +62,7 @@ tasks.register('shadowJar', com.github.jengelman.gradle.plugins.shadow.tasks.Sha
     dependsOn uiProject.tasks.named('classes')
     dependsOn coreProject.tasks.named('jar')
 
-    archiveBaseName.set('maries-framework')
+    archiveBaseName.set('maries-lib')
     archiveVersion.set("${mod_version}")
     archiveClassifier.set('')
     destinationDirectory.set(layout.buildDirectory.dir('libs'))

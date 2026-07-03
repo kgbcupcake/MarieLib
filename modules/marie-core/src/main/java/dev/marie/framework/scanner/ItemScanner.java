@@ -5,7 +5,7 @@ package dev.marie.framework.scanner;
 import dev.marie.framework.api.ApiStatus;
 import dev.marie.framework.api.ValueDefinition;
 import dev.marie.framework.api.registry.ValueRegistry;
-import dev.marie.framework.core.MariesLib;
+import dev.marie.framework.core.MarieCore;
 import dev.marie.framework.core.IMarieConfig;
 import dev.marie.framework.core.MarieContext;
 import dev.marie.framework.runtime.SourceRegistry;
@@ -231,7 +231,7 @@ public final class ItemScanner {
         scanAsync(options)
                 .thenAccept(ItemScanner::applyScanResult)
                 .exceptionally(ex -> {
-                    MariesLib.LOGGER.warn("[ItemScanner] scanAndApply failed", ex);
+                    MarieCore.LOGGER.warn("[ItemScanner] scanAndApply failed", ex);
                     return null;
                 });
     }
@@ -281,7 +281,7 @@ public final class ItemScanner {
             }
         }
         SourceRegistry.applyFromScanner(valueMap);
-        MariesLib.LOGGER.info(
+        MarieCore.LOGGER.info(
                 "[ItemScanner] scanAndApply complete: {} confident, {} uncertain",
                 confident,
                 uncertain);
@@ -451,7 +451,7 @@ public final class ItemScanner {
                 try {
                     sink.writeReports(allResults, summary, diff);
                 } catch (IOException e) {
-                    MariesLib.LOGGER.error("[ItemScanner] Failed to write reports", e);
+                    MarieCore.LOGGER.error("[ItemScanner] Failed to write reports", e);
                 }
             }
         }
@@ -462,7 +462,7 @@ public final class ItemScanner {
                 try {
                     sink.writeRecommendations(allResults, options.confidenceSpreadThreshold());
                 } catch (IOException e) {
-                    MariesLib.LOGGER.error("[ItemScanner] Failed to write recommendations", e);
+                    MarieCore.LOGGER.error("[ItemScanner] Failed to write recommendations", e);
                 }
             }
             MultiValueAnalysisPipeline.run(allResults, 0.15f, 0.35f, 0.10f);

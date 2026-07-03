@@ -4,7 +4,7 @@ import dev.marie.framework.api.ApiStatus;
 
 /**
  * Immutable snapshot of feature flags supplied by the consuming Marie mod.
- * MariesLib does not define defaults for these — consuming mods must provide values.
+ * MarieCore does not define defaults for these — consuming mods must provide values.
  */
 @ApiStatus.Stable
 public record MarieModFeatureFlags(

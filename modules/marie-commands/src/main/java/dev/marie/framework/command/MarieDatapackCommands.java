@@ -10,7 +10,7 @@ import com.google.gson.JsonParser;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import dev.marie.framework.api.ApiStatus;
-import dev.marie.framework.core.MariesLib;
+import dev.marie.framework.core.MarieCore;
 import dev.marie.framework.data.DatapackDiagnostic;
 import dev.marie.framework.data.DatapackDiagnostics;
 import dev.marie.framework.data.SchemaDefinition;
@@ -125,7 +125,7 @@ final class MarieDatapackCommands {
                     .withStyle(ChatFormatting.GREEN), false);
             return 1;
         } catch (IOException | IllegalArgumentException | com.google.gson.JsonParseException ex) {
-            MariesLib.LOGGER.error("[MarieLib] Failed to repair generated datapack", ex);
+            MarieCore.LOGGER.error("[MarieLib] Failed to repair generated datapack", ex);
             source.sendFailure(Component.literal("Failed to repair " + modId + "-generated datapack: " + ex.getMessage()));
             return 0;
         }

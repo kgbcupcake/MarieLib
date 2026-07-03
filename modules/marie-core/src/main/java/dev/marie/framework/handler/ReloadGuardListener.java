@@ -2,7 +2,7 @@ package dev.marie.framework.handler;
 
 import dev.marie.framework.api.ApiStatus;
 import dev.marie.framework.core.MarieContext;
-import dev.marie.framework.core.MariesLib;
+import dev.marie.framework.core.MarieCore;
 import dev.marie.framework.data.MarieDataManager;
 import dev.marie.framework.registry.RegistryLifecycleManager;
 import net.minecraft.server.MinecraftServer;
@@ -43,7 +43,7 @@ public class ReloadGuardListener {
                     reloadInProgress = true;
                     try {
                         RegistryLifecycleManager.loadAll(resourceManager);
-                        MariesLib.LOGGER.info("[MarieLib] Datapack config reload complete");
+                        MarieCore.LOGGER.info("[MarieLib] Datapack config reload complete");
                     } finally {
                         reloadInProgress = false;
                     }

@@ -2,7 +2,7 @@ package dev.marie.framework.client;
 
 import dev.marie.framework.core.IMarieConfig;
 import dev.marie.framework.config.PresetRegistry;
-import dev.marie.framework.core.MariesLib;
+import dev.marie.framework.core.MarieCore;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -29,7 +29,7 @@ public final class SavePresetScreen extends Screen {
     }
 
     private static String configKey(String suffix) {
-        return "config." + MariesLib.MOD_ID + "." + suffix;
+        return "config." + MarieCore.MOD_ID + "." + suffix;
     }
 
     @Override
@@ -69,7 +69,7 @@ public final class SavePresetScreen extends Screen {
         try {
             PresetRegistry.saveUserPreset(name, desc, author, IMarieConfig.get().currentConfigPresetValues());
         } catch (Exception e) {
-            MariesLib.LOGGER.warn("[SavePresetScreen] Failed to save preset", e);
+            MarieCore.LOGGER.warn("[SavePresetScreen] Failed to save preset", e);
             return;
         }
         mc.setScreen(reopenParent);

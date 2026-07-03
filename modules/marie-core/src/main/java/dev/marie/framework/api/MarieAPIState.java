@@ -1,6 +1,6 @@
 package dev.marie.framework.api;
 
-import dev.marie.framework.core.MariesLib;
+import dev.marie.framework.core.MarieCore;
 
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -50,13 +50,13 @@ public final class MarieAPIState {
             return;
         }
         currentPhase.set(Phase.CLOSED);
-        MariesLib.LOGGER.info("[MarieLib] Registration phase: CLOSED");
+        MarieCore.LOGGER.info("[MarieLib] Registration phase: CLOSED");
     }
 
     @ApiStatus.Internal
     public static DatapackReloadScope openForDatapackReload() {
         currentPhase.set(Phase.DATAPACK_RELOAD);
-        MariesLib.LOGGER.info("[MarieLib] Registration phase: DATAPACK_RELOAD");
+        MarieCore.LOGGER.info("[MarieLib] Registration phase: DATAPACK_RELOAD");
         return new DatapackReloadScope();
     }
 
@@ -65,7 +65,7 @@ public final class MarieAPIState {
         @Override
         public void close() {
             currentPhase.set(Phase.CLOSED);
-            MariesLib.LOGGER.info("[MarieLib] Registration phase: CLOSED");
+            MarieCore.LOGGER.info("[MarieLib] Registration phase: CLOSED");
         }
     }
 }

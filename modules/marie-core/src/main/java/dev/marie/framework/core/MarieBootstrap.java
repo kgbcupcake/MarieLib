@@ -101,7 +101,7 @@ public final class MarieBootstrap {
         modEventBus.addListener(MarieBootstrap::onCommonSetup);
         modEventBus.addListener(MarieBootstrap::onLoadComplete);
 
-        MariesLib.LOGGER.info("[MarieLib] Attached to mod: {}", modId);
+        MarieCore.LOGGER.info("[MarieLib] Attached to mod: {}", modId);
     }
 
     private static void onCommonSetup(FMLCommonSetupEvent event) {
@@ -158,7 +158,7 @@ public final class MarieBootstrap {
         RegistryLifecycleManager.loadAll();
         ModCompatRegistry.load();
         FeatureFlagCache.sync(MarieModFeatureFlags.disabled());
-        MariesLib.LOGGER.info("[MariesLib] Bootstrap complete with owned config");
+        MarieCore.LOGGER.info("[MarieCore] Bootstrap complete with owned config");
     }
 
     private static void registerRegistries() {

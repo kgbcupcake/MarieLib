@@ -7,7 +7,7 @@ import com.google.gson.JsonObject;
 
 import dev.marie.framework.core.MarieContext;
 import dev.marie.framework.core.MarieModRegistry;
-import dev.marie.framework.core.MariesLib;
+import dev.marie.framework.core.MarieCore;
 import net.neoforged.fml.loading.FMLPaths;
 
 import java.io.IOException;
@@ -66,7 +66,7 @@ public final class PresetRegistry {
     public static Path presetsDirectory() {
         String modId = MarieModRegistry.isRegistered()
                 ? MarieModRegistry.getPrimary().modId()
-                : MariesLib.MOD_ID;
+                : MarieCore.MOD_ID;
         return FMLPaths.CONFIGDIR.get().resolve(modId).resolve("presets");
     }
 
@@ -77,7 +77,7 @@ public final class PresetRegistry {
         try {
             Files.createDirectories(presetsDirectory());
         } catch (IOException e) {
-            MariesLib.LOGGER.error("[MarieLib] Failed to create presets directory", e);
+            MarieCore.LOGGER.error("[MarieLib] Failed to create presets directory", e);
         }
         if (MarieContext.isRegistered()) {
             MarieContext.get().ensureBuiltInPresetsOnDisk();
@@ -106,11 +106,11 @@ public final class PresetRegistry {
                                 out.add(parsed);
                             }
                         } catch (Exception e) {
-                            MariesLib.LOGGER.warn("[MarieLib] Skipping invalid preset {}", p, e);
+                            MarieCore.LOGGER.warn("[MarieLib] Skipping invalid preset {}", p, e);
                         }
                     });
         } catch (IOException e) {
-            MariesLib.LOGGER.error("[MarieLib] Failed to list presets", e);
+            MarieCore.LOGGER.error("[MarieLib] Failed to list presets", e);
         }
         out.sort(Comparator
                 .comparing((ParsedPreset p) -> p.locked())
@@ -140,7 +140,7 @@ public final class PresetRegistry {
         boolean locked = root.has("locked") && root.get("locked").getAsBoolean();
         JsonElement valuesEl = root.get("values");
         if (valuesEl == null || !valuesEl.isJsonObject()) {
-            MariesLib.LOGGER.warn("[MarieLib] Preset {} has no values object", path);
+            MarieCore.LOGGER.warn("[MarieLib] Preset {} has no values object", path);
             return null;
         }
         PresetValues values = PresetValues.fromJsonObject(valuesEl.getAsJsonObject());
@@ -191,7 +191,7 @@ public final class PresetRegistry {
         try (Writer w = Files.newBufferedWriter(file)) {
             GSON.toJson(root, w);
         }
-        MariesLib.LOGGER.info("[MarieLib] Saved preset to {}", file);
+        MarieCore.LOGGER.info("[MarieLib] Saved preset to {}", file);
         return file;
     }
 

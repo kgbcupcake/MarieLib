@@ -2,7 +2,7 @@ package dev.marie.framework.client;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import dev.marie.framework.core.MarieContext;
-import dev.marie.framework.core.MariesLib;
+import dev.marie.framework.core.MarieCore;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.toasts.Toast;
@@ -34,7 +34,7 @@ public class CriticalValueToast implements Toast {
     public CriticalValueToast(String valueKey, ItemStack iconItem) {
         this.valueKey = valueKey;
         this.icon = iconItem.copy();
-        String modId = MarieContext.isRegistered() ? MarieContext.get().modId() : MariesLib.MOD_ID;
+        String modId = MarieContext.isRegistered() ? MarieContext.get().modId() : MarieCore.MOD_ID;
         String barKey = modId + ".screen.tracking.bar." + valueKey;
         String translated = Component.translatable(barKey).getString();
         String name = translated.equals(barKey) ? valueKey : translated;

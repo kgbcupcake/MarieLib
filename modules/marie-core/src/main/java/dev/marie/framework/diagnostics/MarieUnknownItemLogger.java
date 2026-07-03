@@ -21,7 +21,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import dev.marie.framework.core.IMarieConfig;
 import dev.marie.framework.core.MarieContext;
-import dev.marie.framework.core.MariesLib;
+import dev.marie.framework.core.MarieCore;
 import dev.marie.framework.scan.ResolutionResult;
 import dev.marie.framework.scan.RuntimeCascadeStage;
 import net.minecraft.resources.ResourceLocation;
@@ -93,7 +93,7 @@ public final class MarieUnknownItemLogger {
         try {
             Files.createDirectories(path.getParent());
         } catch (IOException e) {
-            MariesLib.LOGGER.warn("[MarieUnknownItemLogger] Failed to create log directory: {}", e.getMessage());
+            MarieCore.LOGGER.warn("[MarieUnknownItemLogger] Failed to create log directory: {}", e.getMessage());
             LOGGED_IDS.remove(itemId);
             return;
         }
@@ -118,7 +118,7 @@ public final class MarieUnknownItemLogger {
                 StandardOpenOption.CREATE, StandardOpenOption.APPEND)) {
             writer.write(sb.toString());
         } catch (IOException e) {
-            MariesLib.LOGGER.warn("[MarieUnknownItemLogger] Failed to write log entry: {}", e.getMessage());
+            MarieCore.LOGGER.warn("[MarieUnknownItemLogger] Failed to write log entry: {}", e.getMessage());
             LOGGED_IDS.remove(itemId);
             SESSION_START_PENDING.set(true);
         }
@@ -132,7 +132,7 @@ public final class MarieUnknownItemLogger {
             logPath = FMLPaths.GAMEDIR.get().resolve("config").resolve(IMarieConfig.get().modId()).resolve("unknown_sources.log");
             return logPath;
         } catch (Exception e) {
-            MariesLib.LOGGER.warn("[MarieUnknownItemLogger] Failed to resolve log path, disabling logger: {}", e.getMessage());
+            MarieCore.LOGGER.warn("[MarieUnknownItemLogger] Failed to resolve log path, disabling logger: {}", e.getMessage());
             DISABLED.set(true);
             return null;
         }

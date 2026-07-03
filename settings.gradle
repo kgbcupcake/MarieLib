@@ -1,4 +1,4 @@
-rootProject.name = "maries-framework"
+rootProject.name = 'MarieLib'
 
 include 'marie-core', 'marie-resources', 'marie-commands', 'marie-ui'
 project(':marie-core').projectDir = file('modules/marie-core')

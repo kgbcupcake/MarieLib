@@ -5,7 +5,7 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import dev.marie.framework.api.ApiStatus;
 import dev.marie.framework.core.MarieContext;
-import dev.marie.framework.core.MariesLib;
+import dev.marie.framework.core.MarieCore;
 import dev.marie.framework.runtime.RuntimeResolver;
 import dev.marie.framework.runtime.SourceCollector;
 import dev.marie.framework.scanner.ClassificationResult;
@@ -108,7 +108,7 @@ final class MarieScannerCommands {
             }
             Files.write(outputPath, lines, StandardCharsets.UTF_8);
         } catch (IOException ex) {
-            MariesLib.LOGGER.error("[MarieLib] Failed to write unassigned sources file", ex);
+            MarieCore.LOGGER.error("[MarieLib] Failed to write unassigned sources file", ex);
             player.sendSystemMessage(Component.literal("[" + modId + "] Failed to write unassigned sources file.")
                     .withStyle(ChatFormatting.RED));
             return 0;

@@ -13,7 +13,7 @@ import dev.marie.framework.api.SynergyDefinition;
 import dev.marie.framework.api.ThresholdEffect;
 import dev.marie.framework.api.ValueDefinition;
 import dev.marie.framework.compat.CompatDefinition;
-import dev.marie.framework.core.MariesLib;
+import dev.marie.framework.core.MarieCore;
 import dev.marie.framework.registry.MarieApiRegistries;
 import dev.marie.framework.util.MarieRegistryUtils;
 import net.minecraft.core.Holder;
@@ -544,9 +544,9 @@ public final class MarieDataLoader extends SimpleJsonResourceReloadListener {
         String message = ex.getMessage();
         if (message != null && message.startsWith("Value already registered: ")) {
             String key = message.substring("Value already registered: ".length());
-            MariesLib.LOGGER.debug("[MarieLib] Value '{}' already registered (loaded from config); ignoring datapack duplicate at {}", key, path);
+            MarieCore.LOGGER.debug("[MarieLib] Value '{}' already registered (loaded from config); ignoring datapack duplicate at {}", key, path);
             return;
         }
-        MariesLib.LOGGER.warn("[MarieLib] Skipping malformed datapack entry at {}: {}", path, message);
+        MarieCore.LOGGER.warn("[MarieLib] Skipping malformed datapack entry at {}: {}", path, message);
     }
 }

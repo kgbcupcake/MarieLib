@@ -4,7 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 
-import dev.marie.framework.core.MariesLib;
+import dev.marie.framework.core.MarieCore;
 import dev.marie.framework.scanner.ScannerSpecRegistry;
 import net.neoforged.fml.loading.FMLPaths;
 
@@ -21,7 +21,7 @@ import java.util.Set;
 public final class MariesLibConfigIO {
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
-    private static final String FILE_NAME = MariesLib.MOD_ID + ".cfg";
+    private static final String FILE_NAME = MarieCore.MOD_ID + ".cfg";
     private static final Set<String> LEGACY_SECTIONS = Set.of("modules", "memory", "thresholds", "effects", "client");
     private static volatile boolean legacyWarningLogged;
 
@@ -37,7 +37,7 @@ public final class MariesLibConfigIO {
         if (!Files.exists(file)) {
             h.loadScannerScalarsFromRegistry();
             save();
-            MariesLib.LOGGER.info("[MariesLib] Wrote default {}", file);
+            MarieCore.LOGGER.info("[MarieCore] Wrote default {}", file);
             return;
         }
         try (Reader r = Files.newBufferedReader(file)) {
@@ -45,9 +45,9 @@ public final class MariesLibConfigIO {
             if (root != null) {
                 readIntoHolder(root, h);
             }
-            MariesLib.LOGGER.info("[MariesLib] Loaded config from {}", file);
+            MarieCore.LOGGER.info("[MarieCore] Loaded config from {}", file);
         } catch (IOException e) {
-            MariesLib.LOGGER.error("[MariesLib] Failed to load {}, using defaults", file, e);
+            MarieCore.LOGGER.error("[MarieCore] Failed to load {}, using defaults", file, e);
             h.loadScannerScalarsFromRegistry();
         }
     }
@@ -63,9 +63,9 @@ public final class MariesLibConfigIO {
             }
             patchScannerSpecScalars(h);
             ScannerSpecRegistry.reload();
-            MariesLib.LOGGER.info("[MariesLib] Saved config to {}", file);
+            MarieCore.LOGGER.info("[MarieCore] Saved config to {}", file);
         } catch (IOException e) {
-            MariesLib.LOGGER.error("[MariesLib] Failed to save {}", file, e);
+            MarieCore.LOGGER.error("[MarieCore] Failed to save {}", file, e);
         }
     }
 
@@ -74,7 +74,7 @@ public final class MariesLibConfigIO {
         if (!legacyWarningLogged) {
             for (String section : LEGACY_SECTIONS) {
                 if (root.has(section)) {
-                    MariesLib.LOGGER.info("[MariesLib] Ignoring legacy config sections (modules/memory/thresholds/effects/client) — these now belong to consuming mods");
+                    MarieCore.LOGGER.info("[MarieCore] Ignoring legacy config sections (modules/memory/thresholds/effects/client) — these now belong to consuming mods");
                     legacyWarningLogged = true;
                     break;
                 }
@@ -136,7 +136,7 @@ public final class MariesLibConfigIO {
     }
 
     static void patchScannerSpecScalars(MariesLibConfigHolder h) throws IOException {
-        Path configDir = FMLPaths.CONFIGDIR.get().resolve(MariesLib.MOD_ID);
+        Path configDir = FMLPaths.CONFIGDIR.get().resolve(MarieCore.MOD_ID);
         Path file = configDir.resolve("scanner_spec.json");
         Files.createDirectories(configDir);
         JsonObject root;

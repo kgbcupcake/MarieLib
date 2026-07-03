@@ -4,7 +4,7 @@ import dev.marie.framework.api.ApiStatus;
 import dev.marie.framework.api.SleepBonusEvaluator;
 import dev.marie.framework.api.registry.SleepBonusEvaluatorRegistry;
 import dev.marie.framework.config.FeatureFlagCache;
-import dev.marie.framework.core.MariesLib;
+import dev.marie.framework.core.MarieCore;
 import dev.marie.framework.tracking.TrackingAttachment;
 import dev.marie.framework.tracking.TrackingData;
 import net.minecraft.server.level.ServerPlayer;
@@ -37,7 +37,7 @@ public class RestCycleListener {
                     player.addEffect(effect);
                 }
             } catch (Exception ex) {
-                MariesLib.LOGGER.warn(
+                MarieCore.LOGGER.warn(
                         "[MarieLib] SleepBonusEvaluator threw during evaluate(): {}",
                         ex.getMessage());
             }

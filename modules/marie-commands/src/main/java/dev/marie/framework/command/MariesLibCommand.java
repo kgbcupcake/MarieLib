@@ -9,7 +9,7 @@ import dev.marie.framework.api.MarieAPIVersion;
 import dev.marie.framework.config.ConfigValidatorRegistry;
 import dev.marie.framework.core.MarieContext;
 import dev.marie.framework.core.MarieModRegistry;
-import dev.marie.framework.core.MariesLib;
+import dev.marie.framework.core.MarieCore;
 import dev.marie.framework.export.ExportResolverRegistry;
 import dev.marie.framework.export.ExportWriter;
 import dev.marie.framework.registry.RegistryLifecycleManager;
@@ -39,7 +39,7 @@ import java.util.function.Supplier;
  * dependency on marie-commands, per the locked one-directional module graph.</p>
  */
 @ApiStatus.Internal
-@EventBusSubscriber(modid = MariesLib.MOD_ID)
+@EventBusSubscriber(modid = MarieCore.MOD_ID)
 public final class MariesLibCommand {
 
     private MariesLibCommand() {}
@@ -74,17 +74,17 @@ public final class MariesLibCommand {
                                             Supplier<Path> resolver = ExportResolverRegistry.get(resolverId);
                                             if (resolver == null) {
                                                 source.sendFailure(Component.literal(
-                                                        "[MariesLib] No exporter registered for: " + resolverId));
+                                                        "[MarieCore] No exporter registered for: " + resolverId));
                                                 return 0;
                                             }
                                             Path written = resolver.get();
                                             if (written == null) {
                                                 source.sendFailure(Component.literal(
-                                                        "[MariesLib] Export failed or produced no data for: " + resolverId));
+                                                        "[MarieCore] Export failed or produced no data for: " + resolverId));
                                                 return 0;
                                             }
                                             source.sendSuccess(() -> Component.literal(
-                                                    "[MariesLib] Wrote export to " + written), false);
+                                                    "[MarieCore] Wrote export to " + written), false);
                                             return 1;
                                         })))
                         .then(Commands.literal("validate")
@@ -101,7 +101,7 @@ public final class MariesLibCommand {
                                                     ConfigValidatorRegistry.get(modId);
                                             if (validator == null) {
                                                 source.sendFailure(Component.literal(
-                                                        "[MariesLib] No validator registered for modid: " + modId));
+                                                        "[MarieCore] No validator registered for modid: " + modId));
                                                 return 0;
                                             }
                                             return validator.apply(ctx);
@@ -113,7 +113,7 @@ public final class MariesLibCommand {
         CommandSourceStack source = ctx.getSource();
 
         String libVersion = ModList.get()
-                .getModContainerById(MariesLib.MOD_ID)
+                .getModContainerById(MarieCore.MOD_ID)
                 .map(c -> c.getModInfo().getVersion().toString())
                 .orElse("unknown");
 
@@ -121,7 +121,7 @@ public final class MariesLibCommand {
         int modCount = MarieModRegistry.getAll().size();
         String bootstrapMode = MarieContext.isRegistered() ? "consumer-driven" : "standalone";
 
-        source.sendSuccess(() -> Component.literal("[MariesLib Status]").withStyle(ChatFormatting.GOLD), false);
+        source.sendSuccess(() -> Component.literal("[MarieCore Status]").withStyle(ChatFormatting.GOLD), false);
         source.sendSuccess(() -> Component.literal("Library version: " + libVersion).withStyle(ChatFormatting.WHITE), false);
         source.sendSuccess(() -> Component.literal("API version: " + apiVersion).withStyle(ChatFormatting.WHITE), false);
         source.sendSuccess(() -> Component.literal("Bootstrap mode: " + bootstrapMode).withStyle(ChatFormatting.WHITE), false);
@@ -135,11 +135,11 @@ public final class MariesLibCommand {
         List<MarieContext> mods = MarieModRegistry.getAll();
 
         if (mods.isEmpty()) {
-            source.sendSuccess(() -> Component.literal("[MariesLib] No Marie mods registered.").withStyle(ChatFormatting.YELLOW), false);
+            source.sendSuccess(() -> Component.literal("[MarieCore] No Marie mods registered.").withStyle(ChatFormatting.YELLOW), false);
             return 1;
         }
 
-        source.sendSuccess(() -> Component.literal("[MariesLib Registered Mods]").withStyle(ChatFormatting.GOLD), false);
+        source.sendSuccess(() -> Component.literal("[MarieCore Registered Mods]").withStyle(ChatFormatting.GOLD), false);
 
         MarieContext primary = MarieModRegistry.getPrimaryOrNull();
         for (MarieContext mod : mods) {
@@ -157,7 +157,7 @@ public final class MariesLibCommand {
         CommandSourceStack source = ctx.getSource();
         MarieAPIState.Phase phase = MarieAPIState.getPhase();
 
-        source.sendSuccess(() -> Component.literal("[MariesLib API]").withStyle(ChatFormatting.GOLD), false);
+        source.sendSuccess(() -> Component.literal("[MarieCore API]").withStyle(ChatFormatting.GOLD), false);
         source.sendSuccess(() -> Component.literal("Registration phase: " + phase.name()).withStyle(ChatFormatting.WHITE), false);
 
         String hint;
@@ -177,7 +177,7 @@ public final class MariesLibCommand {
         List<String> names = RegistryLifecycleManager.registeredNames();
         boolean reloading = RegistryLifecycleManager.isReloadInProgress();
 
-        source.sendSuccess(() -> Component.literal("[MariesLib Registries]").withStyle(ChatFormatting.GOLD), false);
+        source.sendSuccess(() -> Component.literal("[MarieCore Registries]").withStyle(ChatFormatting.GOLD), false);
 
         if (reloading) {
             source.sendSuccess(() -> Component.literal("Reload in progress: YES").withStyle(ChatFormatting.YELLOW), false);
@@ -200,11 +200,11 @@ public final class MariesLibCommand {
         Path written = ExportWriter.writeExport(resolverId);
 
         if (written == null) {
-            source.sendFailure(Component.literal("[MariesLib] Export failed or produced no data for resolver: " + resolverId).withStyle(ChatFormatting.RED));
+            source.sendFailure(Component.literal("[MarieCore] Export failed or produced no data for resolver: " + resolverId).withStyle(ChatFormatting.RED));
             return 0;
         }
 
-        source.sendSuccess(() -> Component.literal("[MariesLib] Wrote export to " + written).withStyle(ChatFormatting.GREEN), false);
+        source.sendSuccess(() -> Component.literal("[MarieCore] Wrote export to " + written).withStyle(ChatFormatting.GREEN), false);
         return 1;
     }
 

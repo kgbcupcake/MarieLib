@@ -1,6 +1,6 @@
 package dev.marie.framework.util;
 
-import dev.marie.framework.core.MariesLib;
+import dev.marie.framework.core.MarieCore;
 import dev.marie.framework.core.MarieContext;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
@@ -72,7 +72,7 @@ public final class MarieResourceLoader {
         if (!MarieContext.isRegistered()) {
             fallback.run();
             if (fallbackInfoLog != null) {
-                MariesLib.LOGGER.info(fallbackInfoLog);
+                MarieCore.LOGGER.info(fallbackInfoLog);
             }
             return;
         }
@@ -81,22 +81,22 @@ public final class MarieResourceLoader {
         if (resource.isEmpty()) {
             fallback.run();
             if (fallbackInfoLog != null) {
-                MariesLib.LOGGER.info(fallbackInfoLog);
+                MarieCore.LOGGER.info(fallbackInfoLog);
             }
             return;
         }
         try (InputStream is = resource.get().open();
              Reader r = new InputStreamReader(is, StandardCharsets.UTF_8)) {
             if (action.apply(r)) {
-                MariesLib.LOGGER.info(successMessage);
+                MarieCore.LOGGER.info(successMessage);
                 return;
             }
         } catch (IOException e) {
-            MariesLib.LOGGER.error(errorMessage, e);
+            MarieCore.LOGGER.error(errorMessage, e);
         }
         fallback.run();
         if (fallbackInfoLog != null) {
-            MariesLib.LOGGER.info(fallbackInfoLog);
+            MarieCore.LOGGER.info(fallbackInfoLog);
         }
     }
 

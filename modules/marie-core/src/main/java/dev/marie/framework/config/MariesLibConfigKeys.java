@@ -1,7 +1,7 @@
 package dev.marie.framework.config;
 
 /**
- * Stable Cloth Config / {@link LockRegistry} keys for MariesLib-owned settings.
+ * Stable Cloth Config / {@link LockRegistry} keys for MarieCore-owned settings.
  * Only scanner and debug keys remain — gameplay keys belong to consuming mods.
  */
 public final class MariesLibConfigKeys {

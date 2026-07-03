@@ -2,7 +2,7 @@ package dev.marie.framework.config.validation;
 
 import dev.marie.framework.api.ApiStatus;
 import dev.marie.framework.api.ConfigValidator;
-import dev.marie.framework.core.MariesLib;
+import dev.marie.framework.core.MarieCore;
 import dev.marie.framework.registry.ListRegistry;
 
 import java.util.ArrayList;
@@ -39,7 +39,7 @@ public final class ConfigValidatorRegistry {
         String id = validator.validatorId();
         for (ConfigValidator existing : REGISTRY.values()) {
             if (existing.validatorId().equals(id)) {
-                MariesLib.LOGGER.warn("[ConfigValidatorRegistry] Ignoring duplicate validator registration: {}", id);
+                MarieCore.LOGGER.warn("[ConfigValidatorRegistry] Ignoring duplicate validator registration: {}", id);
                 return;
             }
         }

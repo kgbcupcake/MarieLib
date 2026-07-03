@@ -7,7 +7,7 @@ import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import dev.marie.framework.api.ApiStatus;
 import dev.marie.framework.core.IMarieConfig;
-import dev.marie.framework.core.MariesLib;
+import dev.marie.framework.core.MarieCore;
 import dev.marie.framework.util.MarieValidation;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.fml.loading.FMLPaths;
@@ -36,7 +36,7 @@ public final class ExportWriter {
     public static Path writeExport(String resolverId) {
         Map<ResourceLocation, Map<String, Object>> results = RegistryExporter.run(resolverId);
         if (results.isEmpty()) {
-            MariesLib.LOGGER.warn("[ExportWriter] No data to write for resolver '{}'", resolverId);
+            MarieCore.LOGGER.warn("[ExportWriter] No data to write for resolver '{}'", resolverId);
             return null;
         }
 
@@ -66,10 +66,10 @@ public final class ExportWriter {
             try (Writer w = Files.newBufferedWriter(file)) {
                 GSON.toJson(arr, w);
             }
-            MariesLib.LOGGER.info("[ExportWriter] Wrote {} entries to {}", results.size(), file);
+            MarieCore.LOGGER.info("[ExportWriter] Wrote {} entries to {}", results.size(), file);
             return file;
         } catch (IOException e) {
-            MariesLib.LOGGER.error("[ExportWriter] Failed to write export for resolver '{}'", resolverId, e);
+            MarieCore.LOGGER.error("[ExportWriter] Failed to write export for resolver '{}'", resolverId, e);
             return null;
         }
     }

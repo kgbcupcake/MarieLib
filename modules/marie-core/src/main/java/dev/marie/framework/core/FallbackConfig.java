@@ -18,7 +18,7 @@ import dev.marie.framework.tracking.DiminishingReturnsConfig;
 enum FallbackConfig implements IMarieConfig {
     INSTANCE;
 
-    @Override public String modId() { return MariesLib.MOD_ID; }
+    @Override public String modId() { return MarieCore.MOD_ID; }
     @Override public float scannerConfidenceSpreadThreshold() { return MariesLibConfigHolder.get().scannerConfidenceSpreadThreshold; }
     @Override public float compositeRatioThreshold() { return MariesLibConfigHolder.get().compositeRatioThreshold; }
     @Override public boolean scannerEnableRecipeInheritance() { return MariesLibConfigHolder.get().scannerEnableRecipeInheritance; }

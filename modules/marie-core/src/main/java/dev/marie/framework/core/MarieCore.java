@@ -9,14 +9,14 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 
-@Mod(MariesLib.MOD_ID)
-public final class MariesLib {
+@Mod(MarieCore.MOD_ID)
+public final class MarieCore {
 
     public static final String MOD_ID = "marieslib";
     public static final Logger LOGGER = LogUtils.getLogger();
 
-    public MariesLib(IEventBus modEventBus, ModContainer modContainer) {
+    public MarieCore(IEventBus modEventBus, ModContainer modContainer) {
         MariesLibConfigIO.load();
-        LOGGER.info("MariesLib initialized");
+        LOGGER.info("MarieCore initialized");
     }
 }

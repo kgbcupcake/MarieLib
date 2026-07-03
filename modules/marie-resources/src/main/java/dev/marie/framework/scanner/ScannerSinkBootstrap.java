@@ -1,7 +1,7 @@
 package dev.marie.framework.scanner;
 
 import dev.marie.framework.api.ApiStatus;
-import dev.marie.framework.core.MariesLib;
+import dev.marie.framework.core.MarieCore;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
@@ -13,7 +13,7 @@ import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
  * classes directly, per the locked one-directional module graph.
  */
 @ApiStatus.Internal
-@EventBusSubscriber(modid = MariesLib.MOD_ID, bus = EventBusSubscriber.Bus.MOD)
+@EventBusSubscriber(modid = MarieCore.MOD_ID, bus = EventBusSubscriber.Bus.MOD)
 public final class ScannerSinkBootstrap {
 
     private ScannerSinkBootstrap() {}

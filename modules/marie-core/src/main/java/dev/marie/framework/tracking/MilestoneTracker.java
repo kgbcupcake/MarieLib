@@ -6,7 +6,7 @@ import dev.marie.framework.api.MilestoneDefinition;
 import dev.marie.framework.api.registry.MilestoneRegistry;
 import dev.marie.framework.config.FeatureFlagCache;
 import dev.marie.framework.core.MarieContext;
-import dev.marie.framework.core.MariesLib;
+import dev.marie.framework.core.MarieCore;
 import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
@@ -105,7 +105,7 @@ public final class MilestoneTracker {
                         holder,
                         milestone.getRewardDuration(),
                         milestone.getRewardAmplifier())),
-                () -> MariesLib.LOGGER.warn(
+                () -> MarieCore.LOGGER.warn(
                         "[MarieLib] Milestone '{}' references unknown effect '{}'",
                         milestone.getId(),
                         effectId));
@@ -118,7 +118,7 @@ public final class MilestoneTracker {
         }
         AdvancementHolder holder = resolveAdvancement(player, advancementId);
         if (holder == null) {
-            MariesLib.LOGGER.warn(
+            MarieCore.LOGGER.warn(
                     "[MarieLib] Milestone '{}' references unknown advancement '{}'",
                     milestone.getId(),
                     advancementId);

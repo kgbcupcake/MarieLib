@@ -5,7 +5,7 @@ import dev.marie.framework.api.ApplicationHistoryView;
 import dev.marie.framework.api.impl.EmptyApplicationHistoryView;
 import dev.marie.framework.core.IMarieConfig;
 import dev.marie.framework.core.MarieContext;
-import dev.marie.framework.core.MariesLib;
+import dev.marie.framework.core.MarieCore;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.attachment.AttachmentType;
 import net.neoforged.neoforge.registries.DeferredRegister;
@@ -90,7 +90,7 @@ public final class TrackingAttachment {
         }
         List<String> valueKeys = MarieContext.get().valueKeys();
         for (String valueKey : valueKeys) {
-            MariesLib.LOGGER.info("[MarieLib] Value NBT path: {}", getValueNbtPath(valueKey));
+            MarieCore.LOGGER.info("[MarieLib] Value NBT path: {}", getValueNbtPath(valueKey));
         }
     }
 

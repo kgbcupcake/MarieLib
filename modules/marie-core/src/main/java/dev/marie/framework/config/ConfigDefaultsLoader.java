@@ -2,7 +2,7 @@ package dev.marie.framework.config;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import dev.marie.framework.core.MariesLib;
+import dev.marie.framework.core.MarieCore;
 import dev.marie.framework.util.MarieJsonUtils;
 
 import java.io.InputStream;
@@ -25,7 +25,7 @@ public final class ConfigDefaultsLoader {
                 return obj != null ? obj : new JsonObject();
             }
         } catch (Exception ex) {
-            MariesLib.LOGGER.warn("[MarieLib] Failed to load config defaults from {}", resourcePath, ex);
+            MarieCore.LOGGER.warn("[MarieLib] Failed to load config defaults from {}", resourcePath, ex);
             return new JsonObject();
         }
     }

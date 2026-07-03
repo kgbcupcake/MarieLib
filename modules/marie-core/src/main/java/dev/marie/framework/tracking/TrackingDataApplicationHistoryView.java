@@ -3,7 +3,7 @@ package dev.marie.framework.tracking;
 import dev.marie.framework.api.ApiStatus;
 import dev.marie.framework.api.ApplicationHistoryView;
 import dev.marie.framework.core.IMarieConfig;
-import dev.marie.framework.core.MariesLib;
+import dev.marie.framework.core.MarieCore;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.Comparator;
@@ -36,7 +36,7 @@ public final class TrackingDataApplicationHistoryView implements ApplicationHist
                     try {
                         return ResourceLocation.parse(e.getKey());
                     } catch (Exception ex) {
-                        MariesLib.LOGGER.warn("[MarieLib] Dropping invalid source key in history: '{}'", e.getKey());
+                        MarieCore.LOGGER.warn("[MarieLib] Dropping invalid source key in history: '{}'", e.getKey());
                         return null;
                     }
                 })

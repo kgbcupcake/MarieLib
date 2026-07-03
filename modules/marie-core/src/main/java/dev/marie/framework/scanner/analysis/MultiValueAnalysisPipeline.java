@@ -1,7 +1,7 @@
 package dev.marie.framework.scanner.analysis;
 
 import dev.marie.framework.api.ApiStatus;
-import dev.marie.framework.core.MariesLib;
+import dev.marie.framework.core.MarieCore;
 import dev.marie.framework.scanner.ClassificationResult;
 
 import java.io.IOException;
@@ -135,7 +135,7 @@ public final class MultiValueAnalysisPipeline {
             MultiValueAnalysisWriter.writeAll(
                     result, outputDir, absoluteThreshold, relativeThreshold, ambiguityThreshold);
         } catch (IOException e) {
-            MariesLib.LOGGER.error("[MultiValueAnalysisPipeline] Failed to create output directory", e);
+            MarieCore.LOGGER.error("[MultiValueAnalysisPipeline] Failed to create output directory", e);
         }
     }
 
@@ -150,12 +150,12 @@ public final class MultiValueAnalysisPipeline {
             float ambiguityThreshold
     ) {
         if (results.isEmpty()) {
-            MariesLib.LOGGER.warn(
+            MarieCore.LOGGER.warn(
                     "[MultiValueAnalysisPipeline] Registry empty or unavailable — skipping full registry analysis");
             return;
         }
 
-        MariesLib.LOGGER.info(
+        MarieCore.LOGGER.info(
                 "[MultiValueAnalysisPipeline] Pulled {} classified sources from registry",
                 results.size());
 
@@ -164,7 +164,7 @@ public final class MultiValueAnalysisPipeline {
         try {
             write(result);
         } catch (IOException e) {
-            MariesLib.LOGGER.error("[MultiValueAnalysisPipeline] Failed to write full registry analysis", e);
+            MarieCore.LOGGER.error("[MultiValueAnalysisPipeline] Failed to write full registry analysis", e);
         }
     }
 

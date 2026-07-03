@@ -16,7 +16,7 @@ final class MariesLibInternalContext implements MarieLibSettings {
 
     @Override
     public String modId() {
-        return MariesLib.MOD_ID;
+        return MarieCore.MOD_ID;
     }
 
     @Override

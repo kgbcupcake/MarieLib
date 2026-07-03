@@ -4,7 +4,7 @@ import com.mojang.brigadier.CommandDispatcher;
 import dev.marie.framework.api.ApiStatus;
 import dev.marie.framework.core.MarieContext;
 import dev.marie.framework.core.MarieModRegistry;
-import dev.marie.framework.core.MariesLib;
+import dev.marie.framework.core.MarieCore;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -19,7 +19,7 @@ import net.neoforged.neoforge.event.server.ServerStoppedEvent;
  * dependency on marie-commands, per the locked one-directional module graph.
  */
 @ApiStatus.Internal
-@EventBusSubscriber(modid = MariesLib.MOD_ID)
+@EventBusSubscriber(modid = MarieCore.MOD_ID)
 public final class MarieCommand {
 
     private MarieCommand() {}
@@ -29,7 +29,7 @@ public final class MarieCommand {
         CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
         for (MarieContext ctx : MarieModRegistry.getAll()) {
             String modId = ctx.modId();
-            if (!modId.equals(MariesLib.MOD_ID)) {
+            if (!modId.equals(MarieCore.MOD_ID)) {
                 MarieConsumerCommandTree.register(dispatcher, modId);
             }
         }

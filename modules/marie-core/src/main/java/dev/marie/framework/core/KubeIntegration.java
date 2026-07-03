@@ -77,7 +77,7 @@ public final class KubeIntegration {
             Class<?> type = Class.forName(className);
             return type.getMethod(method, paramTypes).invoke(null, args);
         } catch (ReflectiveOperationException e) {
-            MariesLib.LOGGER.warn("[MarieLib] KubeJS integration call failed: {}.{}", className, method, e);
+            MarieCore.LOGGER.warn("[MarieLib] KubeJS integration call failed: {}.{}", className, method, e);
             return null;
         }
     }

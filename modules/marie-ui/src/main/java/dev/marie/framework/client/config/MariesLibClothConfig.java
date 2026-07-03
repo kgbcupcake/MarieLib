@@ -6,7 +6,7 @@ import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
 import net.minecraft.client.gui.screens.Screen;
 
 /**
- * Builds the MariesLib Cloth Config screen with framework-only tabs:
+ * Builds the MarieCore Cloth Config screen with framework-only tabs:
  * Overview, Scanner, Diagnostics, and Tools.
  */
 public final class MariesLibClothConfig {

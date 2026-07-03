@@ -13,23 +13,23 @@ logoFile = "marieslib_icon.png"
 logoBlur = false
 
 [[mixins]]
-config = "mariesframework.mixins.json"
+config = "marieslib.mixins.json"
 
-[[dependencies.mariesframework]]
+[[dependencies.marieslib]]
 modId = "neoforge"
 type = "required"
 versionRange = "${neo_version_range}"
 ordering = "NONE"
 side = "BOTH"
 
-[[dependencies.mariesframework]]
+[[dependencies.marieslib]]
 modId = "minecraft"
 type = "required"
 versionRange = "${minecraft_version_range}"
 ordering = "NONE"
 side = "BOTH"
 
-[[dependencies.mariesframework]]
+[[dependencies.marieslib]]
 modId = "cloth_config"
 type = "optional"
 versionRange = "[15.0.0,)"

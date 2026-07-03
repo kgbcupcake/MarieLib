@@ -7,7 +7,7 @@ import dev.marie.framework.classification.ClassificationTraceStep;
 import dev.marie.framework.classification.TraceStepId;
 import dev.marie.framework.classification.TraceStepStatus;
 import dev.marie.framework.core.MarieContext;
-import dev.marie.framework.core.MariesLib;
+import dev.marie.framework.core.MarieCore;
 import dev.marie.framework.scanner.ScannerSpecRegistry.Multipliers;
 import dev.marie.framework.scanner.ScannerSpecRegistry.ScannerSpec;
 import dev.marie.framework.scanner.stages.RecipeInheritanceStage;
@@ -334,7 +334,7 @@ public final class ItemClassifier {
                result.forEach((k, v) -> contributions.merge(k, v, Float::sum));
             }
          } catch (Exception ex) {
-            MariesLib.LOGGER.warn(
+            MarieCore.LOGGER.warn(
                "[MarieLib] SourcePropertySignal '{}' threw during evaluate(): {}",
                signal.signalId(), ex.getMessage());
          }

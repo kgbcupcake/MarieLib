@@ -1,7 +1,7 @@
 package dev.marie.framework.config;
 
 /**
- * Mutable source of truth for all MariesLib-owned scalar configuration.
+ * Mutable source of truth for all MarieCore-owned scalar configuration.
  * Only scanner and debug settings live here — gameplay config belongs to consuming mods.
  */
 public final class MariesLibConfigHolder {

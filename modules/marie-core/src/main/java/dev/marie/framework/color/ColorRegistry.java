@@ -9,7 +9,7 @@ import com.google.gson.JsonObject;
 import dev.marie.framework.api.ValueDefinition;
 import dev.marie.framework.api.registry.ValueRegistry;
 import dev.marie.framework.core.IMarieConfig;
-import dev.marie.framework.core.MariesLib;
+import dev.marie.framework.core.MarieCore;
 import dev.marie.framework.data.DatapackSchema;
 import dev.marie.framework.registry.AbstractRegistry;
 import dev.marie.framework.util.MarieResourceLoader;
@@ -90,19 +90,19 @@ public final class ColorRegistry {
             Files.createDirectories(configDir);
             if (!Files.exists(file)) {
                 writeEmpty(file);
-                MariesLib.LOGGER.info("[ColorRegistry] Wrote default colors.json");
+                MarieCore.LOGGER.info("[ColorRegistry] Wrote default colors.json");
             }
             parseFile(file);
-            MariesLib.LOGGER.info("[ColorRegistry] Loaded {} custom colors from {}", INSTANCE.size(), file);
+            MarieCore.LOGGER.info("[ColorRegistry] Loaded {} custom colors from {}", INSTANCE.size(), file);
         } catch (IOException e) {
-            MariesLib.LOGGER.error("[ColorRegistry] Failed to load colors.json", e);
+            MarieCore.LOGGER.error("[ColorRegistry] Failed to load colors.json", e);
             INSTANCE.reset();
             INSTANCE.freeze();
         }
     }
 
     public static void reload() {
-        MariesLib.LOGGER.info("[ColorRegistry] Reloading colors.json");
+        MarieCore.LOGGER.info("[ColorRegistry] Reloading colors.json");
         load();
     }
 
@@ -126,9 +126,9 @@ public final class ColorRegistry {
             try (Writer w = Files.newBufferedWriter(file)) {
                 GSON.toJson(arr, w);
             }
-            MariesLib.LOGGER.info("[ColorRegistry] Saved {} entries to {}", arr.size(), file);
+            MarieCore.LOGGER.info("[ColorRegistry] Saved {} entries to {}", arr.size(), file);
         } catch (IOException e) {
-            MariesLib.LOGGER.error("[ColorRegistry] Failed to save colors.json", e);
+            MarieCore.LOGGER.error("[ColorRegistry] Failed to save colors.json", e);
         }
     }
 

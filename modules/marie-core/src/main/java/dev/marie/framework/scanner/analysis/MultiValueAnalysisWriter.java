@@ -6,7 +6,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 import dev.marie.framework.api.ApiStatus;
-import dev.marie.framework.core.MariesLib;
+import dev.marie.framework.core.MarieCore;
 import dev.marie.framework.core.MarieContext;
 import dev.marie.framework.util.MarieValidation;
 import net.neoforged.fml.loading.FMLPaths;
@@ -68,7 +68,7 @@ final class MultiValueAnalysisWriter {
                 writeDatapack(result, outputDir.resolve(DATAPACK_SUBDIR)));
 
         ScannerMetrics m = result.metrics();
-        MariesLib.LOGGER.info(
+        MarieCore.LOGGER.info(
                 "[MultiValueAnalysisPipeline] Wrote analysis: {} sources, {} multi-value, {} ambiguous → {}",
                 m.total(), m.multiValue(), m.ambiguous(), outputDir.toAbsolutePath());
     }
@@ -77,7 +77,7 @@ final class MultiValueAnalysisWriter {
         try {
             action.run();
         } catch (IOException e) {
-            MariesLib.LOGGER.error(
+            MarieCore.LOGGER.error(
                     "[MultiValueAnalysisPipeline] Failed to write {}", target.getFileName(), e);
         }
     }

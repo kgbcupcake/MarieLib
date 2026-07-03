@@ -1,7 +1,7 @@
 package dev.marie.framework.registry;
 
 import dev.marie.framework.api.ApiStatus;
-import dev.marie.framework.core.MariesLib;
+import dev.marie.framework.core.MarieCore;
 import net.minecraft.server.packs.resources.ResourceManager;
 
 import java.util.ArrayList;
@@ -74,7 +74,7 @@ public final class RegistryLifecycleManager {
         }
         for (Entry entry : ENTRIES) {
             if (entry.name().equals(name)) {
-                MariesLib.LOGGER.warn("[RegistryLifecycleManager] Ignoring duplicate registry registration: {}", name);
+                MarieCore.LOGGER.warn("[RegistryLifecycleManager] Ignoring duplicate registry registration: {}", name);
                 return;
             }
         }
@@ -87,14 +87,14 @@ public final class RegistryLifecycleManager {
      */
     public static void loadAll() {
         for (Entry entry : ENTRIES) {
-            MariesLib.LOGGER.info("[RegistryLifecycleManager] Loading {}", entry.name());
+            MarieCore.LOGGER.info("[RegistryLifecycleManager] Loading {}", entry.name());
             try {
                 entry.load().run();
             } catch (RuntimeException e) {
-                MariesLib.LOGGER.error("[RegistryLifecycleManager] Failed to load {}", entry.name(), e);
+                MarieCore.LOGGER.error("[RegistryLifecycleManager] Failed to load {}", entry.name(), e);
                 throw e;
             }
-            MariesLib.LOGGER.info("[RegistryLifecycleManager] Loaded {}", entry.name());
+            MarieCore.LOGGER.info("[RegistryLifecycleManager] Loaded {}", entry.name());
         }
     }
 
@@ -106,14 +106,14 @@ public final class RegistryLifecycleManager {
         reloadInProgress = true;
         try {
             for (Entry entry : ENTRIES) {
-                MariesLib.LOGGER.info("[RegistryLifecycleManager] Reloading {}", entry.name());
+                MarieCore.LOGGER.info("[RegistryLifecycleManager] Reloading {}", entry.name());
                 try {
                     entry.reload().run();
                 } catch (RuntimeException e) {
-                    MariesLib.LOGGER.error("[RegistryLifecycleManager] Failed to reload {}", entry.name(), e);
+                    MarieCore.LOGGER.error("[RegistryLifecycleManager] Failed to reload {}", entry.name(), e);
                     throw e;
                 }
-                MariesLib.LOGGER.info("[RegistryLifecycleManager] Reloaded {}", entry.name());
+                MarieCore.LOGGER.info("[RegistryLifecycleManager] Reloaded {}", entry.name());
             }
         } finally {
             reloadInProgress = false;
@@ -132,14 +132,14 @@ public final class RegistryLifecycleManager {
                 if (datapack == null) {
                     continue;
                 }
-                MariesLib.LOGGER.info("[RegistryLifecycleManager] Datapack-loading {}", entry.name());
+                MarieCore.LOGGER.info("[RegistryLifecycleManager] Datapack-loading {}", entry.name());
                 try {
                     datapack.accept(resourceManager);
                 } catch (RuntimeException e) {
-                    MariesLib.LOGGER.error("[RegistryLifecycleManager] Failed datapack-load of {}", entry.name(), e);
+                    MarieCore.LOGGER.error("[RegistryLifecycleManager] Failed datapack-load of {}", entry.name(), e);
                     throw e;
                 }
-                MariesLib.LOGGER.info("[RegistryLifecycleManager] Datapack-loaded {}", entry.name());
+                MarieCore.LOGGER.info("[RegistryLifecycleManager] Datapack-loaded {}", entry.name());
             }
         } finally {
             reloadInProgress = false;

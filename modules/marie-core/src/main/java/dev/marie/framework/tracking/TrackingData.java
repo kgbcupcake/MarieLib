@@ -12,7 +12,7 @@ import dev.marie.framework.api.ApiStatus;
 
 
 import dev.marie.framework.core.IMarieConfig;
-import dev.marie.framework.core.MariesLib;
+import dev.marie.framework.core.MarieCore;
 import dev.marie.framework.core.MarieContext;
 import net.minecraft.util.Mth;
 
@@ -156,7 +156,7 @@ public class TrackingData {
                     .result()
                     .ifPresent(m -> {
                         if (m.size() > 512) {
-                            MariesLib.LOGGER.warn("[TrackingData] source_memory exceeded cap ({} entries) — truncating to 512", m.size());
+                            MarieCore.LOGGER.warn("[TrackingData] source_memory exceeded cap ({} entries) — truncating to 512", m.size());
                         }
                         m.entrySet().stream().limit(512).forEach(e -> data.sourceMemory.put(e.getKey(), e.getValue()));
                     });
@@ -170,7 +170,7 @@ public class TrackingData {
                     .result()
                     .ifPresent(m -> {
                         if (m.size() > 256) {
-                            MariesLib.LOGGER.warn("[TrackingData] category_memory exceeded cap ({} entries) — truncating to 256", m.size());
+                            MarieCore.LOGGER.warn("[TrackingData] category_memory exceeded cap ({} entries) — truncating to 256", m.size());
                         }
                         m.entrySet().stream().limit(256).forEach(e -> data.categoryMemory.put(e.getKey(), e.getValue()));
                     });
@@ -183,7 +183,7 @@ public class TrackingData {
                     .result()
                     .ifPresent(m -> {
                         if (m.size() > 256) {
-                            MariesLib.LOGGER.warn("[TrackingData] family_memory exceeded cap ({} entries) — truncating to 256", m.size());
+                            MarieCore.LOGGER.warn("[TrackingData] family_memory exceeded cap ({} entries) — truncating to 256", m.size());
                         }
                         m.entrySet().stream().limit(256).forEach(e -> data.familyMemory.put(e.getKey(), e.getValue()));
                     });
@@ -221,7 +221,7 @@ public class TrackingData {
                         .map(TrackingData::extractSavedValueKey)
                         .filter(key -> key != null && !registeredValueKeys.contains(key))
                         .filter(loggedUnknownKeys::add)
-                        .ifPresent(key -> MariesLib.LOGGER.debug(
+                        .ifPresent(key -> MarieCore.LOGGER.debug(
                                 "[TrackingData] Dropping unknown value key from saved data: {}",
                                 key
                         ))
@@ -350,7 +350,7 @@ public class TrackingData {
         if (!values.containsKey(key)) return;
         float newValue = Mth.clamp(values.get(key) + amount, 0f, 1f);
         if (Float.isNaN(newValue)) {
-            MariesLib.LOGGER.error("[MarieLib] NaN value detected for key={} — resetting to 0", key);
+            MarieCore.LOGGER.error("[MarieLib] NaN value detected for key={} — resetting to 0", key);
             newValue = 0f;
         }
         values.put(key, newValue);
@@ -440,7 +440,7 @@ public class TrackingData {
         // Debug logging when enabled
         if (configuredDebugMemoryLogging()) {
             MultiplierBreakdown breakdown = getMultiplierBreakdown(sourceKey, dominantCategory, familyKey, currentTime);
-            MariesLib.LOGGER.debug(
+            MarieCore.LOGGER.debug(
                     "Memory breakdown for {}: item={} (w={}) cat={} (w={}) family={} (w={}) novelty={} => final={}",
                     sourceKey,
                     breakdown.itemContribution(), breakdown.itemWeight(),

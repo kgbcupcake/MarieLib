@@ -7,7 +7,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import dev.marie.framework.api.ApiStatus;
 import dev.marie.framework.core.IMarieConfig;
-import dev.marie.framework.core.MariesLib;
+import dev.marie.framework.core.MarieCore;
 import dev.marie.framework.registry.AbstractRegistry;
 import dev.marie.framework.data.DatapackSchema;
 import dev.marie.framework.util.MarieJsonUtils;
@@ -78,14 +78,14 @@ public final class ScannerSpecRegistry {
             Files.createDirectories(configDir);
             if (!Files.exists(file)) {
                 if (writeBundledTo(file)) {
-                    MariesLib.LOGGER.info("[ScannerSpecRegistry] Wrote default scanner_spec.json");
+                    MarieCore.LOGGER.info("[ScannerSpecRegistry] Wrote default scanner_spec.json");
                 } else {
-                    MariesLib.LOGGER.debug("[ScannerSpecRegistry] No bundled scanner_spec.json for this modId, skipping write");
+                    MarieCore.LOGGER.debug("[ScannerSpecRegistry] No bundled scanner_spec.json for this modId, skipping write");
                 }
             }
             ScannerSpec spec = parseFile(file);
             if (spec == null) {
-                MariesLib.LOGGER.warn("[ScannerSpecRegistry] scanner_spec.json was empty/invalid, falling back to bundled defaults");
+                MarieCore.LOGGER.warn("[ScannerSpecRegistry] scanner_spec.json was empty/invalid, falling back to bundled defaults");
                 spec = parseBundled();
             }
             if (spec == null) {
@@ -94,9 +94,9 @@ public final class ScannerSpecRegistry {
             INSTANCE.reset();
             INSTANCE.register(SPEC_KEY, spec);
             INSTANCE.freeze();
-            MariesLib.LOGGER.info("[ScannerSpecRegistry] Loaded scanner spec from {}", file);
+            MarieCore.LOGGER.info("[ScannerSpecRegistry] Loaded scanner spec from {}", file);
         } catch (IOException e) {
-            MariesLib.LOGGER.error("[ScannerSpecRegistry] Failed to load scanner_spec.json, using bundled defaults", e);
+            MarieCore.LOGGER.error("[ScannerSpecRegistry] Failed to load scanner_spec.json, using bundled defaults", e);
             ScannerSpec bundled = parseBundled();
             INSTANCE.reset();
             INSTANCE.register(SPEC_KEY, bundled != null ? bundled : ScannerSpec.empty());
@@ -105,7 +105,7 @@ public final class ScannerSpecRegistry {
     }
 
     public static void reload() {
-        MariesLib.LOGGER.info("[ScannerSpecRegistry] Reloading scanner_spec.json");
+        MarieCore.LOGGER.info("[ScannerSpecRegistry] Reloading scanner_spec.json");
         load();
     }
 
@@ -144,7 +144,7 @@ public final class ScannerSpecRegistry {
                 return parseReader(r);
             }
         } catch (IOException e) {
-            MariesLib.LOGGER.error("[ScannerSpecRegistry] Failed to read bundled scanner_spec.json", e);
+            MarieCore.LOGGER.error("[ScannerSpecRegistry] Failed to read bundled scanner_spec.json", e);
             return null;
         }
     }

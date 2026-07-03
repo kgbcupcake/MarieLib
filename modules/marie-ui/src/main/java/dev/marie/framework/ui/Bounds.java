@@ -1,0 +1,9 @@
+package dev.marie.framework.ui;
+
+/** Resolved pixel rectangle a {@link MarieComponent} is told to occupy for one render/input pass. */
+public record Bounds(int x, int y, int width, int height) {
+
+    public boolean contains(int px, int py) {
+        return px >= x && py >= y && px < x + width && py < y + height;
+    }
+}

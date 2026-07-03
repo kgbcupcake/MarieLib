@@ -3,7 +3,7 @@ package dev.marie.framework.compat;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
-import dev.marie.framework.core.MariesLib;
+import dev.marie.framework.core.MarieCore;
 import dev.marie.framework.core.MarieContext;
 import dev.marie.framework.util.MarieValidation;
 import dev.marie.framework.util.MarieRegistryUtils;
@@ -37,7 +37,7 @@ public final class AutoCompatDiscovery {
     private AutoCompatDiscovery() {}
 
     public static void discover() {
-        MariesLib.LOGGER.info("[MarieLib] AutoCompatDiscovery.discover() called — evaluating {} mods", ModList.get().getMods().size());
+        MarieCore.LOGGER.info("[MarieLib] AutoCompatDiscovery.discover() called — evaluating {} mods", ModList.get().getMods().size());
         try {
             Path autoCompatDir = FMLPaths.CONFIGDIR.get().resolve(MarieContext.get().modId() + "/auto_compat");
             Files.createDirectories(autoCompatDir);
@@ -45,21 +45,21 @@ public final class AutoCompatDiscovery {
 
             for (var modInfo : ModList.get().getMods()) {
                 String modId = modInfo.getModId();
-                MariesLib.LOGGER.info("[MarieLib] AutoCompat checking: {}", modId);
+                MarieCore.LOGGER.info("[MarieLib] AutoCompat checking: {}", modId);
                 if (VANILLA_MOD_IDS.contains(modId)) {
-                    MariesLib.LOGGER.info("[MarieLib] AutoCompat skipping {} — reason: {}", modId, "vanilla/system mod");
+                    MarieCore.LOGGER.info("[MarieLib] AutoCompat skipping {} — reason: {}", modId, "vanilla/system mod");
                     continue;
                 }
                 if (registeredModIds.contains(modId)) {
-                    MariesLib.LOGGER.info("[MarieLib] AutoCompat skipping {} — reason: {}", modId, "already registered");
+                    MarieCore.LOGGER.info("[MarieLib] AutoCompat skipping {} — reason: {}", modId, "already registered");
                     continue;
                 }
 
                 Map<ResourceLocation, String> hintedMappings = new LinkedHashMap<>();
                 List<Item> sourceItems = collectSourceItems(modId, hintedMappings);
-                MariesLib.LOGGER.info("[MarieLib] AutoCompat source item count for {}: {}", modId, sourceItems.size());
+                MarieCore.LOGGER.info("[MarieLib] AutoCompat source item count for {}: {}", modId, sourceItems.size());
                 if (sourceItems.isEmpty()) {
-                    MariesLib.LOGGER.info("[MarieLib] AutoCompat skipping {} — reason: {}", modId, "no source items found");
+                    MarieCore.LOGGER.info("[MarieLib] AutoCompat skipping {} — reason: {}", modId, "no source items found");
                     continue;
                 }
 
@@ -70,7 +70,7 @@ public final class AutoCompatDiscovery {
                 ModCompat.registerExternal(definition);
                 registeredModIds.add(modId);
 
-                MariesLib.LOGGER.info(
+                MarieCore.LOGGER.info(
                         "[MarieLib] Auto-detected source mod: {} ({} source items found)",
                         modId,
                         sourceItems.size()
@@ -79,7 +79,7 @@ public final class AutoCompatDiscovery {
                 writeStubIfMissing(autoCompatDir, modId, sourceItems.size(), hintedMappings);
             }
         } catch (Exception e) {
-            MariesLib.LOGGER.warn("[MarieLib] Auto compat discovery failed: {}", e.getMessage());
+            MarieCore.LOGGER.warn("[MarieLib] Auto compat discovery failed: {}", e.getMessage());
         }
     }
 
@@ -116,7 +116,7 @@ public final class AutoCompatDiscovery {
             Map<ResourceLocation, String> hintedMappings
     ) {
         if (!MarieValidation.sanitizeModId(modId)) {
-            MariesLib.LOGGER.warn("[MarieLib] AutoCompat: invalid modId '{}' — skipping stub write", modId);
+            MarieCore.LOGGER.warn("[MarieLib] AutoCompat: invalid modId '{}' — skipping stub write", modId);
             return;
         }
         Path stubPath = autoCompatDir.resolve(modId + ".json");
@@ -142,9 +142,9 @@ public final class AutoCompatDiscovery {
 
         try (Writer writer = Files.newBufferedWriter(stubPath)) {
             GSON.toJson(root, writer);
-            MariesLib.LOGGER.info("[MarieLib] Wrote auto-compat stub: {}", stubPath);
+            MarieCore.LOGGER.info("[MarieLib] Wrote auto-compat stub: {}", stubPath);
         } catch (IOException e) {
-            MariesLib.LOGGER.warn("[MarieLib] Failed to write auto-compat stub {}: {}", stubPath, e.getMessage());
+            MarieCore.LOGGER.warn("[MarieLib] Failed to write auto-compat stub {}: {}", stubPath, e.getMessage());
         }
     }
 }

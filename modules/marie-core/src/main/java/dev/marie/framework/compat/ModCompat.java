@@ -3,7 +3,7 @@ package dev.marie.framework.compat;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import dev.marie.framework.api.ApiStatus;
-import dev.marie.framework.core.MariesLib;
+import dev.marie.framework.core.MarieCore;
 import dev.marie.framework.core.MarieContext;
 import net.neoforged.fml.ModList;
 import net.neoforged.fml.loading.FMLPaths;
@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
 @ApiStatus.Internal
 public final class ModCompat {
 
-    private static final Logger LOGGER = MariesLib.LOGGER;
+    private static final Logger LOGGER = MarieCore.LOGGER;
     private static final Gson GSON = new GsonBuilder().create();
 
     private static volatile boolean initialized = false;

@@ -7,7 +7,7 @@ import com.google.gson.JsonObject;
 
 import dev.marie.framework.api.ApiStatus;
 import dev.marie.framework.core.IMarieConfig;
-import dev.marie.framework.core.MariesLib;
+import dev.marie.framework.core.MarieCore;
 import net.neoforged.fml.ModList;
 
 import java.io.InputStream;
@@ -41,13 +41,13 @@ public final class ModCompatRegistry {
         String path = resourcePath();
         try (InputStream in = ModCompatRegistry.class.getResourceAsStream(path)) {
             if (in == null) {
-                MariesLib.LOGGER.warn("[MarieLib] Missing resource {}", path);
+                MarieCore.LOGGER.warn("[MarieLib] Missing resource {}", path);
                 return;
             }
             try (InputStreamReader reader = new InputStreamReader(in, StandardCharsets.UTF_8)) {
                 JsonObject root = GSON.fromJson(reader, JsonObject.class);
                 if (root == null || !root.has("integrations") || !root.get("integrations").isJsonArray()) {
-                    MariesLib.LOGGER.warn("[MarieLib] mod_compat.json missing integrations array");
+                    MarieCore.LOGGER.warn("[MarieLib] mod_compat.json missing integrations array");
                     return;
                 }
                 JsonArray arr = root.getAsJsonArray("integrations");
@@ -67,10 +67,10 @@ public final class ModCompatRegistry {
                     INTEGRATIONS.put(modId, new IntegrationEntry(modId, notes));
                 }
             }
-            MariesLib.LOGGER.info("[MarieLib] Loaded {} integration entries from mod_compat.json",
+            MarieCore.LOGGER.info("[MarieLib] Loaded {} integration entries from mod_compat.json",
                     INTEGRATIONS.size());
         } catch (Exception e) {
-            MariesLib.LOGGER.error("[MarieLib] Failed to load mod_compat.json", e);
+            MarieCore.LOGGER.error("[MarieLib] Failed to load mod_compat.json", e);
             INTEGRATIONS.clear();
         }
     }

@@ -1,4 +1,4 @@
 /**
- * Mixin injection points for MariesLib.
+ * Mixin injection points for MarieCore.
  */
 package dev.marie.framework.mixin;

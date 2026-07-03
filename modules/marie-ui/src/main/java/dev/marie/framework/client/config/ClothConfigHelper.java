@@ -4,7 +4,7 @@ import java.util.Optional;
 
 import dev.marie.framework.config.LockRegistry;
 import dev.marie.framework.config.MariesLibConfigHolder;
-import dev.marie.framework.core.MariesLib;
+import dev.marie.framework.core.MarieCore;
 import me.shedaniel.clothconfig2.api.AbstractConfigListEntry;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.ConfigCategory;
@@ -20,7 +20,7 @@ final class ClothConfigHelper {
     private ClothConfigHelper() {}
 
     static String key(String suffix) {
-        return "config." + MariesLib.MOD_ID + "." + suffix;
+        return "config." + MarieCore.MOD_ID + "." + suffix;
     }
 
     static Component t(String suffix) {

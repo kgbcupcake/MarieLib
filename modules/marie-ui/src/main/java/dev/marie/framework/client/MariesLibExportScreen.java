@@ -1,7 +1,7 @@
 package dev.marie.framework.client;
 
 import com.google.gson.JsonObject;
-import dev.marie.framework.core.MariesLib;
+import dev.marie.framework.core.MarieCore;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Checkbox;
@@ -29,7 +29,7 @@ public final class MariesLibExportScreen extends Screen {
     }
 
     private static String configKey(String suffix) {
-        return "config." + MariesLib.MOD_ID + "." + suffix;
+        return "config." + MarieCore.MOD_ID + "." + suffix;
     }
 
     @Override

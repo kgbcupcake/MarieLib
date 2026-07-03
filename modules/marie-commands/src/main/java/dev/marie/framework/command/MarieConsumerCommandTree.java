@@ -4,7 +4,7 @@ package dev.marie.framework.command;
 import dev.marie.framework.api.ApiStatus;
 import dev.marie.framework.classification.ClassificationTrace;
 import dev.marie.framework.classification.ClassificationTraceFormatter;
-import dev.marie.framework.core.MariesLib;
+import dev.marie.framework.core.MarieCore;
 import dev.marie.framework.runtime.RuntimeResolver;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.FloatArgumentType;
@@ -172,7 +172,7 @@ final class MarieConsumerCommandTree {
                                                 source.sendSuccess(() -> Component.literal(
                                                         "Analysis written to: " + file.toString()), false);
                                             } catch (IOException e) {
-                                                MariesLib.LOGGER.warn("[MarieConsumerCommandTree] Failed to write analyze dump: {}",
+                                                MarieCore.LOGGER.warn("[MarieConsumerCommandTree] Failed to write analyze dump: {}",
                                                         e.getMessage());
                                                 source.sendFailure(Component.literal("Analyze write failed: " + e.getMessage()));
                                                 return 0;

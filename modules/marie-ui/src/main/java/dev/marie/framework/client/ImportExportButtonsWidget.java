@@ -1,6 +1,6 @@
 package dev.marie.framework.client;
 
-import dev.marie.framework.core.MariesLib;
+import dev.marie.framework.core.MarieCore;
 import me.shedaniel.clothconfig2.gui.ClothConfigScreen;
 import me.shedaniel.clothconfig2.gui.entries.TooltipListEntry;
 import net.minecraft.client.Minecraft;
@@ -49,7 +49,7 @@ public final class ImportExportButtonsWidget extends TooltipListEntry<Object> {
     }
 
     private static String configKey(String suffix) {
-        return "config." + MariesLib.MOD_ID + "." + suffix;
+        return "config." + MarieCore.MOD_ID + "." + suffix;
     }
 
     @Override

@@ -8,7 +8,7 @@ import dev.marie.framework.api.ApiStatus;
 import dev.marie.framework.classification.ClassificationTrace;
 import dev.marie.framework.classification.ClassificationTraceFormatter;
 import dev.marie.framework.classification.ClassificationTraceStep;
-import dev.marie.framework.core.MariesLib;
+import dev.marie.framework.core.MarieCore;
 import dev.marie.framework.runtime.RuntimeResolver;
 import dev.marie.framework.scan.CacheStats;
 import dev.marie.framework.util.MarieRegistryUtils;
@@ -173,7 +173,7 @@ public final class MarieDebugCommand {
             Files.writeString(file, fullTrace);
             source.sendSuccess(() -> Component.literal("Trace written to: " + file.toString()), false);
         } catch (IOException e) {
-            MariesLib.LOGGER.warn("[MarieDebugCommand] Failed to write trace dump: {}", e.getMessage());
+            MarieCore.LOGGER.warn("[MarieDebugCommand] Failed to write trace dump: {}", e.getMessage());
             source.sendSuccess(() -> Component.literal("Trace write failed: " + e.getMessage()), false);
         }
 

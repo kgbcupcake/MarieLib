@@ -5,7 +5,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 
 import dev.marie.framework.config.MariesLibConfigBridge;
-import dev.marie.framework.core.MariesLib;
+import dev.marie.framework.core.MarieCore;
 import net.minecraft.network.chat.Component;
 import net.neoforged.fml.loading.FMLPaths;
 
@@ -31,7 +31,7 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 /**
- * Serializes and restores MariesLib scanner/diagnostics settings for file export and share codes.
+ * Serializes and restores MarieCore scanner/diagnostics settings for file export and share codes.
  */
 public final class ImportExportManager {
 
@@ -57,7 +57,7 @@ public final class ImportExportManager {
         }
 
         public Component label() {
-            return Component.translatable("config." + MariesLib.MOD_ID + ".importExport.section." + jsonKey);
+            return Component.translatable("config." + MarieCore.MOD_ID + ".importExport.section." + jsonKey);
         }
 
         public static Section fromJsonKey(String key) {
@@ -77,12 +77,12 @@ public final class ImportExportManager {
     }
 
     public static Path exportsDirectory() {
-        return FMLPaths.CONFIGDIR.get().resolve(MariesLib.MOD_ID).resolve("exports");
+        return FMLPaths.CONFIGDIR.get().resolve(MarieCore.MOD_ID).resolve("exports");
     }
 
     public static Path writeExportFile(JsonObject root) throws IOException {
         Files.createDirectories(exportsDirectory());
-        String stem = MariesLib.MOD_ID + "-config-" + LocalDateTime.now().format(FILE_TS);
+        String stem = MarieCore.MOD_ID + "-config-" + LocalDateTime.now().format(FILE_TS);
         Path file = exportsDirectory().resolve(stem + ".json");
         try (Writer w = Files.newBufferedWriter(file)) {
             GSON_PRETTY.toJson(root, w);

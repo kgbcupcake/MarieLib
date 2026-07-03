@@ -1,7 +1,7 @@
 package dev.marie.framework.scanner;
 
 import dev.marie.framework.api.ApiStatus;
-import dev.marie.framework.core.MariesLib;
+import dev.marie.framework.core.MarieCore;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -371,11 +371,11 @@ public final class TokenStemmer {
     private static void debugLog(String original, String result, String rule) {
         if (DEBUG) {
             if (rule.contains("discard") || rule.contains("stop-word")) {
-                MariesLib.LOGGER.debug("[Stemmer] \"{}\" discarded ({})", original, rule);
+                MarieCore.LOGGER.debug("[Stemmer] \"{}\" discarded ({})", original, rule);
             } else if (rule.equals("compound-split")) {
-                MariesLib.LOGGER.debug("[Stemmer] {} → [{}] (rule: {})", original, result, rule);
+                MarieCore.LOGGER.debug("[Stemmer] {} → [{}] (rule: {})", original, result, rule);
             } else {
-                MariesLib.LOGGER.debug("[Stemmer] {} → {} (rule: {})", original, result, rule);
+                MarieCore.LOGGER.debug("[Stemmer] {} → {} (rule: {})", original, result, rule);
             }
         }
     }

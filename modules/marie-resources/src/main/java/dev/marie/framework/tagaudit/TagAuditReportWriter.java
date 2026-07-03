@@ -5,7 +5,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import dev.marie.framework.api.ApiStatus;
-import dev.marie.framework.core.MariesLib;
+import dev.marie.framework.core.MarieCore;
 import dev.marie.framework.tagaudit.model.TagFixSuggestion;
 import dev.marie.framework.tagaudit.model.TagIssue;
 import dev.marie.framework.tagaudit.model.TagReport;
@@ -73,11 +73,11 @@ public final class TagAuditReportWriter {
             try (Writer w = Files.newBufferedWriter(file)) {
                 GSON.toJson(root, w);
             }
-            MariesLib.LOGGER.info("[TagAuditReportWriter] Wrote tag audit report ({} issues, {} suggestions) to {}",
+            MarieCore.LOGGER.info("[TagAuditReportWriter] Wrote tag audit report ({} issues, {} suggestions) to {}",
                     report.issues().size(), report.suggestions().size(), file);
             return file;
         } catch (IOException e) {
-            MariesLib.LOGGER.error("[TagAuditReportWriter] Failed to write tag audit report for '{}'", modId, e);
+            MarieCore.LOGGER.error("[TagAuditReportWriter] Failed to write tag audit report for '{}'", modId, e);
             return null;
         }
     }

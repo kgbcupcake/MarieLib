@@ -30,7 +30,7 @@ import net.minecraft.world.effect.MobEffectInstance;
 import dev.marie.framework.config.FeatureFlagCache;
 import dev.marie.framework.core.IMarieConfig;
 import dev.marie.framework.core.MarieContext;
-import dev.marie.framework.core.MariesLib;
+import dev.marie.framework.core.MarieCore;
 import dev.marie.framework.debug.MarieDebugLogger;
 import dev.marie.framework.runtime.SourceClassificationRegistry;
 import dev.marie.framework.runtime.SourceTriggerRegistry;
@@ -118,7 +118,7 @@ public final class SourceApplicationPipeline {
             try {
                 sourceResourceId = ResourceLocation.parse(trigger.sourceId());
             } catch (Exception e) {
-                MariesLib.LOGGER.warn("[MarieLib] Invalid sourceId in trigger: '{}' — skipping pipeline",
+                MarieCore.LOGGER.warn("[MarieLib] Invalid sourceId in trigger: '{}' — skipping pipeline",
                         trigger.sourceId());
                 return;
             }
@@ -127,7 +127,7 @@ public final class SourceApplicationPipeline {
             totalAdded = override.total();
             valueDeltas = new HashMap<>(override.values());
             matchedBars = new HashMap<>(override.values());
-            MariesLib.LOGGER.debug("[MarieLib] using override for {} (total={}, values={})",
+            MarieCore.LOGGER.debug("[MarieLib] using override for {} (total={}, values={})",
                     sourceKey, totalAdded, valueDeltas);
         } else if (stack == null || stack.isEmpty()) {
             matchedBars = Map.of();
@@ -165,7 +165,7 @@ public final class SourceApplicationPipeline {
                 : null;
 
         if (FeatureFlagCache.enableTotalTracking()) {
-            MariesLib.LOGGER.debug("[MarieLib] total: adding {} * {} for {}",
+            MarieCore.LOGGER.debug("[MarieLib] total: adding {} * {} for {}",
                     totalAdded, multiplier,
                     stack != null ? stack.getItem().getDescriptionId() : trigger.sourceId());
             tracking.addTotal(totalAdded * multiplier);
@@ -200,7 +200,7 @@ public final class SourceApplicationPipeline {
                 float finalDelta = modifierEvent.getAmount();
                 finalDelta = MarieContext.get().applyPostValueModifier(modifierCtx, finalDelta);
                 if (!Float.isFinite(finalDelta)) {
-                    MariesLib.LOGGER.warn("[MarieLib] non-finite finalDelta {} for player={} source={} value={} — skipping",
+                    MarieCore.LOGGER.warn("[MarieLib] non-finite finalDelta {} for player={} source={} value={} — skipping",
                             finalDelta, player.getName().getString(), sourceKey, key);
                     continue;
                 }
@@ -310,7 +310,7 @@ public final class SourceApplicationPipeline {
                                             holder,
                                             synergy.getEffectDuration(),
                                             synergy.getEffectAmplifier())),
-                                    () -> MariesLib.LOGGER.warn(
+                                    () -> MarieCore.LOGGER.warn(
                                             "[MarieLib] ValueSynergy '{}' references unknown effect '{}'",
                                             synergy.getId(), effectId));
                         }
@@ -347,7 +347,7 @@ public final class SourceApplicationPipeline {
         ctx.trackingDeltaSyncer().accept(player, tracking);
         ctx.effectApplier().accept(player, tracking);
 
-        MariesLib.LOGGER.debug("{} applied {} -> {}",
+        MarieCore.LOGGER.debug("{} applied {} -> {}",
                 player.getName().getString(),
                 stack != null ? stack.getItem().getDescriptionId() : trigger.sourceId(),
                 tracking);
@@ -536,13 +536,13 @@ public final class SourceApplicationPipeline {
         for (MarieSeasonHook hook : hooks) {
             float mult = hook.getSeasonalAbsorptionModifier(valueKey, MarieSeasonHook.Season.SPRING);
             if (!Float.isFinite(mult)) {
-                MariesLib.LOGGER.warn("[MarieLib] Seasonal modifier returned non-finite value {} for value={} — using 0", mult, valueKey);
+                MarieCore.LOGGER.warn("[MarieLib] Seasonal modifier returned non-finite value {} for value={} — using 0", mult, valueKey);
                 mult = 0f;
             }
             amount *= Math.max(0f, mult);
         }
         if (!Float.isFinite(amount)) {
-            MariesLib.LOGGER.warn("[MarieLib] Seasonal absorption result non-finite for value={} — using 0", valueKey);
+            MarieCore.LOGGER.warn("[MarieLib] Seasonal absorption result non-finite for value={} — using 0", valueKey);
             return 0f;
         }
         return amount;
@@ -557,13 +557,13 @@ public final class SourceApplicationPipeline {
         for (AbsorptionModifier modifier : modifiers) {
             float factor = modifier.getAbsorptionMultiplier(player, valueKey, amount);
             if (!Float.isFinite(factor)) {
-                MariesLib.LOGGER.warn("[MarieLib] Absorption modifier returned non-finite value {} for value={} — using 0", factor, valueKey);
+                MarieCore.LOGGER.warn("[MarieLib] Absorption modifier returned non-finite value {} for value={} — using 0", factor, valueKey);
                 factor = 0f;
             }
             amount *= Math.max(0f, factor);
         }
         if (!Float.isFinite(amount)) {
-            MariesLib.LOGGER.warn("[MarieLib] Absorption modifier result non-finite for value={} — using 0", valueKey);
+            MarieCore.LOGGER.warn("[MarieLib] Absorption modifier result non-finite for value={} — using 0", valueKey);
             return 0f;
         }
         return amount;

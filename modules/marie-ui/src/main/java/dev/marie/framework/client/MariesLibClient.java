@@ -1,7 +1,7 @@
 package dev.marie.framework.client;
 
 import dev.marie.framework.client.config.MariesLibClothConfig;
-import dev.marie.framework.core.MariesLib;
+import dev.marie.framework.core.MarieCore;
 import dev.marie.framework.core.MarieBootstrap;
 import net.minecraft.client.gui.screens.Screen;
 import net.neoforged.api.distmarker.Dist;
@@ -9,7 +9,7 @@ import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 
-@Mod(value = MariesLib.MOD_ID, dist = Dist.CLIENT)
+@Mod(value = MarieCore.MOD_ID, dist = Dist.CLIENT)
 public final class MariesLibClient {
 
     public MariesLibClient(ModContainer container) {
