@@ -45,6 +45,14 @@ public final class MarieConfigPersistenceProvider implements PersistenceProvider
         writeAll();
     }
 
+    @Override
+    public synchronized void remove(String componentId) {
+        ensureLoaded();
+        if (cache.remove(componentId) != null) {
+            writeAll();
+        }
+    }
+
     private Path filePath() {
         return FMLPaths.CONFIGDIR.get().resolve(FILE_NAME);
     }
