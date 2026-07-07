@@ -28,6 +28,41 @@ public interface RenderContext {
 
     void drawDashedBorder(int x, int y, int width, int height, int argbColor);
 
+    /**
+     * Fills and borders a rectangle with 1px diagonal-notched corners — the classic pixel-art
+     * "rounded rect" fake used throughout Minecraft GUIs: the outermost corner pixel is left
+     * untouched (transparent) and the pixel diagonally inset from it is drawn in
+     * {@code borderColor}, producing an octagonal cut instead of a hard square corner. Ported
+     * from Nourished's pre-MarieUI {@code DietScreen#drawRoundedPanel}, collapsed to a single
+     * border color — that legacy version used separate light-top/dark-bottom bevel shades, which
+     * none of marie-ui's current callers need. Geometry is exact for {@code thickness == 1} (the
+     * only value any caller uses today); other thicknesses scale the corner inset by
+     * {@code thickness + 1} rather than a fixed 1px notch.
+     */
+    default void drawRoundedRect(int x, int y, int width, int height, int thickness, int fillColor, int borderColor) {
+        if (width <= 0 || height <= 0) {
+            return;
+        }
+        int x2 = x + width;
+        int y2 = y + height;
+        int inset = thickness + 1;
+        int innerW = Math.max(0, width - 2 * inset);
+        int innerH = Math.max(0, height - 2 * inset);
+
+        fillRect(x + inset, y, innerW, height, fillColor);
+        fillRect(x, y + inset, width, innerH, fillColor);
+
+        fillRect(x + inset, y, innerW, thickness, borderColor);
+        fillRect(x + inset, y2 - thickness, innerW, thickness, borderColor);
+        fillRect(x, y + inset, thickness, innerH, borderColor);
+        fillRect(x2 - thickness, y + inset, thickness, innerH, borderColor);
+
+        fillRect(x + thickness, y + thickness, 1, 1, borderColor);
+        fillRect(x2 - thickness - 1, y + thickness, 1, 1, borderColor);
+        fillRect(x + thickness, y2 - thickness - 1, 1, 1, borderColor);
+        fillRect(x2 - thickness - 1, y2 - thickness - 1, 1, 1, borderColor);
+    }
+
     void drawText(String text, int x, int y, int argbColor, float scale);
 
     void drawBar(int x, int y, int width, int height, float fillPct, int backgroundColor, int fillColor);
@@ -55,5 +90,39 @@ public interface RenderContext {
                 : hovered ? theme().color(ThemeKey.HANDLE_HOVER) : theme().color(ThemeKey.HANDLE_BACKGROUND);
         fillRect(x, y, size, size, handleColor);
         drawText("◢", x + 1, y, 0xFF101010, 1f);
+    }
+
+    /**
+     * Length, in pixels, of the cursor-localized indicator {@link #drawEdgeHandle} paints along an
+     * edge — deliberately much shorter than the full hit-region ({@link
+     * DraggableResizable#edgeHandleBounds(Bounds, DraggableResizable.Edge)} spans the box's entire
+     * width/height, since a large hit-region is good for usability), so hovering/dragging one edge
+     * reads as a small localized handle near the cursor rather than the box's whole side lighting up.
+     */
+    int EDGE_INDICATOR_LENGTH = 16;
+
+    /**
+     * Draws a small cursor-localized indicator along one edge — NOT the full {@code (x, y, width,
+     * height)} hit-region strip (that stays large, per {@link
+     * DraggableResizable#edgeHandleBounds(Bounds, DraggableResizable.Edge)}, purely for hit-testing).
+     * The indicator is centered on {@code (mx, my)}'s position along the strip's long axis, clamped
+     * so it never spills outside the strip, then colored via the same {@link ThemeKey#HANDLE_ACTIVE}/
+     * {@link ThemeKey#HANDLE_HOVER} keys as {@link #drawResizeHandle}. No glyph: {@link
+     * DraggableResizable#EDGE_HANDLE_THICKNESS} is too thin for a corner-style glyph to read legibly.
+     */
+    default void drawEdgeHandle(int x, int y, int width, int height, int mx, int my, boolean hovered, boolean active) {
+        if (!hovered && !active) {
+            return;
+        }
+        int handleColor = active ? theme().color(ThemeKey.HANDLE_ACTIVE) : theme().color(ThemeKey.HANDLE_HOVER);
+        if (width >= height) {
+            int indicatorW = Math.min(EDGE_INDICATOR_LENGTH, width);
+            int ix = Math.max(x, Math.min(mx - indicatorW / 2, x + width - indicatorW));
+            fillRect(ix, y, indicatorW, height, handleColor);
+        } else {
+            int indicatorH = Math.min(EDGE_INDICATOR_LENGTH, height);
+            int iy = Math.max(y, Math.min(my - indicatorH / 2, y + height - indicatorH));
+            fillRect(x, iy, width, indicatorH, handleColor);
+        }
     }
 }
