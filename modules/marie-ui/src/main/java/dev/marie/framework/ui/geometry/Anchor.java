@@ -1,4 +1,6 @@
-package dev.marie.framework.ui;
+package dev.marie.framework.ui.geometry;
+
+import dev.marie.framework.ui.component.MarieComponent;
 
 /** Which corner/edge/center of the available area a {@link MarieComponent} is positioned relative to. */
 public enum Anchor {

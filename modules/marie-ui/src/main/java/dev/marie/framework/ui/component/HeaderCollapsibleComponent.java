@@ -1,4 +1,7 @@
-package dev.marie.framework.ui;
+package dev.marie.framework.ui.component;
+
+import dev.marie.framework.ui.edit.DraggableResizable;
+import dev.marie.framework.ui.geometry.Bounds;
 
 /**
  * Shared collapse-on-shrink contract for a {@link MarieComponent} whose content is a fixed header/

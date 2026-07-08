@@ -1,5 +1,8 @@
 package dev.marie.framework.ui;
 
+import dev.marie.framework.ui.component.MarieComponent;
+import dev.marie.framework.ui.edit.DraggableResizable;
+import dev.marie.framework.ui.geometry.Bounds;
 import net.minecraft.world.item.ItemStack;
 
 /**

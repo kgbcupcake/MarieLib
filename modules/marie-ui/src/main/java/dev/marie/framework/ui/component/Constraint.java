@@ -1,4 +1,8 @@
-package dev.marie.framework.ui;
+package dev.marie.framework.ui.component;
+
+import dev.marie.framework.ui.geometry.Anchor;
+import dev.marie.framework.ui.geometry.Insets;
+import dev.marie.framework.ui.geometry.Size;
 
 /**
  * Sizing/placement metadata every {@link MarieComponent} exposes. Layouts consume this — they do not

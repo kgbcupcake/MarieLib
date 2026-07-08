@@ -1,5 +1,6 @@
-package dev.marie.framework.ui;
+package dev.marie.framework.ui.edit;
 
+import dev.marie.framework.ui.component.MarieComponent;
 import net.minecraft.client.Minecraft;
 
 /**

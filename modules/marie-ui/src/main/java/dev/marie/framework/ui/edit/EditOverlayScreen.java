@@ -1,5 +1,10 @@
-package dev.marie.framework.ui;
+package dev.marie.framework.ui.edit;
 
+import dev.marie.framework.ui.RenderContext;
+import dev.marie.framework.ui.Theme;
+import dev.marie.framework.ui.ThemeKey;
+import dev.marie.framework.ui.component.MarieComponent;
+import dev.marie.framework.ui.geometry.Bounds;
 import dev.marie.framework.ui.render.GuiGraphicsRenderContext;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;

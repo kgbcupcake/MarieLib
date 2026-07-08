@@ -1,4 +1,4 @@
-package dev.marie.framework.ui;
+package dev.marie.framework.ui.component;
 
 /** Persisted position/size/collapsed-state for one component, keyed externally by component id. */
 public record ComponentState(int x, int y, int width, int height, boolean collapsed) {}

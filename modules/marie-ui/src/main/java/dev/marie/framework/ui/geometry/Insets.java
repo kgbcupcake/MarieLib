@@ -1,4 +1,6 @@
-package dev.marie.framework.ui;
+package dev.marie.framework.ui.geometry;
+
+import dev.marie.framework.ui.component.Constraint;
 
 /** Directional spacing shared by {@link Constraint#padding()} and {@link Constraint#margin()}. */
 public record Insets(int top, int right, int bottom, int left) {

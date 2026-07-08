@@ -5,8 +5,8 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 
 import dev.marie.framework.core.MarieCore;
-import dev.marie.framework.ui.ComponentState;
 import dev.marie.framework.ui.PersistenceProvider;
+import dev.marie.framework.ui.component.ComponentState;
 import net.neoforged.fml.loading.FMLPaths;
 
 import java.io.IOException;

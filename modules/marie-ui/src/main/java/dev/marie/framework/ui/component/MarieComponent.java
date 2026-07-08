@@ -1,4 +1,8 @@
-package dev.marie.framework.ui;
+package dev.marie.framework.ui.component;
+
+import dev.marie.framework.ui.RenderContext;
+import dev.marie.framework.ui.VisibilityRule;
+import dev.marie.framework.ui.geometry.Bounds;
 
 /**
  * Base UI element contract: identity, constraint metadata, rendering, and input handling.

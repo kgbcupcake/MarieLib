@@ -1,4 +1,10 @@
-package dev.marie.framework.ui;
+package dev.marie.framework.ui.edit;
+
+import dev.marie.framework.ui.PersistenceProvider;
+import dev.marie.framework.ui.component.Constraint;
+import dev.marie.framework.ui.component.MarieComponent;
+import dev.marie.framework.ui.geometry.Bounds;
+import dev.marie.framework.ui.geometry.Size;
 
 import java.util.function.BiConsumer;
 

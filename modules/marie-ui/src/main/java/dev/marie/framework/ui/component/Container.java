@@ -1,4 +1,8 @@
-package dev.marie.framework.ui;
+package dev.marie.framework.ui.component;
+
+import dev.marie.framework.ui.Layout;
+import dev.marie.framework.ui.RenderContext;
+import dev.marie.framework.ui.geometry.Bounds;
 
 import java.util.List;
 import java.util.Map;

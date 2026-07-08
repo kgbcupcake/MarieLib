@@ -1,5 +1,7 @@
 package dev.marie.framework.ui;
 
+import dev.marie.framework.ui.component.ComponentState;
+
 import java.util.Optional;
 
 /**

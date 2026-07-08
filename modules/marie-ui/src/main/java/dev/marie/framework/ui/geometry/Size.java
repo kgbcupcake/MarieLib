@@ -1,4 +1,6 @@
-package dev.marie.framework.ui;
+package dev.marie.framework.ui.geometry;
+
+import dev.marie.framework.ui.component.Constraint;
 
 /** A width/height pair used by {@link Constraint} to describe sizing intent, not a resolved layout result. */
 public record Size(int width, int height) {

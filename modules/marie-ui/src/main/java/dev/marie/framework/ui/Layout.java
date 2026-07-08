@@ -1,5 +1,9 @@
 package dev.marie.framework.ui;
 
+import dev.marie.framework.ui.component.Constraint;
+import dev.marie.framework.ui.component.MarieComponent;
+import dev.marie.framework.ui.geometry.Bounds;
+
 import java.util.List;
 import java.util.Map;
 
