@@ -1,4 +1,4 @@
-package dev.marie.framework.client;
+package dev.marie.framework.client.config;
 
 import dev.marie.framework.core.MarieContext;
 import dev.marie.framework.core.MarieBootstrap;

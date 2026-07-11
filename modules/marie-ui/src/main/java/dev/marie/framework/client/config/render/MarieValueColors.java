@@ -1,4 +1,4 @@
-package dev.marie.framework.client;
+package dev.marie.framework.client.config.render;
 
 import dev.marie.framework.api.ValueDefinition;
 import dev.marie.framework.color.ColorRegistry;

@@ -1,4 +1,4 @@
-package dev.marie.framework.client.config;
+package dev.marie.framework.client.config.cloth;
 
 import java.util.Optional;
 

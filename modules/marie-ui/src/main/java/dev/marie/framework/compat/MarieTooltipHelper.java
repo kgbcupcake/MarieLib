@@ -12,7 +12,7 @@ import dev.marie.framework.api.SourcePairSynergy;
 import dev.marie.framework.api.MilestoneDefinition;
 import dev.marie.framework.api.registry.MilestoneRegistry;
 import dev.marie.framework.api.registry.SynergyRegistry;
-import dev.marie.framework.client.MarieValueColors;
+import dev.marie.framework.client.config.render.MarieValueColors;
 import dev.marie.framework.config.FeatureFlagCache;
 import dev.marie.framework.core.IMarieConfig;
 import dev.marie.framework.core.MarieContext;

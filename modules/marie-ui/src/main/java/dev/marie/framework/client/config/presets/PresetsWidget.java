@@ -1,5 +1,6 @@
-package dev.marie.framework.client;
+package dev.marie.framework.client.config.presets;
 
+import dev.marie.framework.client.config.ClientScreenFactories;
 import dev.marie.framework.config.PresetRegistry;
 import dev.marie.framework.config.PresetRegistry.ParsedPreset;
 import dev.marie.framework.core.MarieCore;

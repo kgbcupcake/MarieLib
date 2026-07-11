@@ -1,4 +1,4 @@
-package dev.marie.framework.client;
+package dev.marie.framework.client.config.state;
 
 import dev.marie.framework.api.ApiStatus;
 import dev.marie.framework.network.SyncState;

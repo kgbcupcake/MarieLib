@@ -1,4 +1,4 @@
-package dev.marie.framework.client;
+package dev.marie.framework.client.config.presets;
 
 import dev.marie.framework.core.IMarieConfig;
 import dev.marie.framework.config.PresetRegistry;

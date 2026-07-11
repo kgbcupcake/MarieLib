@@ -1,4 +1,4 @@
-package dev.marie.framework.client;
+package dev.marie.framework.client.config.toast;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import dev.marie.framework.core.MarieContext;

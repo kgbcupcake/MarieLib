@@ -1,5 +1,6 @@
-package dev.marie.framework.client;
+package dev.marie.framework.client.config.importexport;
 
+import dev.marie.framework.client.config.ClientScreenFactories;
 import dev.marie.framework.core.MarieCore;
 import me.shedaniel.clothconfig2.gui.ClothConfigScreen;
 import me.shedaniel.clothconfig2.gui.entries.TooltipListEntry;

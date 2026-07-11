@@ -1,4 +1,4 @@
-package dev.marie.framework.client.config;
+package dev.marie.framework.client.config.cloth;
 
 import java.util.List;
 import java.util.stream.Collectors;

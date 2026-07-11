@@ -1,4 +1,4 @@
-package dev.marie.framework.client;
+package dev.marie.framework.client.config.importexport;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;

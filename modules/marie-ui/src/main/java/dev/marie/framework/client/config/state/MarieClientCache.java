@@ -1,4 +1,4 @@
-package dev.marie.framework.client;
+package dev.marie.framework.client.config.state;
 
 import dev.marie.framework.core.IMarieConfig;
 import dev.marie.framework.tracking.TrackingData;

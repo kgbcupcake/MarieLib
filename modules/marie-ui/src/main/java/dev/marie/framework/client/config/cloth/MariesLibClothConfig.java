@@ -1,4 +1,4 @@
-package dev.marie.framework.client.config;
+package dev.marie.framework.client.config.cloth;
 
 import dev.marie.framework.config.MariesLibConfigIO;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;

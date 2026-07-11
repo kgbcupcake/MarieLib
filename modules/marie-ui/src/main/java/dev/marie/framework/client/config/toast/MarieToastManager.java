@@ -1,4 +1,4 @@
-package dev.marie.framework.client;
+package dev.marie.framework.client.config.toast;
 
 import dev.marie.framework.config.FeatureFlagCache;
 import dev.marie.framework.core.MarieContext;

@@ -21,16 +21,24 @@ import java.util.Optional;
 /**
  * The only {@link PersistenceProvider} MarieUI ships: one JSON file under config/, one entry per
  * component id, following the same Gson-backed convention marie-core uses for its own config
- * (see MariesLibConfigIO). A future server-sync or per-world provider is a drop-in replacement —
- * callers depend only on the {@link PersistenceProvider} interface.
+ * (see MariesLibConfigIO). File is named {@code <modId>-ui-state.json} per consumer. A future
+ * server-sync or per-world provider is a drop-in replacement — callers depend only on the
+ * {@link PersistenceProvider} interface.
  */
 public final class MarieConfigPersistenceProvider implements PersistenceProvider {
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
-    private static final String FILE_NAME = MarieCore.MOD_ID + "-ui-state.json";
 
+    // old shared filename from before per-consumer namespacing; migrated on first load
+    private static final String LEGACY_FILE_NAME = "marieslib-ui-state.json";
+
+    private final String fileName;
     private final Map<String, ComponentState> cache = new HashMap<>();
     private boolean loaded;
+
+    public MarieConfigPersistenceProvider(String modId) {
+        this.fileName = modId + "-ui-state.json";
+    }
 
     @Override
     public synchronized Optional<ComponentState> load(String componentId) {
@@ -54,7 +62,23 @@ public final class MarieConfigPersistenceProvider implements PersistenceProvider
     }
 
     private Path filePath() {
-        return FMLPaths.CONFIGDIR.get().resolve(FILE_NAME);
+        return FMLPaths.CONFIGDIR.get().resolve(fileName);
+    }
+
+    private void migrateLegacyFileIfNeeded() {
+        Path file = filePath();
+        if (Files.exists(file)) {
+            return;
+        }
+        Path legacy = FMLPaths.CONFIGDIR.get().resolve(LEGACY_FILE_NAME);
+        if (!Files.exists(legacy)) {
+            return;
+        }
+        try {
+            Files.copy(legacy, file);
+        } catch (IOException e) {
+            MarieCore.LOGGER.error("[MarieUI] Failed to migrate legacy {} to {}", legacy, file, e);
+        }
     }
 
     private void ensureLoaded() {
@@ -62,6 +86,7 @@ public final class MarieConfigPersistenceProvider implements PersistenceProvider
             return;
         }
         loaded = true;
+        migrateLegacyFileIfNeeded();
         Path file = filePath();
         if (!Files.exists(file)) {
             return;
@@ -78,7 +103,10 @@ public final class MarieConfigPersistenceProvider implements PersistenceProvider
                         o.get("y").getAsInt(),
                         o.get("width").getAsInt(),
                         o.get("height").getAsInt(),
-                        o.has("collapsed") && o.get("collapsed").getAsBoolean()
+                        o.has("collapsed") && o.get("collapsed").getAsBoolean(),
+                        o.has("widthManual") && o.get("widthManual").getAsBoolean(),
+                        o.has("heightManual") && o.get("heightManual").getAsBoolean(),
+                        o.has("leftMargin") ? o.get("leftMargin").getAsInt() : 0
                 ));
             }
         } catch (IOException e) {
@@ -99,6 +127,9 @@ public final class MarieConfigPersistenceProvider implements PersistenceProvider
                 o.addProperty("width", s.width());
                 o.addProperty("height", s.height());
                 o.addProperty("collapsed", s.collapsed());
+                o.addProperty("widthManual", s.widthManual());
+                o.addProperty("heightManual", s.heightManual());
+                o.addProperty("leftMargin", s.leftMargin());
                 root.add(entry.getKey(), o);
             }
             try (Writer w = Files.newBufferedWriter(file)) {
