@@ -80,6 +80,24 @@ public interface RenderContext {
     void drawItem(ItemStack stack, int x, int y, float scale);
 
     /**
+     * Pushes a rectangular scissor/clip region — nothing drawn between this call and the matching
+     * {@link #popClip()} renders outside {@code (x, y, width, height)}, intersected with any
+     * currently active clip (nested clips shrink, they never widen back out past a parent's own
+     * region). Lets a component draw its content at a fixed, natural size unconditionally and let the
+     * box's own live {@link dev.marie.framework.ui.geometry.Bounds} determine how much of that fixed
+     * content is actually visible, instead of the component computing its own fit-check and skipping
+     * draw calls outright (a resize that hides content is very different from a resize that reveals/
+     * hides more of a fixed scene through a window — this is a window, not a fit-check).
+     *
+     * <p>Callers MUST pair every {@code pushClip} with exactly one {@link #popClip()}, including
+     * across early returns — wrap the clipped region in try/finally.
+     */
+    void pushClip(int x, int y, int width, int height);
+
+    /** Pops the most recent {@link #pushClip} region, restoring whatever clip (if any) was active before it. */
+    void popClip();
+
+    /**
      * Draws a resize-handle square at (x, y) — the handle's own top-left corner, e.g. from
      * {@link DraggableResizable#handleBounds(Bounds)} — with a corner glyph, colored via
      * {@link ThemeKey#HANDLE_ACTIVE}/{@link ThemeKey#HANDLE_HOVER}/{@link ThemeKey#HANDLE_BACKGROUND}.
