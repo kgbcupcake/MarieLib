@@ -1,7 +1,11 @@
 package dev.marie.framework.core;
 
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+
+import dev.marie.framework.api.registry.BlockHoverProviderRegistry;
+import dev.marie.framework.network.BlockHoverResponsePayload;
 
 import dev.marie.framework.color.ColorRegistry;
 import dev.marie.framework.compat.AutoCompatDiscovery;
@@ -64,6 +68,7 @@ public final class MarieBootstrap {
     private static volatile Supplier<Object> configScreenFactory = () -> null;
     private static volatile Function<Object, Object> exportScreenFactory = parent -> null;
     private static volatile Function<Object, Object> importScreenFactory = parent -> null;
+    private static volatile Consumer<BlockHoverResponsePayload> blockHoverResponseListener = payload -> {};
     private static volatile IEventBus attachedModEventBus;
 
     private MarieBootstrap() {}
@@ -87,6 +92,8 @@ public final class MarieBootstrap {
         if (modEventBus == null) {
             throw new IllegalArgumentException("modEventBus cannot be null");
         }
+
+        attachFrameworkServices(modEventBus);
 
         MarieContext ctx = MarieContext.builder(modId).build();
         MarieContext.register(ctx);
@@ -133,6 +140,14 @@ public final class MarieBootstrap {
         importScreenFactory = factory != null ? factory : parent -> null;
     }
 
+    public static void setBlockHoverResponseListener(Consumer<BlockHoverResponsePayload> listener) {
+        blockHoverResponseListener = listener != null ? listener : payload -> {};
+    }
+
+    public static Consumer<BlockHoverResponsePayload> getBlockHoverResponseListener() {
+        return blockHoverResponseListener;
+    }
+
     public static Supplier<Object> getConfigScreenFactory() {
         return configScreenFactory;
     }
@@ -161,7 +176,31 @@ public final class MarieBootstrap {
         MarieCore.LOGGER.info("[MarieCore] Bootstrap complete with owned config");
     }
 
+    private static volatile boolean frameworkServicesAttached;
+
+    /**
+     * Unlocks the registration window for domain-agnostic framework registries and wires
+     * their freeze — safe to call from any number of mods, including ones that never touch
+     * {@link MarieContext}. Future bucket-(a)/domain-agnostic registries should be added here
+     * as they appear.
+     */
+    @ApiStatus.Experimental
+    public static void attachFrameworkServices(IEventBus modEventBus) {
+        if (frameworkServicesAttached) {
+            return;
+        }
+        frameworkServicesAttached = true;
+        modEventBus.addListener((FMLCommonSetupEvent event) ->
+                event.enqueueWork(BlockHoverProviderRegistry::freezeInternal));
+    }
+
+    private static boolean registriesRegistered;
+
     private static void registerRegistries() {
+        if (registriesRegistered) {
+            return;
+        }
+        registriesRegistered = true;
         RegistryLifecycleManager.registerRegistry("LockRegistry", LockRegistry::load, LockRegistry::reload,
                 LockRegistry::loadFromDatapack);
         RegistryLifecycleManager.registerRegistry("ColorRegistry", ColorRegistry::load, ColorRegistry::reload,
@@ -190,7 +229,7 @@ public final class MarieBootstrap {
         // MariesLibCommand / MarieCommand (marie-commands) self-register via
         // @EventBusSubscriber — core has no compile-time dependency on marie-commands.
         KubeIntegration.registerEventBridge();
-        MarieApiRegistries.freezeModOnlyRegistriesAfterCommonSetup();
+        MarieApiRegistries.freezeValueTrackingOnlyRegistriesAfterCommonSetup();
         for (SourceTriggerListener handler : TriggerHandlerRegistry.getAll()) {
             handler.register(NeoForge.EVENT_BUS);
         }

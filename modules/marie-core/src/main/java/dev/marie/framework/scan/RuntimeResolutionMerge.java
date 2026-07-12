@@ -56,7 +56,7 @@ public final class RuntimeResolutionMerge {
 
         return new ResolutionResult(
                 merged,
-                primary.rawScores(),
+                merged,
                 primary.tokens(),
                 primary.tokenWeights(),
                 rejected,

@@ -8,6 +8,7 @@ import javax.annotation.Nullable;
 
 import dev.marie.framework.api.impl.EmptyApplicationHistoryView;
 import dev.marie.framework.api.registry.AbsorptionModifierRegistry;
+import dev.marie.framework.api.registry.BlockHoverProviderRegistry;
 import dev.marie.framework.api.registry.MilestoneRegistry;
 import dev.marie.framework.api.registry.ProfileRegistry;
 import dev.marie.framework.api.registry.ReportProviderRegistry;
@@ -491,6 +492,26 @@ public final class MarieAPI {
     @ApiStatus.Stable
     public static void addReportSection(ReportProvider provider) {
         registerReportProvider(provider);
+    }
+
+    /**
+     * Registers a block-hover provider that supplies "what's at this block" data over the
+     * client/server request-response network channel.
+     *
+     * @param provider the block-hover provider implementation
+     * @throws IllegalStateException    if registration is closed
+     * @throws IllegalArgumentException if {@code provider} is null
+     */
+    @ApiStatus.Experimental
+    public static void registerBlockHoverProvider(BlockHoverProvider provider) {
+        if (!MarieAPIState.isRegistrationAllowed()) {
+            throw new IllegalStateException(
+                    "[MarieAPI] Registration closed — registerBlockHoverProvider must be called during mod initialization or datapack reload.");
+        }
+        if (provider == null) {
+            throw new IllegalArgumentException("provider cannot be null");
+        }
+        BlockHoverProviderRegistry.register(provider);
     }
 
     /**

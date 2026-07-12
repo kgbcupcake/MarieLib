@@ -23,9 +23,12 @@ public final class MarieApiRegistries {
     private MarieApiRegistries() {}
 
     /**
-     * Freezes list registries that only receive mod-constructor registrations (no datapack pass).
+     * Freezes value-tracking-specific list registries that only receive mod-constructor
+     * registrations (no datapack pass). Domain-agnostic registries (e.g.
+     * {@code BlockHoverProviderRegistry}) are frozen separately via
+     * {@link dev.marie.framework.core.MarieBootstrap#attachFrameworkServices}.
      */
-    public static void freezeModOnlyRegistriesAfterCommonSetup() {
+    public static void freezeValueTrackingOnlyRegistriesAfterCommonSetup() {
         AbsorptionModifierRegistry.freezeInternal();
         SeasonHookRegistry.freezeInternal();
         ReportProviderRegistry.freezeInternal();

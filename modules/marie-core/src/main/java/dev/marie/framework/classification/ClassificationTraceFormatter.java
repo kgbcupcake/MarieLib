@@ -203,7 +203,7 @@ public final class ClassificationTraceFormatter {
             float diff = topScore - secondScore;
             appendLine(sb, "  " + dominant + " score: " + String.format(Locale.ROOT, "%.1f", topScore));
             appendLine(sb, "  secondary score: " + String.format(Locale.ROOT, "%.1f", secondScore));
-            appendLine(sb, "  Difference: +" + String.format(Locale.ROOT, "%.1f", diff));
+            appendLine(sb, "  Difference: " + String.format(Locale.ROOT, "%+.1f", diff));
             appendLine(sb, "  Confidence: " + deriveConfidence(trace));
             appendLine(sb, "  Reason: " + (trace.summaryReason().isEmpty() ? "Highest weighted contribution." : trace.summaryReason()));
         }
