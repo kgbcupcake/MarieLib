@@ -1,12 +1,16 @@
 package dev.marie.framework.scanner.stages;
 
 import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.runtime.ComponentClassifier;
+import dev.marie.framework.scan.ResolutionResult;
+import dev.marie.framework.scan.ResolutionStageHandler;
 import dev.marie.framework.scanner.ClassificationResult;
 import dev.marie.framework.scanner.ClassificationSignal;
 import dev.marie.framework.scanner.RecipeInheritanceResolver;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 
 import javax.annotation.Nullable;
 import java.util.HashMap;
@@ -39,14 +43,17 @@ public final class RecipeInheritanceStage {
             @Nullable RecipeInheritanceResolver recipeResolver,
             Function<ResourceLocation, ClassificationResult> classifiedLookup,
             float multiplier,
-            Function<Item, Map<String, Float>> valueTagScoresProvider
+            Function<Item, Map<String, Float>> valueTagScoresProvider,
+            Set<String> validKeys,
+            List<ResolutionStageHandler> componentFallbackStages
     ) {
         if (tagClassified || recipeResolver == null) {
             return;
         }
 
         Set<String> authoritativeKeys = new HashSet<>(valueTagScoresProvider.apply(item).keySet());
-        Function<ResourceLocation, ClassificationResult> lookup = buildLookup(classifiedLookup, valueTagScoresProvider);
+        Function<ResourceLocation, ClassificationResult> lookup =
+                buildLookup(classifiedLookup, valueTagScoresProvider, validKeys, componentFallbackStages);
 
         Map<String, Float> recipeContribs = recipeResolver.resolve(item, lookup);
         if (recipeContribs.isEmpty()) {
@@ -76,7 +83,9 @@ public final class RecipeInheritanceStage {
 
     private static Function<ResourceLocation, ClassificationResult> buildLookup(
             Function<ResourceLocation, ClassificationResult> classifiedLookup,
-            Function<Item, Map<String, Float>> valueTagScoresProvider
+            Function<Item, Map<String, Float>> valueTagScoresProvider,
+            Set<String> validKeys,
+            List<ResolutionStageHandler> componentFallbackStages
     ) {
         return id -> {
             ClassificationResult cached = classifiedLookup.apply(id);
@@ -88,10 +97,15 @@ public final class RecipeInheritanceStage {
                 return null;
             }
             Map<String, Float> tagScores = valueTagScoresProvider.apply(ingredient);
-            if (tagScores.isEmpty()) {
+            if (!tagScores.isEmpty()) {
+                return toTagClassifiedResult(id, tagScores);
+            }
+            ResolutionResult componentResult = ComponentClassifier.classify(
+                    new ItemStack(ingredient), null, validKeys, componentFallbackStages);
+            if (componentResult == null) {
                 return null;
             }
-            return toTagClassifiedResult(id, tagScores);
+            return toTagClassifiedResult(id, componentResult.values());
         };
     }
 

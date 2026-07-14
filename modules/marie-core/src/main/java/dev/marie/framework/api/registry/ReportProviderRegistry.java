@@ -1,7 +1,7 @@
 package dev.marie.framework.api.registry;
 
 import dev.marie.framework.api.ApiStatus;
-import dev.marie.framework.api.ReportProvider;
+import dev.marie.framework.api.reporting.ReportProvider;
 import dev.marie.framework.registry.ListRegistry;
 
 import java.util.List;

@@ -1,6 +1,6 @@
 package dev.marie.framework.tracking;
 
-import dev.marie.framework.api.AbsorptionModifier;
+import dev.marie.framework.api.effects.AbsorptionModifier;
 
 import net.minecraft.world.entity.player.Player;
 

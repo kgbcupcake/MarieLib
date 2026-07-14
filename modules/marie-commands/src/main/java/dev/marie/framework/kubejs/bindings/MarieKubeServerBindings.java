@@ -2,9 +2,9 @@ package dev.marie.framework.kubejs.bindings;
 
 
 import dev.marie.framework.api.ApiStatus;
-import dev.marie.framework.api.MarieAPI;
-import dev.marie.framework.api.ValueDefinition;
-import dev.marie.framework.api.ValueSourceTrigger;
+import dev.marie.framework.api.marieapi.MarieAPI;
+import dev.marie.framework.api.value.ValueDefinition;
+import dev.marie.framework.api.value.ValueSourceTrigger;
 import dev.marie.framework.api.registry.ValueRegistry;
 import dev.marie.framework.handler.SourceApplicationPipeline;
 import dev.marie.framework.tracking.TrackingAttachment;

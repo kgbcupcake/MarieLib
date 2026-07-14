@@ -2,12 +2,12 @@ package dev.marie.framework.kubejs.bindings;
 
 
 import dev.marie.framework.api.ApiStatus;
-import dev.marie.framework.api.MarieAPI;
-import dev.marie.framework.api.MilestoneDefinition;
-import dev.marie.framework.api.SourcePairSynergy;
-import dev.marie.framework.api.SynergyDefinition;
-import dev.marie.framework.api.ThresholdEffect;
-import dev.marie.framework.api.ValueDefinition;
+import dev.marie.framework.api.marieapi.MarieAPI;
+import dev.marie.framework.api.progression.MilestoneDefinition;
+import dev.marie.framework.api.source.SourcePairSynergy;
+import dev.marie.framework.api.effects.SynergyDefinition;
+import dev.marie.framework.api.effects.ThresholdEffect;
+import dev.marie.framework.api.value.ValueDefinition;
 import dev.marie.framework.runtime.SourceClassificationRegistry;
 import dev.marie.framework.util.MarieValidation;
 import net.minecraft.resources.ResourceLocation;

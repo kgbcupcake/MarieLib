@@ -6,7 +6,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.mojang.brigadier.context.CommandContext;
 import dev.marie.framework.api.ApiStatus;
-import dev.marie.framework.api.ValueDefinition;
+import dev.marie.framework.api.value.ValueDefinition;
 import dev.marie.framework.api.registry.ValueRegistry;
 import dev.marie.framework.util.MarieValidation;
 import net.minecraft.ChatFormatting;
@@ -87,7 +87,7 @@ final class MarieMilestoneTemplateCommand {
 
     private static void writeMilestoneJson(Path path, String modId, String valueKey) throws IOException {
         JsonObject root = new JsonObject();
-        root.addProperty("_comment_value_key", "one of the registered nutrient/value keys");
+        root.addProperty("_comment_value_key", "one of the registered value keys");
         root.addProperty("value_key", valueKey);
         root.addProperty("_comment_cumulative_goal",
                 "cumulative sum of raw consumed amount units for this value over time "

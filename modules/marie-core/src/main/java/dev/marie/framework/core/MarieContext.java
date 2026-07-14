@@ -17,9 +17,9 @@ import javax.annotation.Nullable;
 import com.google.gson.JsonObject;
 
 import dev.marie.framework.api.ApiStatus;
-import dev.marie.framework.api.ValueDefinition;
-import dev.marie.framework.api.ValueModifierContext;
-import dev.marie.framework.api.ValueSourceTrigger;
+import dev.marie.framework.api.value.ValueDefinition;
+import dev.marie.framework.api.value.ValueModifierContext;
+import dev.marie.framework.api.value.ValueSourceTrigger;
 import dev.marie.framework.api.registry.ValueRegistry;
 import dev.marie.framework.config.MariesLibConfigBridge;
 import dev.marie.framework.config.PresetRegistry;
@@ -30,7 +30,7 @@ import dev.marie.framework.util.MarieValidation;
 import dev.marie.framework.scan.ResolutionStageHandler;
 import dev.marie.framework.tracking.TrackingData;
 import dev.marie.framework.tracking.DiminishingReturnsConfig;
-import dev.marie.framework.tracking.DeathNutritionBehavior;
+import dev.marie.framework.tracking.RespawnValueBehavior;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
@@ -126,9 +126,9 @@ public final class MarieContext implements MarieLibSettings, IMarieConfig {
     private final Supplier<Component> joinMessageLine2;
     private final BiConsumer<ServerPlayer, TrackingData> trackingDeltaSyncer;
     private final Consumer<ServerPlayer> syncOnJoin;
-    private final Supplier<DeathNutritionBehavior> deathNutritionBehavior;
+    private final Supplier<RespawnValueBehavior> respawnValueBehavior;
     @Nullable
-    private final BiConsumer<ServerPlayer, TrackingData> deathNutritionHandler;
+    private final BiConsumer<ServerPlayer, TrackingData> respawnValueHandler;
     @Nullable
     private final MarieDataProvider dataProvider;
     @Nullable
@@ -190,8 +190,8 @@ public final class MarieContext implements MarieLibSettings, IMarieConfig {
         this.joinMessageLine2 = builder.joinMessageLine2;
         this.trackingDeltaSyncer = builder.trackingDeltaSyncer;
         this.syncOnJoin = builder.syncOnJoin;
-        this.deathNutritionBehavior = builder.deathNutritionBehavior;
-        this.deathNutritionHandler = builder.deathNutritionHandler;
+        this.respawnValueBehavior = builder.respawnValueBehavior;
+        this.respawnValueHandler = builder.respawnValueHandler;
         this.dataProvider = builder.dataProvider != null
                 ? builder.dataProvider
                 : new AttachmentTrackingDataProvider();
@@ -525,22 +525,41 @@ public final class MarieContext implements MarieLibSettings, IMarieConfig {
     }
 
     /**
-     * Default death respawn policy when {@link #deathNutritionHandler()} is not set.
+     * Default death respawn policy when {@link #respawnValueHandler()} is not set.
      */
     @ApiStatus.Stable
-    public Supplier<DeathNutritionBehavior> deathNutritionBehavior() {
-        return deathNutritionBehavior;
+    public Supplier<RespawnValueBehavior> respawnValueBehavior() {
+        return respawnValueBehavior;
+    }
+
+    /**
+     * @deprecated use {@link #respawnValueBehavior()}
+     */
+    @Deprecated
+    @ApiStatus.Stable
+    public Supplier<RespawnValueBehavior> deathNutritionBehavior() {
+        return respawnValueBehavior();
     }
 
     /**
      * Optional override for death respawn tracking adjustments. When non-null, replaces
-     * {@link #deathNutritionBehavior()} entirely. The consumer should mutate {@code tracking}
+     * {@link #respawnValueBehavior()} entirely. The consumer should mutate {@code tracking}
      * in place; sync runs afterward via {@link #syncOnJoin()}.
      */
     @Nullable
     @ApiStatus.Stable
+    public BiConsumer<ServerPlayer, TrackingData> respawnValueHandler() {
+        return respawnValueHandler;
+    }
+
+    /**
+     * @deprecated use {@link #respawnValueHandler()}
+     */
+    @Nullable
+    @Deprecated
+    @ApiStatus.Stable
     public BiConsumer<ServerPlayer, TrackingData> deathNutritionHandler() {
-        return deathNutritionHandler;
+        return respawnValueHandler();
     }
 
     @ApiStatus.Experimental
@@ -565,7 +584,7 @@ public final class MarieContext implements MarieLibSettings, IMarieConfig {
     }
 
     /**
-     * @deprecated Use {@link dev.marie.framework.api.MarieAPI#registerValue} and related
+     * @deprecated Use {@link dev.marie.framework.api.marieapi.MarieAPI#registerValue} and related
      *             {@code MarieAPI.register*} methods directly instead of supplying a delegate.
      */
     @Nullable
@@ -718,9 +737,9 @@ public final class MarieContext implements MarieLibSettings, IMarieConfig {
         private Supplier<Component> joinMessageLine2 = Component::empty;
         private BiConsumer<ServerPlayer, TrackingData> trackingDeltaSyncer = (p, d) -> {};
         private Consumer<ServerPlayer> syncOnJoin = p -> {};
-        private Supplier<DeathNutritionBehavior> deathNutritionBehavior = () -> DeathNutritionBehavior.PRESERVE;
+        private Supplier<RespawnValueBehavior> respawnValueBehavior = () -> RespawnValueBehavior.PRESERVE;
         @Nullable
-        private BiConsumer<ServerPlayer, TrackingData> deathNutritionHandler = null;
+        private BiConsumer<ServerPlayer, TrackingData> respawnValueHandler = null;
         @Nullable
         private MarieDataProvider dataProvider;
         @Nullable
@@ -807,22 +826,38 @@ public final class MarieContext implements MarieLibSettings, IMarieConfig {
         @ApiStatus.Experimental
         public Builder syncOnJoin(Consumer<ServerPlayer> c) { this.syncOnJoin = c; return this; }
         /**
-         * Death respawn policy when {@link #deathNutritionHandler(BiConsumer)} is not set.
-         * Default: {@link DeathNutritionBehavior#PRESERVE}.
+         * Death respawn policy when {@link #respawnValueHandler(BiConsumer)} is not set.
+         * Default: {@link RespawnValueBehavior#PRESERVE}.
          */
         @ApiStatus.Stable
-        public Builder deathNutritionBehavior(Supplier<DeathNutritionBehavior> s) {
-            this.deathNutritionBehavior = s != null ? s : () -> DeathNutritionBehavior.PRESERVE;
+        public Builder respawnValueBehavior(Supplier<RespawnValueBehavior> s) {
+            this.respawnValueBehavior = s != null ? s : () -> RespawnValueBehavior.PRESERVE;
             return this;
         }
         /**
-         * Fully replaces {@link #deathNutritionBehavior(Supplier)} when set. Use for mod-specific
-         * death handling (e.g. resetting auxiliary attachments) before diet sync on respawn.
+         * @deprecated use {@link #respawnValueBehavior(Supplier)}
+         */
+        @Deprecated
+        @ApiStatus.Stable
+        public Builder deathNutritionBehavior(Supplier<RespawnValueBehavior> s) {
+            return respawnValueBehavior(s);
+        }
+        /**
+         * Fully replaces {@link #respawnValueBehavior(Supplier)} when set. Use for mod-specific
+         * death handling (e.g. resetting auxiliary attachments) before tracking sync on respawn.
          */
         @ApiStatus.Stable
-        public Builder deathNutritionHandler(@Nullable BiConsumer<ServerPlayer, TrackingData> handler) {
-            this.deathNutritionHandler = handler;
+        public Builder respawnValueHandler(@Nullable BiConsumer<ServerPlayer, TrackingData> handler) {
+            this.respawnValueHandler = handler;
             return this;
+        }
+        /**
+         * @deprecated use {@link #respawnValueHandler(BiConsumer)}
+         */
+        @Deprecated
+        @ApiStatus.Stable
+        public Builder deathNutritionHandler(@Nullable BiConsumer<ServerPlayer, TrackingData> handler) {
+            return respawnValueHandler(handler);
         }
         @ApiStatus.Experimental
         public Builder onCacheInvalidated(Runnable hook) {
@@ -842,7 +877,7 @@ public final class MarieContext implements MarieLibSettings, IMarieConfig {
         @ApiStatus.Stable
         public Builder dataProvider(MarieDataProvider p) { this.dataProvider = p; return this; }
         /**
-         * @deprecated Use {@link dev.marie.framework.api.MarieAPI#registerValue} and related
+         * @deprecated Use {@link dev.marie.framework.api.marieapi.MarieAPI#registerValue} and related
          *             {@code MarieAPI.register*} methods directly instead of supplying a delegate.
          */
         @Deprecated

@@ -1,7 +1,7 @@
 package dev.marie.framework.api.registry;
 
 import dev.marie.framework.api.ApiStatus;
-import dev.marie.framework.api.MilestoneDefinition;
+import dev.marie.framework.api.progression.MilestoneDefinition;
 import dev.marie.framework.registry.AbstractRegistry;
 
 import javax.annotation.Nullable;
@@ -81,7 +81,7 @@ public final class MilestoneRegistry {
     /**
      * Returns all milestones that require every value key to reach the cumulative goal.
      *
-     * @return an unmodifiable list of cross-nutrient milestones ({@code valueKey} {@code "all"})
+     * @return an unmodifiable list of cross-value milestones ({@code valueKey} {@code "all"})
      */
     public static List<MilestoneDefinition> getForAll() {
         return INSTANCE.values().stream()

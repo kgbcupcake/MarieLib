@@ -2,7 +2,7 @@ package dev.marie.framework.command;
 
 
 import dev.marie.framework.api.ApiStatus;
-import dev.marie.framework.api.ReportProvider;
+import dev.marie.framework.api.reporting.ReportProvider;
 import dev.marie.framework.api.registry.ReportProviderRegistry;
 import dev.marie.framework.core.IMarieConfig;
 import dev.marie.framework.tracking.TrackingData;

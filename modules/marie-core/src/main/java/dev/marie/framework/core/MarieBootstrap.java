@@ -1,11 +1,9 @@
 package dev.marie.framework.core;
 
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
 import dev.marie.framework.api.registry.BlockHoverProviderRegistry;
-import dev.marie.framework.network.BlockHoverResponsePayload;
 
 import dev.marie.framework.color.ColorRegistry;
 import dev.marie.framework.compat.AutoCompatDiscovery;
@@ -21,7 +19,7 @@ import dev.marie.framework.handler.RestCycleListener;
 import dev.marie.framework.handler.PlayerTrackingLifecycle;
 import dev.marie.framework.handler.ValueDecayListener;
 import dev.marie.framework.handler.ValueEffectsListener;
-import dev.marie.framework.api.SourceTriggerListener;
+import dev.marie.framework.api.source.SourceTriggerListener;
 import dev.marie.framework.registry.MarieApiRegistries;
 import dev.marie.framework.runtime.TriggerHandlerRegistry;
 import dev.marie.framework.registry.MarieAttributes;
@@ -34,7 +32,7 @@ import dev.marie.framework.data.MarieDatapackCallbacks;
 import dev.marie.framework.tracking.MilestoneProgressAttachment;
 import dev.marie.framework.tracking.SynergyAbsorptionModifier;
 import dev.marie.framework.tracking.TrackingAttachment;
-import dev.marie.framework.api.MarieAPI;
+import dev.marie.framework.api.marieapi.MarieAPI;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.fml.event.lifecycle.FMLLoadCompleteEvent;
@@ -68,7 +66,6 @@ public final class MarieBootstrap {
     private static volatile Supplier<Object> configScreenFactory = () -> null;
     private static volatile Function<Object, Object> exportScreenFactory = parent -> null;
     private static volatile Function<Object, Object> importScreenFactory = parent -> null;
-    private static volatile Consumer<BlockHoverResponsePayload> blockHoverResponseListener = payload -> {};
     private static volatile IEventBus attachedModEventBus;
 
     private MarieBootstrap() {}
@@ -138,14 +135,6 @@ public final class MarieBootstrap {
 
     public static void setImportScreenFactory(Function<Object, Object> factory) {
         importScreenFactory = factory != null ? factory : parent -> null;
-    }
-
-    public static void setBlockHoverResponseListener(Consumer<BlockHoverResponsePayload> listener) {
-        blockHoverResponseListener = listener != null ? listener : payload -> {};
-    }
-
-    public static Consumer<BlockHoverResponsePayload> getBlockHoverResponseListener() {
-        return blockHoverResponseListener;
     }
 
     public static Supplier<Object> getConfigScreenFactory() {

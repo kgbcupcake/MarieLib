@@ -1,7 +1,7 @@
 package dev.marie.framework.api.registry;
 
 import dev.marie.framework.api.ApiStatus;
-import dev.marie.framework.api.ProfileDefinition;
+import dev.marie.framework.api.progression.ProfileDefinition;
 import dev.marie.framework.registry.AbstractRegistry;
 
 import javax.annotation.Nullable;

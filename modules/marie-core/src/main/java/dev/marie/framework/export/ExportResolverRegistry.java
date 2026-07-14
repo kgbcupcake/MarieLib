@@ -2,7 +2,7 @@ package dev.marie.framework.export;
 
 import com.mojang.logging.LogUtils;
 import dev.marie.framework.api.ApiStatus;
-import dev.marie.framework.api.ExportResolver;
+import dev.marie.framework.api.reporting.ExportResolver;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceKey;

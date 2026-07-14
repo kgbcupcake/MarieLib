@@ -2,6 +2,51 @@
 
 <!-- markdownlint-disable MD013 -->
 
+## [MariesLib 0.1.1-beta.4] — 2026-07-13
+
+Scanner signal stages extracted into the `ResolutionStageHandler` cascade shape, `ComponentClassifier` wired into recipe-inheritance fallback, `DeathNutritionBehavior` renamed for domain-agnosticism, and a marie-core/marie-ui/marie-commands audit for leftover food/nutrition-specific naming.
+
+### Added
+
+- `CommunityTagResolutionStage` / `SuffixResolutionStage` / `KeywordResolutionStage` (`dev.marie.framework.scanner.stages`)
+- Mechanical extractions of `ItemClassifier`'s former `analyzeSignal1CommunityTags` / `analyzeSignal3Suffix` / `analyzeSignal4Keywords` private methods into proper `ResolutionStageHandler` implementations
+- Same weight-table lookups and scoring math as before, unchanged output
+- `CommunityTagResolutionStage.tagDirectory()`
+- Exposes the actual `c` namespace tag directory the stage scans, so callers never need to hardcode a duplicate copy of the value
+- `RecipeInheritanceStage` now falls back to `ComponentClassifier.classify(...)` for a recipe ingredient when both `classifiedLookup` and its direct tag scores come back empty
+- `RespawnValueBehavior` (`dev.marie.framework.tracking`)
+- Renamed from `DeathNutritionBehavior`; enum constants and config IDs (`preserve`, `reset_to_starting`, `vanilla_half`) unchanged
+- `MarieContext#respawnValueBehavior()` / `#respawnValueHandler()`
+- `MarieContext.Builder#respawnValueBehavior(Supplier)` / `#respawnValueHandler(BiConsumer)`
+- `TrackingResetSupport.applyRespawnValueBehavior(player, tracking)`
+
+### Changed
+
+- `ItemClassifier.classify()`
+- Primary (non-fallback) scan path now runs community-tag/suffix/keyword scoring through the same `ResolutionStageHandler` mechanism as the runtime resolver cascade, instead of calling private methods directly; functionally unchanged
+- Stage instances are built once per `classify()` call and threaded through to `RecipeInheritanceStage.apply()` rather than re-instantiated per ingredient lookup
+- `RecipeInheritanceStage.apply()` / `buildLookup()`
+- New `validKeys` / `componentFallbackStages` parameters to support the `ComponentClassifier` fallback
+
+### Deprecated
+
+- `MarieContext#deathNutritionBehavior()` / `#deathNutritionHandler()`
+- Use `#respawnValueBehavior()` / `#respawnValueHandler()`; old accessors now forward to the new ones
+- `MarieContext.Builder#deathNutritionBehavior(Supplier)` / `#deathNutritionHandler(BiConsumer)`
+- Use `#respawnValueBehavior(Supplier)` / `#respawnValueHandler(BiConsumer)`; old builder methods now forward to the new ones
+
+### Fixed
+
+- `ItemClassifier`'s `COMMUNITY_TAG` classification signal label
+- Was a hardcoded `"c:foods/*"` literal left over from a mechanical extraction; now derived from `CommunityTagResolutionStage.tagDirectory()`
+- Domain-agnostic audit: removed leftover food/nutrition-specific wording from marie-core comments (`MilestoneRegistry`, `DatapackSchema`, `SourceClassificationRegistry`, `TagAuditContext`) and from marie-ui (`MarieValueColors`) and marie-commands (`MarieMilestoneTemplateCommand`'s user-facing `_comment_value_key` output)
+
+### Notes
+
+- Version: **0.1.1-beta.4**
+- `TrackingResetSupport.applyDeathNutritionOnRespawn` (internal-only, `@ApiStatus.Internal`) was renamed directly to `applyRespawnValueBehavior` with no deprecated forwarder, since it isn't public API
+- Flagged but intentionally untouched: `CommunityTagResolutionStage`'s underlying `"foods/"` NeoForge tag directory value (real scoring behavior, not a naming artifact) and marie-ui's javadoc comments documenting generalization from Nourished's original screens (attribution, not a leak)
+
 ---
 
 ## [MariesLib 0.1.1-beta.3] — 2026-06-30

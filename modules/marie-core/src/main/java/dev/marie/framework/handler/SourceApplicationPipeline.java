@@ -11,15 +11,15 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 import dev.marie.framework.api.ApiStatus;
-import dev.marie.framework.api.MarieEvents;
-import dev.marie.framework.api.MarieSeasonHook;
-import dev.marie.framework.api.AbsorptionModifier;
-import dev.marie.framework.api.SourcePairSynergy;
-import dev.marie.framework.api.SynergyDefinition;
-import dev.marie.framework.api.ValueDefinition;
-import dev.marie.framework.api.ValueModifierContext;
-import dev.marie.framework.api.ValueModifierEvent;
-import dev.marie.framework.api.ValueSourceTrigger;
+import dev.marie.framework.api.marie.MarieEvents;
+import dev.marie.framework.api.marie.MarieSeasonHook;
+import dev.marie.framework.api.effects.AbsorptionModifier;
+import dev.marie.framework.api.source.SourcePairSynergy;
+import dev.marie.framework.api.effects.SynergyDefinition;
+import dev.marie.framework.api.value.ValueDefinition;
+import dev.marie.framework.api.value.ValueModifierContext;
+import dev.marie.framework.api.value.ValueModifierEvent;
+import dev.marie.framework.api.value.ValueSourceTrigger;
 import dev.marie.framework.api.registry.AbsorptionModifierRegistry;
 import dev.marie.framework.api.registry.SeasonHookRegistry;
 import dev.marie.framework.api.registry.SynergyRegistry;
@@ -385,7 +385,7 @@ public final class SourceApplicationPipeline {
     }
 
     /**
-     * Applies a direct delta write ({@link dev.marie.framework.api.MarieAPI#modifyValue}).
+     * Applies a direct delta write ({@link dev.marie.framework.api.marieapi.MarieAPI#modifyValue}).
      *
      * @return {@code true} if the stored level changed
      */

@@ -3,7 +3,7 @@ package dev.marie.framework.scanner;
 // High-level orchestrator — the correct entry point for scanning all loaded items.
 
 import dev.marie.framework.api.ApiStatus;
-import dev.marie.framework.api.ValueDefinition;
+import dev.marie.framework.api.value.ValueDefinition;
 import dev.marie.framework.api.registry.ValueRegistry;
 import dev.marie.framework.core.MarieCore;
 import dev.marie.framework.core.IMarieConfig;

@@ -1,7 +1,7 @@
 package dev.marie.framework.runtime;
 
 import dev.marie.framework.api.ApiStatus;
-import dev.marie.framework.api.SourceTriggerListener;
+import dev.marie.framework.api.source.SourceTriggerListener;
 import dev.marie.framework.registry.ListRegistry;
 
 import java.util.List;

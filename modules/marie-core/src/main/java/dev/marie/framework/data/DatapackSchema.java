@@ -89,7 +89,7 @@ public final class DatapackSchema {
     public static final String KEY_BONUS_VALUE_KEY = "bonus_value_key";
     /** Required numeric combo bonus amount key. */
     public static final String KEY_BONUS_AMOUNT = "bonus_amount";
-    /** Optional multiplier applied to nutrient gain while the synergy buff is active. Default 1.0. */
+    /** Optional multiplier applied to value gain while the synergy buff is active. Default 1.0. */
     public static final String KEY_VALUE_MODIFIER = "value_modifier";
     /** Optional duration in ticks for the value modifier buff. Default 0 (no buff). */
     public static final String KEY_MODIFIER_DURATION_TICKS = "modifier_duration_ticks";

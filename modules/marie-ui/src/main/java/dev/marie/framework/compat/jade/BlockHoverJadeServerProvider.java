@@ -1,7 +1,7 @@
 package dev.marie.framework.compat.jade;
 
 import dev.marie.framework.api.ApiStatus;
-import dev.marie.framework.api.BlockHoverProvider;
+import dev.marie.framework.api.hover.BlockHoverProvider;
 import dev.marie.framework.api.registry.BlockHoverProviderRegistry;
 import dev.marie.framework.core.MarieCore;
 import net.minecraft.core.BlockPos;

@@ -1,6 +1,5 @@
 package dev.marie.framework.client.config.state;
 
-import dev.marie.framework.client.BlockHoverClientCache;
 import dev.marie.framework.client.config.cloth.MariesLibClothConfig;
 import dev.marie.framework.client.config.importexport.MariesLibExportScreen;
 import dev.marie.framework.client.config.importexport.MariesLibImportScreen;
@@ -24,6 +23,5 @@ public final class MariesLibClient {
         });
         MarieBootstrap.setExportScreenFactory(parent -> new MariesLibExportScreen((Screen) parent));
         MarieBootstrap.setImportScreenFactory(parent -> new MariesLibImportScreen((Screen) parent));
-        MarieBootstrap.setBlockHoverResponseListener(BlockHoverClientCache::onResponse);
     }
 }

@@ -1,7 +1,7 @@
 package dev.marie.framework.api.impl;
 
 import dev.marie.framework.api.ApiStatus;
-import dev.marie.framework.api.ApplicationHistoryView;
+import dev.marie.framework.api.reporting.ApplicationHistoryView;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.List;

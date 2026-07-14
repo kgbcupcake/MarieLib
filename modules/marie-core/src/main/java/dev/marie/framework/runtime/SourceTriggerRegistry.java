@@ -1,8 +1,8 @@
 package dev.marie.framework.runtime;
 
 import dev.marie.framework.api.ApiStatus;
-import dev.marie.framework.api.SourceTriggerDefinition;
-import dev.marie.framework.api.ValueSourceTrigger;
+import dev.marie.framework.api.source.SourceTriggerDefinition;
+import dev.marie.framework.api.value.ValueSourceTrigger;
 
 import java.util.ArrayList;
 import java.util.List;

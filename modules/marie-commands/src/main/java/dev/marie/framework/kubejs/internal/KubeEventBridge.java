@@ -3,7 +3,7 @@ package dev.marie.framework.kubejs.internal;
 
 import dev.latvian.mods.kubejs.script.ScriptsLoadedEvent;
 import dev.marie.framework.api.ApiStatus;
-import dev.marie.framework.api.MarieEvents;
+import dev.marie.framework.api.marie.MarieEvents;
 import dev.marie.framework.kubejs.MarieKubeEvents;
 import dev.marie.framework.kubejs.events.MarieMilestoneTriggeredEvent;
 import dev.marie.framework.kubejs.events.MarieSourceConsumedEvent;

@@ -1,8 +1,8 @@
 package dev.marie.framework.tracking;
 
 import dev.marie.framework.api.ApiStatus;
-import dev.marie.framework.api.MarieEvents;
-import dev.marie.framework.api.MilestoneDefinition;
+import dev.marie.framework.api.marie.MarieEvents;
+import dev.marie.framework.api.progression.MilestoneDefinition;
 import dev.marie.framework.api.registry.MilestoneRegistry;
 import dev.marie.framework.config.FeatureFlagCache;
 import dev.marie.framework.core.MarieContext;

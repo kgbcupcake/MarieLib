@@ -16,7 +16,7 @@ import java.util.function.Function;
 @ApiStatus.Stable
 public interface TagAuditContext {
 
-    /** All known tag category names for this mod (e.g. nutrient keys). */
+    /** All known tag category names for this mod (e.g. registered value keys). */
     Set<String> knownCategories();
 
     /** All items assigned to the given category tag. */

@@ -1,0 +1,66 @@
+package dev.marie.framework.scanner.stages;
+
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.scan.ResolutionResult;
+import dev.marie.framework.scan.ResolutionStageHandler;
+import dev.marie.framework.scan.RuntimeCascadeStage;
+import dev.marie.framework.scan.StageContext;
+import dev.marie.framework.scanner.ScannerSpecRegistry;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.item.Item;
+
+import javax.annotation.Nullable;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
+/**
+ * Scores an item against the configured community tag weight table, under the {@code c}
+ * namespace directory returned by {@link #tagDirectory()}. Mechanical extraction of the
+ * scanner's former {@code analyzeSignal1CommunityTags} logic into the
+ * {@link ResolutionStageHandler} cascade shape.
+ */
+@ApiStatus.Internal
+public final class CommunityTagResolutionStage implements ResolutionStageHandler {
+
+    /** NeoForge community source-capable tag directory under namespace {@code c}. */
+    private static final String C_COMMUNITY_TAG_PREFIX = "fo" + "ods/";
+
+    /**
+     * The {@code c} namespace tag directory this stage scans (e.g. for building display/trace
+     * labels). Exposed so callers never need to hardcode a duplicate copy of this value.
+     */
+    public static String tagDirectory() {
+        return C_COMMUNITY_TAG_PREFIX;
+    }
+
+    @Override
+    @Nullable
+    public ResolutionResult resolve(ResourceLocation itemId, StageContext ctx) {
+        Map<String, Map<String, Float>> communityTagWeights = ScannerSpecRegistry.get().communityTagWeights();
+        Map<String, Float> contributions = new HashMap<>();
+
+        for (Entry<String, Map<String, Float>> entry : communityTagWeights.entrySet()) {
+            String tagSuffix = entry.getKey();
+            TagKey<Item> tagKey = TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath("c", C_COMMUNITY_TAG_PREFIX + tagSuffix));
+            if (ctx.holder().is(tagKey)) {
+                for (Entry<String, Float> contrib : entry.getValue().entrySet()) {
+                    contributions.merge(contrib.getKey(), contrib.getValue(), Float::sum);
+                }
+            }
+        }
+
+        if (contributions.isEmpty()) {
+            return null;
+        }
+
+        ctx.communityTagSignal().putAll(contributions);
+        return new ResolutionResult(
+                contributions, contributions, List.of(), Map.of(), Map.of(),
+                false, 0f, RuntimeCascadeStage.COMMUNITY_TAG, "community_tag_match"
+        );
+    }
+}

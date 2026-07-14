@@ -47,7 +47,7 @@ public final class TrackingResetSupport {
 
     /**
      * Resets all bars to {@code fill} and clears application memory. Used by reset commands
-     * and {@link DeathNutritionBehavior#RESET_TO_STARTING} / {@link DeathNutritionBehavior#VANILLA_HALF}.
+     * and {@link RespawnValueBehavior#RESET_TO_STARTING} / {@link RespawnValueBehavior#VANILLA_HALF}.
      *
      * @return {@code true} if any bar changed
      */
@@ -58,22 +58,22 @@ public final class TrackingResetSupport {
 
     /**
      * Applies death respawn policy from {@link MarieContext}. When a custom
-     * {@link MarieContext#deathNutritionHandler()} is registered, it fully replaces the enum policy.
+     * {@link MarieContext#respawnValueHandler()} is registered, it fully replaces the enum policy.
      */
-    public static void applyDeathNutritionOnRespawn(ServerPlayer player, TrackingData tracking) {
+    public static void applyRespawnValueBehavior(ServerPlayer player, TrackingData tracking) {
         if (!MarieContext.isRegistered()) {
             return;
         }
         MarieContext ctx = MarieContext.get();
 
-        var custom = ctx.deathNutritionHandler();
+        var custom = ctx.respawnValueHandler();
         if (custom != null) {
             custom.accept(player, tracking);
             TrackingAttachment.setData(player, tracking);
             return;
         }
 
-        DeathNutritionBehavior behavior = ctx.deathNutritionBehavior().get();
+        RespawnValueBehavior behavior = ctx.respawnValueBehavior().get();
         boolean changed = switch (behavior) {
             case PRESERVE -> false;
             case RESET_TO_STARTING -> resetAllValuesAndMemory(player, tracking, resolveStartingFill());

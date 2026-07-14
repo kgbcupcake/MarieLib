@@ -28,7 +28,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 /**
- * Loads per-source manual nutrient assignments from config/&lt;modid&gt;/source_classifications.json.
+ * Loads per-source manual value assignments from config/&lt;modid&gt;/source_classifications.json.
  * Replaces both SourceOverrideRegistry (source_overrides.json) and SourceValueRegistry (source_values.json).
  * On first load, migrates existing old files automatically.
  */

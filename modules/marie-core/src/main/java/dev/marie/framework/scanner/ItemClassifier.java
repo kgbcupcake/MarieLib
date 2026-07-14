@@ -1,39 +1,48 @@
 package dev.marie.framework.scanner;
 
 import dev.marie.framework.api.ApiStatus;
-import dev.marie.framework.api.SourcePropertySignal;
+import dev.marie.framework.api.source.SourcePropertySignal;
 import dev.marie.framework.api.registry.SourcePropertySignalRegistry;
 import dev.marie.framework.classification.ClassificationTraceStep;
 import dev.marie.framework.classification.TraceStepId;
 import dev.marie.framework.classification.TraceStepStatus;
 import dev.marie.framework.core.MarieContext;
 import dev.marie.framework.core.MarieCore;
+import dev.marie.framework.scan.ResolutionResult;
+import dev.marie.framework.scan.ResolutionStageHandler;
+import dev.marie.framework.scan.StageContext;
 import dev.marie.framework.scanner.ScannerSpecRegistry.Multipliers;
 import dev.marie.framework.scanner.ScannerSpecRegistry.ScannerSpec;
+import dev.marie.framework.scanner.stages.CommunityTagResolutionStage;
+import dev.marie.framework.scanner.stages.KeywordResolutionStage;
 import dev.marie.framework.scanner.stages.RecipeInheritanceStage;
+import dev.marie.framework.scanner.stages.SuffixResolutionStage;
 import dev.marie.framework.util.MarieRegistryUtils;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
 @ApiStatus.Internal
 public final class ItemClassifier {
-   /** NeoForge community source-capable tag directory under namespace {@code c}. */
-   private static final String C_COMMUNITY_TAG_PREFIX = "fo" + "ods/";
+   private static final ResolutionStageHandler COMMUNITY_TAG_STAGE = new CommunityTagResolutionStage();
+   private static final ResolutionStageHandler SUFFIX_STAGE = new SuffixResolutionStage();
+   private static final ResolutionStageHandler KEYWORD_STAGE = new KeywordResolutionStage();
+
+   /** Primary (non-recipe-inheritance) stages, used both for the direct scan path and as the
+    * {@link dev.marie.framework.runtime.ComponentClassifier} fallback stage list for recipe ingredients. */
+   private static final List<ResolutionStageHandler> PRIMARY_STAGES = List.of(COMMUNITY_TAG_STAGE, SUFFIX_STAGE, KEYWORD_STAGE);
 
    private final RecipeInheritanceResolver recipeResolver;
    private final boolean enableRecipeInheritance;
@@ -99,11 +108,14 @@ public final class ItemClassifier {
             scores.put(key, 0.0F);
          }
 
+         Set<String> validKeys = Set.copyOf(this.valueKeys);
+         StageContext ctx = new StageContext(holder, itemId, null, Map.of(), validKeys);
+
          List<ClassificationSignal> signals = new ArrayList<>();
-         Map<String, Float> communityTagContribs = this.analyzeSignal1CommunityTags(holder, spec.communityTagWeights());
+         Map<String, Float> communityTagContribs = this.stageValues(COMMUNITY_TAG_STAGE, itemId, ctx);
          this.applySignal(scores, communityTagContribs, mult.communityTag());
          if (!communityTagContribs.isEmpty()) {
-            signals.add(new ClassificationSignal("COMMUNITY_TAG", "c:" + C_COMMUNITY_TAG_PREFIX + "*", this.scaleContributions(communityTagContribs, mult.communityTag())));
+            signals.add(new ClassificationSignal("COMMUNITY_TAG", "c:" + CommunityTagResolutionStage.tagDirectory() + "*", this.scaleContributions(communityTagContribs, mult.communityTag())));
          }
 
          this.emitSignalStep(
@@ -119,13 +131,13 @@ public final class ItemClassifier {
             signals.add(new ClassificationSignal("NAMESPACE", namespace, this.scaleContributions(namespaceContribs, mult.namespace())));
          }
 
-         Map<String, Float> suffixContribs = this.analyzeSignal3Suffix(path, spec.suffixWeights(), mult.secondarySuffix());
+         Map<String, Float> suffixContribs = this.stageValues(SUFFIX_STAGE, itemId, ctx);
          this.applySignal(scores, suffixContribs, mult.suffix());
          if (!suffixContribs.isEmpty()) {
             signals.add(new ClassificationSignal("SUFFIX", this.extractTrailingToken(path), this.scaleContributions(suffixContribs, mult.suffix())));
          }
 
-         Map<String, Float> keywordContribs = this.analyzeSignal4Keywords(path, spec.keywordWeights());
+         Map<String, Float> keywordContribs = this.stageValues(KEYWORD_STAGE, itemId, ctx);
          this.applySignal(scores, keywordContribs, mult.keyword());
          if (!keywordContribs.isEmpty()) {
             signals.add(new ClassificationSignal("KEYWORD", path, this.scaleContributions(keywordContribs, mult.keyword())));
@@ -167,7 +179,9 @@ public final class ItemClassifier {
             this.enableRecipeInheritance ? this.recipeResolver : null,
             classifiedLookup,
             mult.recipeInheritance(),
-            i -> this.analyzeSignal1CommunityTags(BuiltInRegistries.ITEM.wrapAsHolder(i), spec.communityTagWeights())
+            i -> this.communityTagScores(i, validKeys),
+            validKeys,
+            PRIMARY_STAGES
          );
          Map<String, Float> peerAvg = namespaceAverages.get(namespace);
          if (peerAvg != null && !peerAvg.isEmpty()) {
@@ -222,73 +236,24 @@ public final class ItemClassifier {
       }
    }
 
-   private Map<String, Float> analyzeSignal1CommunityTags(Holder<Item> holder, Map<String, Map<String, Float>> communityTagWeights) {
-      Map<String, Float> contributions = new HashMap<>();
+   /** Invokes {@code stage} against {@code ctx} and unwraps a null-safe contribution map. */
+   private Map<String, Float> stageValues(ResolutionStageHandler stage, ResourceLocation itemId, StageContext ctx) {
+      ResolutionResult result = stage.resolve(itemId, ctx);
+      return result != null ? result.values() : Map.of();
+   }
 
-      for (Entry<String, Map<String, Float>> entry : communityTagWeights.entrySet()) {
-         String tagSuffix = entry.getKey();
-         TagKey<Item> tagKey = TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath("c", C_COMMUNITY_TAG_PREFIX + tagSuffix));
-         if (holder.is(tagKey)) {
-            for (Entry<String, Float> contrib : entry.getValue().entrySet()) {
-               contributions.merge(contrib.getKey(), contrib.getValue(), Float::sum);
-            }
-         }
-      }
-
-      return contributions;
+   /** Direct community-tag contribution scores for an arbitrary item, used as the
+    * recipe-inheritance {@code valueTagScoresProvider}. */
+   private Map<String, Float> communityTagScores(Item item, Set<String> validKeys) {
+      ResourceLocation id = MarieRegistryUtils.itemKey(item);
+      ResourceLocation safeId = id != null ? id : ResourceLocation.withDefaultNamespace("unknown");
+      StageContext ingredientCtx = new StageContext(BuiltInRegistries.ITEM.wrapAsHolder(item), safeId, null, Map.of(), validKeys);
+      return this.stageValues(COMMUNITY_TAG_STAGE, safeId, ingredientCtx);
    }
 
    private Map<String, Float> analyzeSignal2Namespace(String namespace, Map<String, Map<String, Float>> namespaceWeights) {
       Map<String, Float> weights = namespaceWeights.get(namespace);
       return (Map<String, Float>)(weights != null ? new HashMap<>(weights) : Map.of());
-   }
-
-   private Map<String, Float> analyzeSignal3Suffix(String path, Map<String, Map<String, Float>> suffixWeights, float secondarySuffixWeight) {
-      Map<String, Float> contributions = new HashMap<>();
-      List<String> raw = TokenStemmer.rawSegmentsForPath(path);
-      String[] unders = path.split("_");
-      if (raw.isEmpty() && unders.length == 0) {
-         return contributions;
-      } else {
-         String lastToken = !raw.isEmpty() ? raw.get(raw.size() - 1).toLowerCase(Locale.ROOT) : unders[unders.length - 1].toLowerCase(Locale.ROOT);
-         Map<String, Float> weights = suffixWeights.get(lastToken);
-         if (weights != null) {
-            contributions.putAll(weights);
-         }
-
-         String secondLast = null;
-         if (raw.size() > 1) {
-            secondLast = raw.get(raw.size() - 2).toLowerCase(Locale.ROOT);
-         } else if (unders.length > 1) {
-            secondLast = unders[unders.length - 2].toLowerCase(Locale.ROOT);
-         }
-
-         if (secondLast != null) {
-            Map<String, Float> secondWeights = suffixWeights.get(secondLast);
-            if (secondWeights != null) {
-               for (Entry<String, Float> e : secondWeights.entrySet()) {
-                  contributions.merge(e.getKey(), e.getValue() * secondarySuffixWeight, Float::sum);
-               }
-            }
-         }
-
-         return contributions;
-      }
-   }
-
-   private Map<String, Float> analyzeSignal4Keywords(String path, Map<String, Map<String, Float>> keywordWeights) {
-      Map<String, Float> contributions = new HashMap<>();
-
-      for (String root : TokenStemmer.tokenizeForScoring(path)) {
-         Map<String, Float> weights = keywordWeights.get(root);
-         if (weights != null) {
-            for (Entry<String, Float> e : weights.entrySet()) {
-               contributions.merge(e.getKey(), e.getValue(), Float::sum);
-            }
-         }
-      }
-
-      return contributions;
    }
 
    private Map<String, Float> analyzeSignal5NegativeKeywords(String path, Map<String, Map<String, Float>> negativeKeywords) {

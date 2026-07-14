@@ -2,7 +2,7 @@ package dev.marie.framework.command;
 
 
 import com.mojang.brigadier.suggestion.SuggestionProvider;
-import dev.marie.framework.api.ValueDefinition;
+import dev.marie.framework.api.value.ValueDefinition;
 import dev.marie.framework.api.registry.ProfileRegistry;
 import dev.marie.framework.api.registry.ValueRegistry;
 import dev.marie.framework.core.MarieContext;

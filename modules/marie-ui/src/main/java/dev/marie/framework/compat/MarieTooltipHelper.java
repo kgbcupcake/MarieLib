@@ -8,8 +8,8 @@ import java.util.Map;
 import java.util.Set;
 
 import dev.marie.framework.api.ApiStatus;
-import dev.marie.framework.api.SourcePairSynergy;
-import dev.marie.framework.api.MilestoneDefinition;
+import dev.marie.framework.api.source.SourcePairSynergy;
+import dev.marie.framework.api.progression.MilestoneDefinition;
 import dev.marie.framework.api.registry.MilestoneRegistry;
 import dev.marie.framework.api.registry.SynergyRegistry;
 import dev.marie.framework.client.config.render.MarieValueColors;

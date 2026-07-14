@@ -43,7 +43,7 @@ import java.util.Set;
  *
  * <p>The spec contains all signal multipliers, weight maps, and archetype patterns
  * used by {@link ItemClassifier}. Domain-specific source property signals are
- * registered via {@link dev.marie.framework.api.MarieAPI#registerSourcePropertySignal}.</p>
+ * registered via {@link dev.marie.framework.api.marieapi.MarieAPI#registerSourcePropertySignal}.</p>
  */
 @ApiStatus.Internal
 public final class ScannerSpecRegistry {

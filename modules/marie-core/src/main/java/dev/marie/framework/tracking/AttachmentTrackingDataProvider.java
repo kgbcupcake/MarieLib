@@ -1,7 +1,7 @@
 package dev.marie.framework.tracking;
 
 import dev.marie.framework.api.ApiStatus;
-import dev.marie.framework.api.ApplicationHistoryView;
+import dev.marie.framework.api.reporting.ApplicationHistoryView;
 import dev.marie.framework.core.MarieDataProvider;
 import dev.marie.framework.handler.SourceApplicationPipeline;
 import net.minecraft.server.level.ServerPlayer;

@@ -45,7 +45,7 @@ public class PlayerTrackingLifecycle {
         tracking.tick();
         TrackingAttachment.setData(player, tracking);
         tracking.setMemoryConfig(DiminishingReturnsSupport.resolveMemoryConfig());
-        TrackingResetSupport.applyDeathNutritionOnRespawn(player, tracking);
+        TrackingResetSupport.applyRespawnValueBehavior(player, tracking);
         if (MarieContext.isRegistered()) {
             MarieContext.get().syncOnJoin().accept(player);
             KubeIntegration.firePlayerSynced(player);

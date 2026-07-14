@@ -1,7 +1,7 @@
 package dev.marie.framework.api.registry;
 
 import dev.marie.framework.api.ApiStatus;
-import dev.marie.framework.api.ValueDefinition;
+import dev.marie.framework.api.value.ValueDefinition;
 import dev.marie.framework.registry.AbstractRegistry;
 
 import javax.annotation.Nullable;

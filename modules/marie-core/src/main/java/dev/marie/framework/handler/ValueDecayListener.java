@@ -1,9 +1,9 @@
 package dev.marie.framework.handler;
 
 import dev.marie.framework.api.ApiStatus;
-import dev.marie.framework.api.MarieEvents;
-import dev.marie.framework.api.MarieSeasonHook;
-import dev.marie.framework.api.ValueDefinition;
+import dev.marie.framework.api.marie.MarieEvents;
+import dev.marie.framework.api.marie.MarieSeasonHook;
+import dev.marie.framework.api.value.ValueDefinition;
 import dev.marie.framework.api.registry.SeasonHookRegistry;
 import dev.marie.framework.api.registry.ValueRegistry;
 import dev.marie.framework.config.FeatureFlagCache;

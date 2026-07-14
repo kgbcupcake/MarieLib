@@ -1,12 +1,12 @@
 package dev.marie.framework.data;
 
-import dev.marie.framework.api.MarieAPI;
-import dev.marie.framework.api.MilestoneDefinition;
-import dev.marie.framework.api.ProfileDefinition;
-import dev.marie.framework.api.SourcePairSynergy;
-import dev.marie.framework.api.SynergyDefinition;
-import dev.marie.framework.api.ThresholdEffect;
-import dev.marie.framework.api.ValueDefinition;
+import dev.marie.framework.api.marieapi.MarieAPI;
+import dev.marie.framework.api.progression.MilestoneDefinition;
+import dev.marie.framework.api.progression.ProfileDefinition;
+import dev.marie.framework.api.source.SourcePairSynergy;
+import dev.marie.framework.api.effects.SynergyDefinition;
+import dev.marie.framework.api.effects.ThresholdEffect;
+import dev.marie.framework.api.value.ValueDefinition;
 import dev.marie.framework.api.ApiStatus;
 import dev.marie.framework.compat.CompatDefinition;
 import dev.marie.framework.config.LockRegistry;

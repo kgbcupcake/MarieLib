@@ -1,7 +1,7 @@
 package dev.marie.framework.handler;
 
 import dev.marie.framework.api.ApiStatus;
-import dev.marie.framework.api.SleepBonusEvaluator;
+import dev.marie.framework.api.effects.SleepBonusEvaluator;
 import dev.marie.framework.api.registry.SleepBonusEvaluatorRegistry;
 import dev.marie.framework.config.FeatureFlagCache;
 import dev.marie.framework.core.MarieCore;

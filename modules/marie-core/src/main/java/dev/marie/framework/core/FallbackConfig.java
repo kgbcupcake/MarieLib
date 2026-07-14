@@ -3,7 +3,7 @@ package dev.marie.framework.core;
 import com.google.gson.JsonObject;
 
 import dev.marie.framework.api.ApiStatus;
-import dev.marie.framework.api.ValueDefinition;
+import dev.marie.framework.api.value.ValueDefinition;
 import dev.marie.framework.api.registry.ValueRegistry;
 import dev.marie.framework.config.MariesLibConfigBridge;
 import dev.marie.framework.config.MariesLibConfigHolder;

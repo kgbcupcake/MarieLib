@@ -2,7 +2,7 @@ package dev.marie.framework.kubejs.internal;
 
 
 import dev.marie.framework.api.ApiStatus;
-import dev.marie.framework.api.ValueModifierContext;
+import dev.marie.framework.api.value.ValueModifierContext;
 import dev.marie.framework.kubejs.MarieKubeEvents;
 import dev.marie.framework.kubejs.events.MarieDecayTickEvent;
 import dev.marie.framework.kubejs.events.MariePlayerSyncedEvent;

@@ -1,8 +1,8 @@
 package dev.marie.framework.core;
 
 import dev.marie.framework.api.ApiStatus;
-import dev.marie.framework.api.ThresholdEffect;
-import dev.marie.framework.api.ValueDefinition;
+import dev.marie.framework.api.effects.ThresholdEffect;
+import dev.marie.framework.api.value.ValueDefinition;
 import net.minecraft.resources.ResourceLocation;
 
 import javax.annotation.Nullable;

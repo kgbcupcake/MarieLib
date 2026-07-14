@@ -3,7 +3,7 @@ package dev.marie.framework.kubejs.events;
 
 import dev.latvian.mods.kubejs.event.KubeEvent;
 import dev.marie.framework.api.ApiStatus;
-import dev.marie.framework.api.MarieEvents;
+import dev.marie.framework.api.marie.MarieEvents;
 
 @ApiStatus.Experimental
 public class MarieValueExcessEvent implements KubeEvent {
