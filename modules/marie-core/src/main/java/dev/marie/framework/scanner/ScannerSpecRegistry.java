@@ -80,7 +80,7 @@ public final class ScannerSpecRegistry {
                 if (writeBundledTo(file)) {
                     MarieCore.LOGGER.info("[ScannerSpecRegistry] Wrote default scanner_spec.json");
                 } else {
-                    MarieCore.LOGGER.debug("[ScannerSpecRegistry] No bundled scanner_spec.json for this modId, skipping write");
+                    MarieCore.LOGGER.warn("[ScannerSpecRegistry] No bundled scanner_spec.json for this modId, skipping write");
                 }
             }
             ScannerSpec spec = parseFile(file);
@@ -150,7 +150,8 @@ public final class ScannerSpecRegistry {
     }
 
     private static boolean writeBundledTo(Path file) throws IOException {
-        try (InputStream in = ScannerSpecRegistry.class.getResourceAsStream(bundledResourcePath())) {
+        try (InputStream in = Thread.currentThread().getContextClassLoader()
+                .getResourceAsStream(bundledResourcePath().substring(1))) {
             if (in == null) {
                 return false;
             }

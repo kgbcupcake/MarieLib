@@ -20,6 +20,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.RecipeManager;
 import net.neoforged.fml.loading.FMLPaths;
 
 import java.io.IOException;
@@ -121,7 +122,8 @@ final class MarieScannerCommands {
     }
 
     static int runScanAnalysis(CommandContext<CommandSourceStack> ctx, String modId) {
-        List<ClassificationResult> classified = SourceCollector.collectAllClassifiedSources();
+        RecipeManager recipeManager = ctx.getSource().getServer().getRecipeManager();
+        List<ClassificationResult> classified = SourceCollector.collectAllClassifiedSources(recipeManager);
         MultiValueAnalysisPipeline.runFullRegistry(classified, 0.15f, 0.35f, 0.10f);
         String outputPath = "config/" + modId + "/scanner_analysis/";
         ctx.getSource().sendSuccess(

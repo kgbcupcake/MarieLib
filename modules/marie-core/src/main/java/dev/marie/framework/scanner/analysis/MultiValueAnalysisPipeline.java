@@ -71,10 +71,8 @@ public final class MultiValueAnalysisPipeline {
                 continue;
             }
 
-            List<String> qualifyingSecondaries = r.tagClassified()
-                    ? resolveTagQualifyingSecondaries(scores, dominant, absoluteThreshold)
-                    : resolveQualifyingSecondaries(
-                            scores, dominant, dominantScore, absoluteThreshold, relativeThreshold);
+            List<String> qualifyingSecondaries = resolveQualifyingSecondaries(
+                    scores, dominant, dominantScore, absoluteThreshold, relativeThreshold);
 
             if (qualifyingSecondaries.isEmpty()) {
                 singleValue++;
@@ -166,26 +164,6 @@ public final class MultiValueAnalysisPipeline {
         } catch (IOException e) {
             MarieCore.LOGGER.error("[MultiValueAnalysisPipeline] Failed to write full registry analysis", e);
         }
-    }
-
-    private static List<String> resolveTagQualifyingSecondaries(
-            Map<String, Float> scores,
-            String dominant,
-            float absoluteThreshold
-    ) {
-        List<String> secondaries = new ArrayList<>();
-        for (Map.Entry<String, Float> entry : scores.entrySet()) {
-            String key = entry.getKey();
-            float score = entry.getValue();
-            if (key.equals(dominant)) {
-                continue;
-            }
-            if (score >= absoluteThreshold) {
-                secondaries.add(key);
-            }
-        }
-        Collections.sort(secondaries);
-        return secondaries;
     }
 
     private static String resolveDominant(Map<String, Float> scores) {

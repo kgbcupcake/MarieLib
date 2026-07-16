@@ -25,6 +25,7 @@ import dev.marie.framework.runtime.TriggerHandlerRegistry;
 import dev.marie.framework.registry.MarieAttributes;
 import dev.marie.framework.registry.RegistryLifecycleManager;
 import dev.marie.framework.runtime.SourceClassificationRegistry;
+import dev.marie.framework.scanner.ExcludedItemsRegistry;
 import dev.marie.framework.scanner.ScannerSpecRegistry;
 import dev.marie.framework.api.ApiStatus;
 import dev.marie.framework.data.MarieDataManager;
@@ -196,6 +197,8 @@ public final class MarieBootstrap {
                 ColorRegistry::loadFromDatapack);
         RegistryLifecycleManager.registerRegistry("ScannerSpecRegistry", ScannerSpecRegistry::load,
                 ScannerSpecRegistry::reload, ScannerSpecRegistry::loadFromDatapack);
+        RegistryLifecycleManager.registerRegistry("ExcludedItemsRegistry", ExcludedItemsRegistry::load,
+                ExcludedItemsRegistry::reload, ExcludedItemsRegistry::loadFromDatapack);
         RegistryLifecycleManager.registerRegistry("SourceClassificationRegistry", SourceClassificationRegistry::load,
                 SourceClassificationRegistry::reload, SourceClassificationRegistry::loadFromDatapack);
         RegistryLifecycleManager.registerRegistry("PresetRegistry", PresetRegistry::reload, PresetRegistry::reload, null);

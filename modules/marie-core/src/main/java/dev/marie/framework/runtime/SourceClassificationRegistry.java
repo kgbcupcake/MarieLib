@@ -17,6 +17,7 @@ import net.neoforged.fml.loading.FMLPaths;
 import org.slf4j.Logger;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.Reader;
 import java.io.Writer;
 import java.nio.file.Files;
@@ -84,12 +85,13 @@ public class SourceClassificationRegistry {
 
     public static void load() {
         Path configDir = FMLPaths.CONFIGDIR.get().resolve(IMarieConfig.get().modId());
-        Path newFile = configDir.resolve("source_classifications.json");
+        Path overridesDir = configDir.resolve("overrides");
+        Path newFile = overridesDir.resolve("source_classifications.json");
         Path oldOverrides = configDir.resolve("source_overrides.json");
         Path oldValues = configDir.resolve("source_values.json");
 
         try {
-            Files.createDirectories(configDir);
+            Files.createDirectories(overridesDir);
             if (Files.exists(newFile)) {
                 parse(newFile);
                 LOGGER.info("[SourceClassificationRegistry] Loaded {} entries from config folder", INSTANCE.size());
@@ -105,6 +107,12 @@ public class SourceClassificationRegistry {
             LOGGER.error("[SourceClassificationRegistry] Failed to load source_classifications.json", e);
             INSTANCE.reset();
             INSTANCE.freeze();
+        }
+
+        try {
+            writeReadmeIfAbsent(overridesDir);
+        } catch (IOException e) {
+            LOGGER.warn("[SourceClassificationRegistry] Failed to write SOURCE_CLASSIFICATIONS_README.md", e);
         }
     }
 
@@ -194,9 +202,25 @@ public class SourceClassificationRegistry {
         }
     }
 
+    private static void writeReadmeIfAbsent(Path overridesDir) throws IOException {
+        Path readme = overridesDir.resolve("SOURCE_CLASSIFICATIONS_README.md");
+        if (Files.exists(readme)) {
+            return;
+        }
+        String resourcePath = "/data/" + IMarieConfig.get().modId() + "/config/SOURCE_CLASSIFICATIONS_README.md";
+        try (InputStream in = Thread.currentThread().getContextClassLoader()
+                .getResourceAsStream(resourcePath.substring(1))) {
+            if (in == null) {
+                LOGGER.warn("[SourceClassificationRegistry] No bundled SOURCE_CLASSIFICATIONS_README.md for this modId, skipping write. Tried resource path: {}", resourcePath);
+                return;
+            }
+            Files.copy(in, readme);
+        }
+    }
+
     public static void save() {
         Path configDir = FMLPaths.CONFIGDIR.get().resolve(IMarieConfig.get().modId());
-        Path file = configDir.resolve("source_classifications.json");
+        Path file = configDir.resolve("overrides").resolve("source_classifications.json");
         try {
             writeRegistry(file);
             LOGGER.info("[SourceClassificationRegistry] Saved source_classifications.json");
