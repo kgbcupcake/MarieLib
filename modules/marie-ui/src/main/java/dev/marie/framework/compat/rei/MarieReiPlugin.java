@@ -1,7 +1,7 @@
 package dev.marie.framework.compat.rei;
 
 import dev.marie.framework.api.ApiStatus;
-import dev.marie.framework.compat.MarieTooltipHelper;
+import dev.marie.framework.tooltips.MarieTooltipHelper;
 import dev.marie.framework.core.MarieContext;
 import me.shedaniel.rei.api.client.plugins.REIClientPlugin;
 import me.shedaniel.rei.api.client.entry.renderer.EntryRendererRegistry;

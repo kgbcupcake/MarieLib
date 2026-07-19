@@ -97,9 +97,16 @@ public final class ExcludedItemsRegistry {
     public static void load() {
         Path configDir = FMLPaths.CONFIGDIR.get().resolve(IMarieConfig.get().modId());
         Path overridesDir = configDir.resolve("overrides");
-        Path file = overridesDir.resolve(CONFIG_FILE_NAME);
+        Path dataDir = overridesDir.resolve("Overrides");
+        Path readmeDir = overridesDir.resolve("Read_Me");
+        Path file = dataDir.resolve(CONFIG_FILE_NAME);
+        Path oldFile = overridesDir.resolve(CONFIG_FILE_NAME);
         try {
-            Files.createDirectories(overridesDir);
+            Files.createDirectories(dataDir);
+            Files.createDirectories(readmeDir);
+            if (Files.exists(oldFile) && !Files.exists(file)) {
+                Files.move(oldFile, file);
+            }
             if (!Files.exists(file)) {
                 if (writeBundledTo(file)) {
                     MarieCore.LOGGER.info("[ExcludedItemsRegistry] Wrote default excluded_items.json");
@@ -124,7 +131,11 @@ public final class ExcludedItemsRegistry {
         }
 
         try {
-            writeReadmeIfAbsent(overridesDir);
+            Path oldReadme = overridesDir.resolve("EXCLUDED_ITEMS_README.md");
+            if (Files.exists(oldReadme)) {
+                Files.deleteIfExists(oldReadme);
+            }
+            writeReadmeIfAbsent(readmeDir);
         } catch (IOException e) {
             MarieCore.LOGGER.warn("[ExcludedItemsRegistry] Failed to write EXCLUDED_ITEMS_README.md", e);
         }

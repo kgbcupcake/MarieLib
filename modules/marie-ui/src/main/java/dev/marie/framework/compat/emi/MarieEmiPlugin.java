@@ -4,7 +4,7 @@ import dev.emi.emi.api.EmiPlugin;
 import dev.emi.emi.api.EmiRegistry;
 import dev.emi.emi.api.stack.Comparison;
 import dev.marie.framework.api.ApiStatus;
-import dev.marie.framework.compat.MarieTooltipHelper;
+import dev.marie.framework.tooltips.MarieTooltipHelper;
 import dev.marie.framework.core.MarieContext;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.item.Item;

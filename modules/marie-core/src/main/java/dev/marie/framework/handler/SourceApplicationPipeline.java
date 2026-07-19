@@ -123,24 +123,34 @@ public final class SourceApplicationPipeline {
                 return;
             }
         }
+        Map<String, Float> resolverMatchedBars;
+        MarieContext.SourceDelta resolverDelta;
+        if (stack == null || stack.isEmpty()) {
+            resolverMatchedBars = Map.of();
+            resolverDelta = ctx.sourceDeltaResolver().resolve(
+                    stack, player.level(), trigger.payload(), resolverMatchedBars);
+        } else {
+            resolverMatchedBars = new LinkedHashMap<>(ctx.sourceValueResolver().apply(stack, player.level()));
+            resolverDelta = ctx.sourceDeltaResolver().resolve(
+                    stack, player.level(), trigger.payload(), resolverMatchedBars);
+        }
+
         if (override != null) {
-            totalAdded = override.total();
             valueDeltas = new HashMap<>(override.values());
+            for (Map.Entry<String, Float> e : resolverDelta.values().entrySet()) {
+                valueDeltas.putIfAbsent(e.getKey(), e.getValue());
+            }
             matchedBars = new HashMap<>(override.values());
+            for (Map.Entry<String, Float> e : resolverMatchedBars.entrySet()) {
+                matchedBars.putIfAbsent(e.getKey(), e.getValue());
+            }
+            totalAdded = override.total() != 0f ? override.total() : resolverDelta.total();
             MarieCore.LOGGER.debug("[MarieLib] using override for {} (total={}, values={})",
                     sourceKey, totalAdded, valueDeltas);
-        } else if (stack == null || stack.isEmpty()) {
-            matchedBars = Map.of();
-            MarieContext.SourceDelta delta = ctx.sourceDeltaResolver().resolve(
-                    stack, player.level(), trigger.payload(), matchedBars);
-            totalAdded = delta.total();
-            valueDeltas = new HashMap<>(delta.values());
         } else {
-            matchedBars = new LinkedHashMap<>(ctx.sourceValueResolver().apply(stack, player.level()));
-            MarieContext.SourceDelta delta = ctx.sourceDeltaResolver().resolve(
-                    stack, player.level(), trigger.payload(), matchedBars);
-            totalAdded = delta.total();
-            valueDeltas = new HashMap<>(delta.values());
+            matchedBars = resolverMatchedBars;
+            totalAdded = resolverDelta.total();
+            valueDeltas = new HashMap<>(resolverDelta.values());
         }
 
         Map<String, Float> matchedBarWeights = new LinkedHashMap<>(matchedBars);

@@ -1,10 +1,11 @@
-package dev.marie.framework.compat;
+package dev.marie.framework.tooltips;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import dev.marie.framework.api.ApiStatus;
@@ -16,6 +17,8 @@ import dev.marie.framework.client.config.render.MarieValueColors;
 import dev.marie.framework.config.FeatureFlagCache;
 import dev.marie.framework.core.IMarieConfig;
 import dev.marie.framework.core.MarieContext;
+import dev.marie.framework.scanner.ExcludedItemsRegistry;
+import dev.marie.framework.scanner.ScannerSpecRegistry;
 import dev.marie.framework.tracking.TrackingData;
 import dev.marie.framework.util.MarieRegistryUtils;
 import net.minecraft.ChatFormatting;
@@ -78,6 +81,18 @@ public final class MarieTooltipHelper {
         lines.add(Component.literal("✦ " + modId).withStyle(ChatFormatting.GOLD));
 
         if (valueBars.isEmpty()) {
+            boolean excluded = ExcludedItemsRegistry.isExcluded(itemId)
+                    || ScannerSpecRegistry.get().excludedItems().contains(itemId);
+            if (excluded) {
+                Optional<String> override = TooltipMessageRegistry.getForItem(modId, itemId, "excluded");
+                Component excludedLine = override.isPresent()
+                        ? Component.literal(override.get())
+                        : Component.translatable(modId + ".tooltip.excluded");
+                int excludedColor = TooltipColorRegistry.getForItem(modId, itemId, "excluded")
+                        .orElse(ChatFormatting.DARK_GRAY.getColor());
+                lines.add(excludedLine.copy().withStyle(Style.EMPTY.withColor(excludedColor)));
+                return lines;
+            }
             lines.add(Component.translatable(modId + ".tooltip.unclassified").withStyle(ChatFormatting.GRAY));
         }
 
@@ -112,7 +127,7 @@ public final class MarieTooltipHelper {
             renderedAny = true;
             String label = MarieRegistryUtils.capitalizeFirst(key);
             String gain = String.format(Locale.ROOT, fmt, display);
-            int color = computeTooltipColor(key, tracking, display);
+            int color = computeTooltipColor(modId, itemId, key, tracking, display);
             MutableComponent line = Component.literal("  " + label + "  +" + gain)
                     .withStyle(Style.EMPTY.withColor(color));
             lines.add(line);
@@ -123,7 +138,7 @@ public final class MarieTooltipHelper {
             float display = base * multiplier;
             String label = MarieRegistryUtils.capitalizeFirst(highestKey);
             String gain = String.format(Locale.ROOT, fmt, display);
-            int color = computeTooltipColor(highestKey, tracking, display);
+            int color = computeTooltipColor(modId, itemId, highestKey, tracking, display);
             lines.add(Component.literal("  " + label + "  +" + gain).withStyle(Style.EMPTY.withColor(color)));
         }
 
@@ -194,7 +209,11 @@ public final class MarieTooltipHelper {
     private static final int COL_WARNING = 0xFFFFAA00;
     private static final int COL_GOOD = 0xFF55FF55;
 
-    private static int computeTooltipColor(String key, TrackingData tracking, float gain) {
+    private static int computeTooltipColor(String modId, String itemId, String key, TrackingData tracking, float gain) {
+        Optional<Integer> override = TooltipColorRegistry.getForItem(modId, itemId, key);
+        if (override.isPresent()) {
+            return override.get();
+        }
         boolean beneficial = MarieContext.isValueBeneficial(key);
         float current = tracking.values.getOrDefault(key, 0f);
         float projected = current + gain;

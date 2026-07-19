@@ -17,6 +17,7 @@ import net.minecraft.server.packs.resources.ResourceManager;
 import net.neoforged.fml.loading.FMLPaths;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.Reader;
 import java.io.Writer;
 import java.nio.file.Files;
@@ -98,6 +99,29 @@ public final class ColorRegistry {
             MarieCore.LOGGER.error("[ColorRegistry] Failed to load colors.json", e);
             INSTANCE.reset();
             INSTANCE.freeze();
+        }
+
+        try {
+            writeReadmeIfAbsent(configDir.resolve("Read_Me"));
+        } catch (IOException e) {
+            MarieCore.LOGGER.warn("[ColorRegistry] Failed to write COLORS_README.md", e);
+        }
+    }
+
+    private static void writeReadmeIfAbsent(Path readmeDir) throws IOException {
+        Path readme = readmeDir.resolve("COLORS_README.md");
+        if (Files.exists(readme)) {
+            return;
+        }
+        Files.createDirectories(readmeDir);
+        String resourcePath = "/data/" + IMarieConfig.get().modId() + "/config/COLORS_README.md";
+        try (InputStream in = Thread.currentThread().getContextClassLoader()
+                .getResourceAsStream(resourcePath.substring(1))) {
+            if (in == null) {
+                MarieCore.LOGGER.warn("[ColorRegistry] No bundled COLORS_README.md for this modId, skipping write. Tried resource path: {}", resourcePath);
+                return;
+            }
+            Files.copy(in, readme);
         }
     }
 

@@ -102,6 +102,29 @@ public final class ScannerSpecRegistry {
             INSTANCE.register(SPEC_KEY, bundled != null ? bundled : ScannerSpec.empty());
             INSTANCE.freeze();
         }
+
+        try {
+            writeReadmeIfAbsent(configDir.resolve("Read_Me"));
+        } catch (IOException e) {
+            MarieCore.LOGGER.warn("[ScannerSpecRegistry] Failed to write SCANNER_SPEC_README.md", e);
+        }
+    }
+
+    private static void writeReadmeIfAbsent(Path readmeDir) throws IOException {
+        Path readme = readmeDir.resolve("SCANNER_SPEC_README.md");
+        if (Files.exists(readme)) {
+            return;
+        }
+        Files.createDirectories(readmeDir);
+        String resourcePath = "/data/" + IMarieConfig.get().modId() + "/config/SCANNER_SPEC_README.md";
+        try (InputStream in = Thread.currentThread().getContextClassLoader()
+                .getResourceAsStream(resourcePath.substring(1))) {
+            if (in == null) {
+                MarieCore.LOGGER.warn("[ScannerSpecRegistry] No bundled SCANNER_SPEC_README.md for this modId, skipping write. Tried resource path: {}", resourcePath);
+                return;
+            }
+            Files.copy(in, readme);
+        }
     }
 
     public static void reload() {
