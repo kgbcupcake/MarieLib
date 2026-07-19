@@ -14,7 +14,7 @@ Tooltip message/color customization (`dev.marie.framework.tooltips`), excluded-i
   - `seedDefaultsIfAbsent(modId, defaults)`, `reload(modId)`, `loadFromDatapack(modId, resourceManager)`
 - `MarieTooltipHelper` now checks `ExcludedItemsRegistry.isExcluded(itemId)` / `ScannerSpecRegistry.get().excludedItems()` and, for excluded items, renders an `"excluded"`-keyed tooltip line/color sourced from `TooltipMessageRegistry` / `TooltipColorRegistry` instead of the usual unclassified-item line
 - `ExcludedItemsRegistry` (`dev.marie.framework.scanner`), wired into `MarieBootstrap`'s lifecycle
-- `ColorRegistry` / `ScannerSpecRegistry` now bundle a README (`COLORS_README.md`, `SCANNER_SPEC_README.md`) into the config folder on first load, mirroring the pattern already used by `SourceClassificationRegistry` / `ExcludedItemsRegistry`
+- `ColorRegistry` / `ScannerSpecRegistry` now write a README (`COLORS_README.md`, `SCANNER_SPEC_README.md`) into the config folder on first load, mirroring the pattern already used by `SourceClassificationRegistry` / `ExcludedItemsRegistry`
 
 ### Changed
 
@@ -29,6 +29,7 @@ Tooltip message/color customization (`dev.marie.framework.tooltips`), excluded-i
 - `ScannerSpecRegistry.writeBundledTo` now uses the context classloader (matching `parseBundled`), so the bundled `scanner_spec.json` resolves correctly across module boundaries
 - `SourceClassificationRegistry.parseEntry()` no longer throws an unguarded `NullPointerException` when an entry omits `source_id` (or any array element isn't a JSON object); malformed entries are now logged and skipped individually (by `source_id` if readable, otherwise by array index) instead of aborting the whole file and crashing mod bootstrap. `load()` also gained a broader catch as a second line of defense against whole-file corruption (invalid JSON syntax, non-array top-level value)
 - Removed `TOOLTIP_COLORS_README.md` / `TOOLTIP_MESSAGES_README.md` from marie-ui's bundled resources: `writeReadmeIfAbsent` looks up `data/<modId>/config/...` using the *consuming* mod's runtime `modId`, so a copy bundled under marie-ui's own `marieslib` namespace was never reachable by any real consumer, same bug class as `SOURCE_CLASSIFICATIONS_README`. Consumer mods must now bundle their own copy under their own `data/<modid>/config/` namespace.
+- Removed `COLORS_README.md` / `SCANNER_SPEC_README.md` from marie-core's bundled resources for the same reason: `ColorRegistry`/`ScannerSpecRegistry`'s `writeReadmeIfAbsent` resolve `data/<modId>/config/...` by the consuming mod's runtime `modId`, so the copies bundled under marie-core's own `marieslib` namespace were never reachable. Note this only affects the READMEs — `ScannerSpecRegistry`'s bundled `scanner_spec.json` *defaults* use a separate, already-correct resolution path (`data/<modId>/<modId>/scanner/scanner_spec.json`, supplied by each consumer) and were not touched.
 
 ---
 
