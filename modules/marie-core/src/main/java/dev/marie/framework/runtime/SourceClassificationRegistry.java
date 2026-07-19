@@ -86,19 +86,34 @@ public class SourceClassificationRegistry {
     public static void load() {
         Path configDir = FMLPaths.CONFIGDIR.get().resolve(IMarieConfig.get().modId());
         Path overridesDir = configDir.resolve("overrides");
-        Path newFile = overridesDir.resolve("source_classifications.json");
+        Path dataDir = overridesDir.resolve("Overrides");
+        Path readmeDir = overridesDir.resolve("Read_Me");
+        Path newFile = dataDir.resolve("source_classifications.json");
+        Path oldFlatFile = overridesDir.resolve("source_classifications.json");
         Path oldOverrides = configDir.resolve("source_overrides.json");
         Path oldValues = configDir.resolve("source_values.json");
+        Path oldRootFile = configDir.resolve("source_classifications.json");
 
         try {
-            Files.createDirectories(overridesDir);
+            Files.createDirectories(dataDir);
+            Files.createDirectories(readmeDir);
+            if (Files.exists(oldFlatFile) && !Files.exists(newFile)) {
+                Files.move(oldFlatFile, newFile);
+            }
             if (Files.exists(newFile)) {
                 parse(newFile);
                 LOGGER.info("[SourceClassificationRegistry] Loaded {} entries from config folder", INSTANCE.size());
-            } else if (Files.exists(oldOverrides) || Files.exists(oldValues)) {
-                migrateFromLegacy(newFile, oldOverrides, oldValues);
-                LOGGER.warn("[SourceClassificationRegistry] Migrated source_values.json and source_overrides.json into source_classifications.json. You can delete the old files.");
+                if (Files.deleteIfExists(oldOverrides) | Files.deleteIfExists(oldValues) | Files.deleteIfExists(oldFlatFile) | Files.deleteIfExists(oldRootFile)) {
+                    LOGGER.info("[SourceClassificationRegistry] Cleaned up leftover legacy files (source_overrides.json / source_values.json / flat source_classifications.json / root source_classifications.json)");
+                }
+            } else if (Files.exists(oldOverrides) || Files.exists(oldValues) || hasContent(oldRootFile)) {
+                migrateFromLegacy(newFile, oldOverrides, oldValues, oldRootFile);
+                Files.deleteIfExists(oldOverrides);
+                Files.deleteIfExists(oldValues);
+                Files.deleteIfExists(oldRootFile);
+                LOGGER.warn("[SourceClassificationRegistry] Migrated source_values.json, source_overrides.json, and root source_classifications.json into source_classifications.json. The old files were deleted.");
             } else {
+                Files.deleteIfExists(oldRootFile);
                 writeDefaults(newFile);
                 LOGGER.info("[SourceClassificationRegistry] Wrote default source_classifications.json");
                 parse(newFile);
@@ -107,10 +122,20 @@ public class SourceClassificationRegistry {
             LOGGER.error("[SourceClassificationRegistry] Failed to load source_classifications.json", e);
             INSTANCE.reset();
             INSTANCE.freeze();
+        } catch (RuntimeException e) {
+            // Per-entry parse failures are isolated in parseEntry()/parseFromReader(); this only
+            // catches whole-file corruption (invalid JSON syntax, or top-level value isn't an array).
+            LOGGER.error("[SourceClassificationRegistry] source_classifications.json is not valid JSON, ignoring file", e);
+            INSTANCE.reset();
+            INSTANCE.freeze();
         }
 
         try {
-            writeReadmeIfAbsent(overridesDir);
+            Path oldReadme = overridesDir.resolve("SOURCE_CLASSIFICATIONS_README.md");
+            if (Files.exists(oldReadme)) {
+                Files.deleteIfExists(oldReadme);
+            }
+            writeReadmeIfAbsent(readmeDir);
         } catch (IOException e) {
             LOGGER.warn("[SourceClassificationRegistry] Failed to write SOURCE_CLASSIFICATIONS_README.md", e);
         }
@@ -137,8 +162,13 @@ public class SourceClassificationRegistry {
         INSTANCE.reset();
         JsonArray arr = GSON.fromJson(reader, JsonArray.class);
         if (arr != null) {
-            for (JsonElement el : arr) {
-                parseEntry(el.getAsJsonObject());
+            for (int i = 0; i < arr.size(); i++) {
+                JsonElement el = arr.get(i);
+                if (!el.isJsonObject()) {
+                    LOGGER.warn("[SourceClassificationRegistry] Skipping malformed entry at index {}: not a JSON object", i);
+                    continue;
+                }
+                parseEntry(el.getAsJsonObject(), i);
             }
         }
         INSTANCE.freeze();
@@ -150,25 +180,35 @@ public class SourceClassificationRegistry {
         }
     }
 
-    private static void parseEntry(JsonObject obj) {
-        String sourceId = obj.get("source_id").getAsString();
-        boolean enabled = !obj.has("enabled") || obj.get("enabled").getAsBoolean();
-
-        Map<String, Float> values = new HashMap<>();
-        if (obj.has("values") && obj.get("values").isJsonObject()) {
-            for (Map.Entry<String, JsonElement> entry : obj.getAsJsonObject("values").entrySet()) {
-                values.put(entry.getKey(), entry.getValue().getAsFloat());
+    private static void parseEntry(JsonObject obj, int index) {
+        try {
+            if (!obj.has("source_id")) {
+                LOGGER.warn("[SourceClassificationRegistry] Skipping malformed entry at index {}: missing \"source_id\"", index);
+                return;
             }
+            String sourceId = obj.get("source_id").getAsString();
+            boolean enabled = !obj.has("enabled") || obj.get("enabled").getAsBoolean();
+
+            Map<String, Float> values = new HashMap<>();
+            if (obj.has("values") && obj.get("values").isJsonObject()) {
+                for (Map.Entry<String, JsonElement> entry : obj.getAsJsonObject("values").entrySet()) {
+                    values.put(entry.getKey(), entry.getValue().getAsFloat());
+                }
+            }
+
+            float total = obj.has("total") && !obj.get("total").isJsonNull()
+                    ? obj.get("total").getAsFloat()
+                    : 0f;
+
+            INSTANCE.register(sourceId, new SourceClassification(sourceId, values, total, enabled));
+        } catch (RuntimeException e) {
+            JsonElement idEl = obj.get("source_id");
+            String label = (idEl != null && idEl.isJsonPrimitive()) ? idEl.getAsString() : ("index " + index);
+            LOGGER.warn("[SourceClassificationRegistry] Skipping malformed entry ({}): {}", label, e.getMessage());
         }
-
-        float total = obj.has("total") && !obj.get("total").isJsonNull()
-                ? obj.get("total").getAsFloat()
-                : 0f;
-
-        INSTANCE.register(sourceId, new SourceClassification(sourceId, values, total, enabled));
     }
 
-    private static void migrateFromLegacy(Path newFile, Path oldOverrides, Path oldValues) throws IOException {
+    private static void migrateFromLegacy(Path newFile, Path oldOverrides, Path oldValues, Path oldRootFile) throws IOException {
         JsonArray merged = new JsonArray();
 
         if (Files.exists(oldOverrides)) {
@@ -184,16 +224,46 @@ public class SourceClassificationRegistry {
             }
         }
 
+        if (Files.exists(oldRootFile)) {
+            try (Reader r = Files.newBufferedReader(oldRootFile)) {
+                JsonArray arr = GSON.fromJson(r, JsonArray.class);
+                if (arr != null) {
+                    for (JsonElement el : arr) {
+                        merged.add(el);
+                    }
+                }
+            } catch (Exception e) {
+                LOGGER.warn("[SourceClassificationRegistry] Could not read root source_classifications.json during migration: {}", e.getMessage());
+            }
+        }
+
         try (Writer w = Files.newBufferedWriter(newFile)) {
             GSON.toJson(merged, w);
         }
 
         INSTANCE.reset();
-        for (JsonElement el : merged) {
-            parseEntry(el.getAsJsonObject());
+        for (int i = 0; i < merged.size(); i++) {
+            JsonElement el = merged.get(i);
+            if (!el.isJsonObject()) {
+                LOGGER.warn("[SourceClassificationRegistry] Skipping malformed entry at index {}: not a JSON object", i);
+                continue;
+            }
+            parseEntry(el.getAsJsonObject(), i);
         }
         INSTANCE.freeze();
         LOGGER.info("[SourceClassificationRegistry] Migration complete — {} entries written to source_classifications.json", INSTANCE.size());
+    }
+
+    private static boolean hasContent(Path file) {
+        if (!Files.exists(file)) {
+            return false;
+        }
+        try (Reader r = Files.newBufferedReader(file)) {
+            JsonArray arr = GSON.fromJson(r, JsonArray.class);
+            return arr != null && !arr.isEmpty();
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     private static void writeDefaults(Path file) throws IOException {
@@ -220,7 +290,7 @@ public class SourceClassificationRegistry {
 
     public static void save() {
         Path configDir = FMLPaths.CONFIGDIR.get().resolve(IMarieConfig.get().modId());
-        Path file = configDir.resolve("overrides").resolve("source_classifications.json");
+        Path file = configDir.resolve("overrides").resolve("Overrides").resolve("source_classifications.json");
         try {
             writeRegistry(file);
             LOGGER.info("[SourceClassificationRegistry] Saved source_classifications.json");

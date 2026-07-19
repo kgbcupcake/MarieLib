@@ -2,6 +2,36 @@
 
 <!-- markdownlint-disable MD013 -->
 
+## [Unreleased]
+
+Tooltip message/color customization (`dev.marie.framework.tooltips`), excluded-item tooltip handling, bundled-resource lookup fix, an excluded-items registry, and recipe-inheritance score merging for tagged items.
+
+### Added
+
+- `TooltipMessageRegistry` / `TooltipColorRegistry` (`dev.marie.framework.tooltips`)
+  - Two-tier override lookup per `modId`: `config/<modId>/tooltips/tooltip_messages.json` / `tooltip_colors.json` (modpack-creator tier), overridden by `data/<modId>/marie/tooltips/tooltip_messages.json` / `tooltip_colors.json` (datapack tier)
+  - Both files share a `byKey` / `byItem` shape; `byItem` takes priority over `byKey` for `getForItem(modId, itemId, key)`
+  - `seedDefaultsIfAbsent(modId, defaults)`, `reload(modId)`, `loadFromDatapack(modId, resourceManager)`
+  - Each bundles its own README (`TOOLTIP_MESSAGES_README.md`, `TOOLTIP_COLORS_README.md`) into the config folder on first load
+- `MarieTooltipHelper` now checks `ExcludedItemsRegistry.isExcluded(itemId)` / `ScannerSpecRegistry.get().excludedItems()` and, for excluded items, renders an `"excluded"`-keyed tooltip line/color sourced from `TooltipMessageRegistry` / `TooltipColorRegistry` instead of the usual unclassified-item line
+- `ExcludedItemsRegistry` (`dev.marie.framework.scanner`), wired into `MarieBootstrap`'s lifecycle
+- `ColorRegistry` / `ScannerSpecRegistry` now bundle a README (`COLORS_README.md`, `SCANNER_SPEC_README.md`) into the config folder on first load, mirroring the pattern already used by `SourceClassificationRegistry` / `ExcludedItemsRegistry`
+
+### Changed
+
+- `MarieTooltipHelper` moved from `dev.marie.framework.compat` to `dev.marie.framework.tooltips`; `MarieEmiPlugin` / `MarieReiPlugin` updated to the new import
+- `SourceClassificationRegistry`'s override folder layout: `config/<modId>/overrides/source_classifications.json` moved under a dedicated `overrides/Overrides/` subfolder, with its README under `overrides/Read_Me/`; existing flat-layout and legacy root-level `source_classifications.json` files are migrated/deleted automatically on load
+- `SourceCollector` now merges qualifying recipe-inherited secondary scores into already-tagged items instead of skipping them outright
+- `SourceApplicationPipeline.process()` no longer short-circuits when a `SourceClassificationRegistry` override is present: `ctx.sourceValueResolver()` / `ctx.sourceDeltaResolver()` are now always invoked and merged with the override (override wins per-key on conflict, resolver fills any gaps; `total` falls back to the resolver's computed delta when the override's `total` is 0/unset)
+- `AutoGrowPanelContainer`'s footprint calculation simplified to respect a sibling's true committed size instead of also maxing against its natural height
+
+### Fixed
+
+- `ScannerSpecRegistry.writeBundledTo` now uses the context classloader (matching `parseBundled`), so the bundled `scanner_spec.json` resolves correctly across module boundaries
+- `SourceClassificationRegistry.parseEntry()` no longer throws an unguarded `NullPointerException` when an entry omits `source_id` (or any array element isn't a JSON object); malformed entries are now logged and skipped individually (by `source_id` if readable, otherwise by array index) instead of aborting the whole file and crashing mod bootstrap. `load()` also gained a broader catch as a second line of defense against whole-file corruption (invalid JSON syntax, non-array top-level value)
+
+---
+
 ## [MariesLib 0.1.1-beta.4] — 2026-07-13
 
 Scanner signal stages extracted into the `ResolutionStageHandler` cascade shape, `ComponentClassifier` wired into recipe-inheritance fallback, `DeathNutritionBehavior` renamed for domain-agnosticism, and a marie-core/marie-ui/marie-commands audit for leftover food/nutrition-specific naming.
