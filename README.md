@@ -1,47 +1,46 @@
-[![License](https://img.shields.io/github/license/kgbcupcake/MarieLib)](LICENSE) [![Release](https://img.shields.io/github/v/release/kgbcupcake/MarieLib?include_prereleases)](https://github.com/kgbcupcake/MarieLib/releases) [![Stars](https://img.shields.io/github/stars/kgbcupcake/MarieLib?style=social)](https://github.com/kgbcupcake/MarieLib/stargazers) [![Issues](https://img.shields.io/github/issues/kgbcupcake/MarieLib)](https://github.com/kgbcupcake/MarieLib/issues) [![Minecraft](https://img.shields.io/badge/Minecraft-1.21.1-brightgreen)](https://www.minecraft.net) [![NeoForge](https://img.shields.io/badge/NeoForge-21.1.229-orange)](https://neoforged.net) [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/kgbcupcake/MarieLib)
+[![License](https://img.shields.io/github/license/kgbcupcake/MarieLib)](LICENSE) [![Release](https://img.shields.io/github/v/release/kgbcupcake/MarieLib?include_prereleases)](https://github.com/kgbcupcake/MarieLib/releases) [![Stars](https://img.shields.io/github/stars/kgbcupcake/MarieLib?style=social)](https://github.com/kgbcupcake/MarieLib/stargazers) [![Issues](https://img.shields.io/github/issues/kgbcupcake/MarieLib)](https://github.com/kgbcupcake/MarieLib/issues) [![Minecraft](https://img.shields.io/badge/Minecraft-1.21.1-brightgreen)](https://www.minecraft.net) [![NeoForge](https://img.shields.io/badge/NeoForge-21.1.229-orange)](https://neoforged.net) [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/kgbcupcake/MariesLib)
 
 ![MariesLib Banner](Assets/MariesLib_banner.png)
 
-I kept rebuilding the same plumbing in every Marie mod, like registries, compat discovery, source
-classification, caching, JSON helpers. It worked, but it was duplicated everywhere and painful
-to maintain.
-
-So I pulled it out into one library. **MariesLib** is the shared backbone behind Marie mods.
+I wanted to  pull out all the reusable code From Nourished, and place it in one library. **MariesLib** This is the shared backbone behind Marie mods.
 It handles the hard problems, auto-classifying thousands of items from modded content, three-tier
 compat with modpack overrides, player tracking with memory and decay, datapack tooling with
-validation, and more, so consuming mods can focus on gameplay.
+validation, Dynamic UI and more, so consuming mods can focus on gameplay.
 
+
+> As of **Version 0.1.1-beta.4** it is now spilt into 
+a 4 `Modules`  `marie-core` `marie-commands` `marie-resources` `marie-ui` this will make it easier for  future
+maintenance
 ---
 
 ## Community
 
 [Discord-Channel](https://discord.gg/EZnFJsfQup)
 
-Questions, suggestions, and development discussion are welcome.
+Questions, suggestions, and development discussion are welcome A lot of new features have come from the 
 
 ---
 
 ## Do you need to install this?
 
-**Yes — if you use a Marie mod that depends on it.**
+**Yes: if you use a Marie's mod that depends on it.**
 
-Every Marie mod requires MariesLib as a **separate install**.
+> Every Marie's mod requires MariesLib as a **separate Install**.
 
 Install both:
 
 - The Marie mod you want
-- MariesLib 0.1.0-beta.1 or newer
+- MariesLib 0.1.1-beta.* or newer
 
-Most launchers resolve that dependency automatically. If a Marie mod fails to load, check that
+>Most launchers resolve that dependency automatically. If a Marie mod fails to load, check that
 MariesLib is installed and up to date.
 
-MariesLib is infrastructure, not a gameplay mod on its own. It powers the mods that depend on it.
 
 ---
 
 ## The Scanner
 
-This is the auto-magic everyone asks about.
+> - This auto scan's all items that the consuming mod is Targeting . 
 
 Run the scanner and MariesLib analyzes **every source item** in your modpack — hundreds of mods,
 thousands of items — then writes ready-to-use datapack files.
@@ -177,12 +176,12 @@ it to a friend, they import instantly. Config presets ship as JSON under `config
 
 ## Mods built on MariesLib
 
-All Marie mods require MariesLib as a separate install.
+All Marie mods require MariesLib as a separate Install.
 
-| Mod                                             | Description                                                     |
-| ----------------------------------------------- | --------------------------------------------------------------- |
-| [Nourished](https://modrinth.com/mod/nourished) | Nutrition framework for NeoForge 1.21.1                         |
-| MariePerfTools                                  | Block entity culling and performance tooling _(in development)_ |
+| Mod                                             | Description                             |
+|-------------------------------------------------|-----------------------------------------|
+| [Nourished](https://modrinth.com/mod/nourished) | Nutrition framework for NeoForge 1.21.1 |
+| **thermal systems**                             | TBA                                     |
 
 ---
 

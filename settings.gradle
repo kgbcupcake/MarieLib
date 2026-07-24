@@ -1,1 +1,7 @@
 rootProject.name = 'MarieLib'
+
+include 'marie-core', 'marie-resources', 'marie-commands', 'marie-ui'
+project(':marie-core').projectDir = file('modules/marie-core')
+project(':marie-resources').projectDir = file('modules/marie-resources')
+project(':marie-commands').projectDir = file('modules/marie-commands')
+project(':marie-ui').projectDir = file('modules/marie-ui')

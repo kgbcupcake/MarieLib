@@ -1,156 +1,122 @@
 plugins {
-    id 'java-library'
-    id 'eclipse'
-    id 'idea'
+    id 'base'
+    id 'java-base'
     id 'maven-publish'
-    id 'net.neoforged.moddev' version '2.0.141'
+    id 'com.gradleup.shadow' version '9.4.3'
 }
 
 version = mod_version
 group = mod_group_id
 
-base {
-    archivesName = mod_id
-}
+// Shared config for every subproject so version/toolchain/repository
+// declarations aren't duplicated four times.
+subprojects {
+    apply plugin: 'java-library'
+    apply plugin: 'eclipse'
+    apply plugin: 'idea'
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+    group = mod_group_id
+    version = mod_version
 
-neoForge {
-    version = project.neo_version
+    java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 
-    parchment {
-        mappingsVersion = project.parchment_mappings_version
-        minecraftVersion = project.parchment_minecraft_version
-    }
-
-    runs {
-        client {
-            client()
-            systemProperty 'neoforge.logging.markers', 'REGISTRIES'
-            systemProperty 'neoforge.logging.console.level', 'debug'
-            systemProperty 'neoforge.enabledGameTestNamespaces', mod_id
+    repositories {
+        mavenCentral()
+        maven {
+            name = 'NeoForged'
+            url = 'https://maven.neoforged.net/releases/'
         }
-
-        server {
-            server()
-            programArgument '--nogui'
-            systemProperty 'neoforge.enabledGameTestNamespaces', mod_id
-        }
-
-        data {
-            data()
-            programArguments.addAll '--mod', mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
+        maven { url = 'https://maven.latvian.dev/releases' }
+        maven { url = 'https://maven.architectury.dev/' }
+        maven { url = 'https://maven.blamejared.com' }
+        maven { url = 'https://maven.terraformersmc.com/releases/' }
+        maven {
+            name = 'Modrinth'
+            url = 'https://api.modrinth.com/maven'
+            content {
+                includeGroup 'maven.modrinth'
+            }
         }
     }
 
-    mods {
-        "${mod_id}" {
-            sourceSet sourceSets.main
+    tasks.withType(JavaCompile).configureEach {
+        options.encoding = 'UTF-8'
+    }
+}
+
+def coreProject = project(':marie-core')
+def resourcesProject = project(':marie-resources')
+def commandsProject = project(':marie-commands')
+def uiProject = project(':marie-ui')
+
+// Aggregate the compiled output of all four subprojects into one jar.
+// marie-core's jar manifest is reused as the base since it carries the
+// NeoForge mod metadata (neoforge.mods.toml).
+tasks.register('shadowJar', com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar) {
+    group = 'shadow'
+    description = 'Merges marie-core, marie-resources, marie-commands and marie-ui into one jar.'
+
+    dependsOn coreProject.tasks.named('classes')
+    dependsOn resourcesProject.tasks.named('classes')
+    dependsOn commandsProject.tasks.named('classes')
+    dependsOn uiProject.tasks.named('classes')
+    dependsOn coreProject.tasks.named('jar')
+
+    archiveBaseName.set('marieslib')
+    archiveVersion.set("${mod_version}")
+    archiveClassifier.set('')
+    destinationDirectory.set(layout.buildDirectory.dir('libs'))
+
+    from coreProject.sourceSets.main.output
+    from resourcesProject.sourceSets.main.output
+    from commandsProject.sourceSets.main.output
+    from uiProject.sourceSets.main.output
+
+    manifest {
+        from coreProject.tasks.named('jar').get().manifest
+    }
+}
+
+tasks.named('build') {
+    dependsOn tasks.named('shadowJar')
+}
+
+// Consumable variants so composite-build project substitution (e.g. from
+// Nourished's settings.gradle) resolves real classes instead of an empty
+// classpath. The root has no 'java' plugin (only 'java-base'), so these are
+// defined by hand rather than coming from the default apiElements/
+// runtimeElements produced by the 'java' plugin.
+configurations {
+    shadowRuntimeElements {
+        canBeConsumed = true
+        canBeResolved = false
+        attributes {
+            attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage, Usage.JAVA_RUNTIME))
+            attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category, Category.LIBRARY))
+            attribute(Bundling.BUNDLING_ATTRIBUTE, objects.named(Bundling, Bundling.SHADOWED))
         }
+        outgoing.artifact(tasks.named('shadowJar'))
     }
-}
-
-// After `clean`, Gradle may still treat createMinecraftArtifacts as up-to-date from
-// cache even though build/moddev/artifacts/ was deleted — force a rerun when the
-// NeoForge compile jar is missing.
-def neoForgeCompileJar = layout.buildDirectory.file("moddev/artifacts/neoforge-${neo_version}.jar")
-
-tasks.named('createMinecraftArtifacts') {
-    outputs.file(neoForgeCompileJar)
-    outputs.upToDateWhen {
-        def jar = neoForgeCompileJar.get().asFile
-        jar.isFile() && jar.length() > 0
-    }
-}
-
-tasks.named('compileJava').configure {
-    dependsOn(tasks.named('createMinecraftArtifacts'))
-    mustRunAfter(tasks.named('clean'))
-}
-
-sourceSets.main.resources { srcDir 'src/generated/resources' }
-
-repositories {
-    mavenCentral()
-    maven {
-        name = 'NeoForged'
-        url = 'https://maven.neoforged.net/releases/'
-    }
-    maven { url = 'https://maven.latvian.dev/releases' }
-    maven { url = 'https://maven.architectury.dev/' }
-    maven { url = 'https://maven.blamejared.com' }
-    maven { url = 'https://maven.terraformersmc.com/releases/' }
-    maven {
-        name = 'Modrinth'
-        url = 'https://api.modrinth.com/maven'
-        content {
-            includeGroup 'maven.modrinth'
+    shadowApiElements {
+        canBeConsumed = true
+        canBeResolved = false
+        attributes {
+            attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage, Usage.JAVA_API))
+            attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category, Category.LIBRARY))
+            attribute(Bundling.BUNDLING_ATTRIBUTE, objects.named(Bundling, Bundling.SHADOWED))
         }
+        outgoing.artifact(tasks.named('shadowJar'))
     }
 }
 
-configurations.configureEach {
-    resolutionStrategy.force "me.shedaniel.cloth:cloth-config-neoforge:${cloth_config_version}"
-}
-
-dependencies {
-    implementation "me.shedaniel.cloth:cloth-config-neoforge:${cloth_config_version}"
-
-    compileOnly "dev.latvian.mods:kubejs-neoforge:${kubejs_version}"
-    compileOnly "maven.modrinth:spice-of-life-onion:${spice_of_life_onion_version}"
-    compileOnly "mezz.jei:jei-${minecraft_version}-common-api:${jei_version}"
-    compileOnly "mezz.jei:jei-${minecraft_version}-neoforge-api:${jei_version}"
-    compileOnly "me.shedaniel:RoughlyEnoughItems-neoforge:${rei_version}"
-    compileOnly "dev.emi:emi-neoforge:${emi_version}"
-
-    testImplementation platform('org.junit:junit-bom:5.10.2')
-    testImplementation 'org.junit.jupiter:junit-jupiter'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-}
-
-test {
-    useJUnitPlatform()
-}
-
-tasks.named('processResources', ProcessResources).configure {
-    var replaceProperties = [
-            minecraft_version      : minecraft_version,
-            minecraft_version_range: minecraft_version_range,
-            neo_version            : neo_version,
-            neo_version_range      : neo_version_range,
-            loader_version_range   : loader_version_range,
-            mod_id                 : mod_id,
-            mod_name               : mod_name,
-            mod_license            : mod_license,
-            mod_version            : mod_version,
-            mod_authors            : mod_authors,
-            mod_description        : mod_description,
-    ]
-    inputs.properties replaceProperties
-
-    filesMatching(['META-INF/neoforge.mods.toml', 'pack.mcmeta']) {
-        expand replaceProperties
-    }
-
-    doLast {
-        def versionFile = file("${sourceSets.main.output.resourcesDir}/.gitversion-${mod_id}")
-        versionFile.parentFile.mkdirs()
-        try {
-            versionFile.text = 'git log "-1" "--format=%h"'.execute(null, project.projectDir).in.text.trim()
-        } catch (Exception ignored) {
-            versionFile.text = 'unknown'
-        }
-    }
-}
-
-tasks.withType(JavaCompile).configureEach {
-    options.encoding = 'UTF-8'
-}
-
+// Only the aggregated shadowJar is a publishable artifact — the four
+// subprojects have no publishing configuration of their own, so their
+// individual jars (needed only as shadowJar's merge inputs) never reach
+// a publish task.
 publishing {
     publications {
         register('mavenJava', MavenPublication) {
-            artifact tasks.named('jar')
+            artifact tasks.named('shadowJar')
             groupId = mod_group_id
             artifactId = mod_id
             version = mod_version

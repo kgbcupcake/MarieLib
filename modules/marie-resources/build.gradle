@@ -1,0 +1,14 @@
+plugins {
+    id 'net.neoforged.moddev' version '2.0.141'
+}
+
+// NeoForge is used for compile-time access to Minecraft/NeoForge classes
+// only — this module carries no mod metadata of its own (no mods.toml,
+// no runs).
+neoForge {
+    version = project.neo_version
+}
+
+dependencies {
+    implementation project(':marie-core')
+}

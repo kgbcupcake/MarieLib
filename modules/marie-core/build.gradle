@@ -1,0 +1,116 @@
+plugins {
+    id 'net.neoforged.moddev' version '2.0.141'
+}
+
+base {
+    archivesName = mod_id
+}
+
+neoForge {
+    version = project.neo_version
+
+    parchment {
+        mappingsVersion = project.parchment_mappings_version
+        minecraftVersion = project.parchment_minecraft_version
+    }
+
+    runs {
+        client {
+            client()
+            systemProperty 'neoforge.logging.markers', 'REGISTRIES'
+            systemProperty 'neoforge.logging.console.level', 'debug'
+            systemProperty 'neoforge.enabledGameTestNamespaces', mod_id
+        }
+
+        server {
+            server()
+            programArgument '--nogui'
+            systemProperty 'neoforge.enabledGameTestNamespaces', mod_id
+        }
+
+        data {
+            data()
+            programArguments.addAll '--mod', mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
+        }
+    }
+
+    mods {
+        "${mod_id}" {
+            sourceSet sourceSets.main
+        }
+    }
+}
+
+// After `clean`, Gradle may still treat createMinecraftArtifacts as up-to-date from
+// cache even though build/moddev/artifacts/ was deleted — force a rerun when the
+// NeoForge compile jar is missing.
+def neoForgeCompileJar = layout.buildDirectory.file("moddev/artifacts/neoforge-${neo_version}.jar")
+
+tasks.named('createMinecraftArtifacts') {
+    outputs.file(neoForgeCompileJar)
+    outputs.upToDateWhen {
+        def jar = neoForgeCompileJar.get().asFile
+        jar.isFile() && jar.length() > 0
+    }
+}
+
+tasks.named('compileJava').configure {
+    dependsOn(tasks.named('createMinecraftArtifacts'))
+    mustRunAfter(tasks.named('clean'))
+}
+
+sourceSets.main.resources { srcDir 'src/generated/resources' }
+
+configurations.configureEach {
+    resolutionStrategy.force "me.shedaniel.cloth:cloth-config-neoforge:${cloth_config_version}"
+}
+
+dependencies {
+    implementation "me.shedaniel.cloth:cloth-config-neoforge:${cloth_config_version}"
+
+    compileOnly "dev.latvian.mods:kubejs-neoforge:${kubejs_version}"
+    compileOnly "maven.modrinth:spice-of-life-onion:${spice_of_life_onion_version}"
+    compileOnly "mezz.jei:jei-${minecraft_version}-common-api:${jei_version}"
+    compileOnly "mezz.jei:jei-${minecraft_version}-neoforge-api:${jei_version}"
+    compileOnly "me.shedaniel:RoughlyEnoughItems-neoforge:${rei_version}"
+    compileOnly "dev.emi:emi-neoforge:${emi_version}"
+
+    testImplementation platform('org.junit:junit-bom:5.10.2')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+tasks.named('processResources', ProcessResources).configure {
+    var replaceProperties = [
+            minecraft_version      : minecraft_version,
+            minecraft_version_range: minecraft_version_range,
+            neo_version            : neo_version,
+            neo_version_range      : neo_version_range,
+            loader_version_range   : loader_version_range,
+            mod_id                 : mod_id,
+            mod_name               : mod_name,
+            mod_license            : mod_license,
+            mod_version            : mod_version,
+            mod_authors            : mod_authors,
+            mod_description        : mod_description,
+    ]
+    inputs.properties replaceProperties
+
+    filesMatching(['META-INF/neoforge.mods.toml', 'pack.mcmeta']) {
+        expand replaceProperties
+    }
+
+    doLast {
+        def versionFile = file("${sourceSets.main.output.resourcesDir}/.gitversion-${mod_id}")
+        versionFile.parentFile.mkdirs()
+        try {
+            versionFile.text = 'git log "-1" "--format=%h"'.execute(null, project.projectDir).in.text.trim()
+        } catch (Exception ignored) {
+            versionFile.text = 'unknown'
+        }
+    }
+}

@@ -1,0 +1,421 @@
+package dev.marie.framework.handler;
+
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.UUID;
+
+import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.api.marie.MarieEvents;
+import dev.marie.framework.api.source.SourcePairSynergy;
+import dev.marie.framework.api.effects.SynergyDefinition;
+import dev.marie.framework.api.value.ValueDefinition;
+import dev.marie.framework.api.value.ValueModifierContext;
+import dev.marie.framework.api.value.ValueModifierEvent;
+import dev.marie.framework.api.value.ValueSourceTrigger;
+import dev.marie.framework.api.registry.SynergyRegistry;
+import dev.marie.framework.tracking.TrackingDataApplicationHistoryView;
+
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.world.effect.MobEffectInstance;
+import dev.marie.framework.config.FeatureFlagCache;
+import dev.marie.framework.core.IMarieConfig;
+import dev.marie.framework.core.MarieContext;
+import dev.marie.framework.core.MarieCore;
+import dev.marie.framework.runtime.SourceClassificationRegistry;
+import dev.marie.framework.runtime.SourceTriggerRegistry;
+import dev.marie.framework.tracking.MilestoneTracker;
+import dev.marie.framework.tracking.SynergyBuffTracker;
+import dev.marie.framework.tracking.TrackingAttachment;
+import dev.marie.framework.tracking.TrackingData;
+import dev.marie.framework.registry.MarieAttributes;
+import dev.marie.framework.core.KubeIntegration;
+import dev.marie.framework.util.MarieRegistryUtils;
+
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.Mth;
+import net.minecraft.world.item.ItemStack;
+import net.neoforged.neoforge.common.NeoForge;
+
+@ApiStatus.Internal
+public final class SourceApplicationPipeline {
+
+    private static final java.util.concurrent.atomic.AtomicBoolean THRESHOLD_WARN_ONCE =
+            new java.util.concurrent.atomic.AtomicBoolean(false);
+    private static final java.util.concurrent.atomic.AtomicBoolean WARN_ONCE_SOURCE_APPLIED =
+            new java.util.concurrent.atomic.AtomicBoolean(false);
+
+    private SourceApplicationPipeline() {}
+
+    /**
+     * Removes all tracked synergy state for the given player, e.g. on logout.
+     *
+     * @param playerId the player's UUID
+     */
+    public static void clearPlayer(UUID playerId) {
+        SynergyStateRegistry.clearPlayer(playerId);
+    }
+
+    public static void process(ServerPlayer player, ValueSourceTrigger trigger, ItemStack stack,
+                             TrackingData tracking, long gameTimeMs) {
+        if (ReloadGuardListener.isReloadInProgress()) {
+            return;
+        }
+
+        var ctx = MarieContext.get();
+
+        MarieEvents.SourceTriggerEvent triggerEvent =
+                new MarieEvents.SourceTriggerEvent(player, trigger);
+        NeoForge.EVENT_BUS.post(triggerEvent);
+        if (triggerEvent.isCanceled()) {
+            return;
+        }
+
+        if (FeatureFlagCache.enableBlockHeavySources()
+                && ctx.isHeavySourceBlocked(player, trigger)) {
+            return;
+        }
+        if (FeatureFlagCache.enableBlockLightSource()
+                && ctx.isLightSourceBlocked(player, trigger)) {
+            return;
+        }
+        DiminishingReturnsConfigOrNull config = resolveMemoryConfig();
+        tracking.setMemoryConfig(config.config());
+        boolean debugApplyLog = FeatureFlagCache.enableDebugLogging();
+        Map<String, Float> valuesBefore = debugApplyLog ? snapshotValues(tracking) : Map.of();
+
+        String sourceKey = trigger.sourceId();
+        SourceClassificationRegistry.SourceClassification override =
+                SourceClassificationRegistry.getOverride(sourceKey).orElse(null);
+
+        float totalAdded;
+        Map<String, Float> valueDeltas;
+        Map<String, Float> matchedBars;
+        ResourceLocation sourceResourceId;
+        if (stack != null) {
+            sourceResourceId = MarieRegistryUtils.itemKey(stack);
+        } else {
+            try {
+                sourceResourceId = ResourceLocation.parse(trigger.sourceId());
+            } catch (Exception e) {
+                MarieCore.LOGGER.warn("[MarieLib] Invalid sourceId in trigger: '{}' — skipping pipeline",
+                        trigger.sourceId());
+                return;
+            }
+        }
+        Map<String, Float> resolverMatchedBars;
+        MarieContext.SourceDelta resolverDelta;
+        if (stack == null || stack.isEmpty()) {
+            resolverMatchedBars = Map.of();
+            resolverDelta = ctx.sourceDeltaResolver().resolve(
+                    stack, player.level(), trigger.payload(), resolverMatchedBars);
+        } else {
+            resolverMatchedBars = new LinkedHashMap<>(ctx.sourceValueResolver().apply(stack, player.level()));
+            resolverDelta = ctx.sourceDeltaResolver().resolve(
+                    stack, player.level(), trigger.payload(), resolverMatchedBars);
+        }
+
+        if (override != null) {
+            valueDeltas = new HashMap<>(override.values());
+            for (Map.Entry<String, Float> e : resolverDelta.values().entrySet()) {
+                valueDeltas.putIfAbsent(e.getKey(), e.getValue());
+            }
+            matchedBars = new HashMap<>(override.values());
+            for (Map.Entry<String, Float> e : resolverMatchedBars.entrySet()) {
+                matchedBars.putIfAbsent(e.getKey(), e.getValue());
+            }
+            totalAdded = override.total() != 0f ? override.total() : resolverDelta.total();
+            MarieCore.LOGGER.debug("[MarieLib] using override for {} (total={}, values={})",
+                    sourceKey, totalAdded, valueDeltas);
+        } else {
+            matchedBars = resolverMatchedBars;
+            totalAdded = resolverDelta.total();
+            valueDeltas = new HashMap<>(resolverDelta.values());
+        }
+
+        Map<String, Float> matchedBarWeights = new LinkedHashMap<>(matchedBars);
+
+        java.util.List<SourceTriggerRegistry.Entry> triggerEntries =
+                SourceTriggerRegistry.getEntries(trigger.type(), trigger.sourceId());
+        for (SourceTriggerRegistry.Entry entry : triggerEntries) {
+            valueDeltas.merge(entry.valueKey(), entry.amount(), Float::sum);
+        }
+
+        String dominantCategory = matchedBars.isEmpty()
+                ? null
+                : matchedBars.entrySet().stream()
+                        .max(Map.Entry.comparingByValue())
+                        .map(Map.Entry::getKey)
+                        .orElse(null);
+        String familyKey = ctx.sourceFamilyResolver().apply(sourceResourceId);
+
+        float multiplier = tracking.recordSource(sourceKey, dominantCategory, familyKey, gameTimeMs);
+        TrackingData.MultiplierBreakdown multiplierBreakdown = debugApplyLog
+                ? tracking.getMultiplierBreakdown(sourceKey, dominantCategory, familyKey, gameTimeMs)
+                : null;
+
+        if (FeatureFlagCache.enableTotalTracking()) {
+            MarieCore.LOGGER.debug("[MarieLib] total: adding {} * {} for {}",
+                    totalAdded, multiplier,
+                    stack != null ? stack.getItem().getDescriptionId() : trigger.sourceId());
+            tracking.addTotal(totalAdded * multiplier);
+        }
+
+        Map<String, Float> afterMultiplierOnly = new HashMap<>();
+        Map<String, Float> finalApplied = new HashMap<>();
+
+        for (String key : ctx.valueKeys()) {
+            float valueDelta = valueDeltas.getOrDefault(key, 0f);
+            ValueDefinition valueDef = MarieContext.get().valueDefinitionFor(key);
+            if (valueDef != null && valueDef.getAmountScale() != 1.0) {
+                valueDelta = (float) (valueDelta / valueDef.getAmountScale());
+            }
+            if (valueDelta != 0f) {
+                float adjustedDelta = valueDelta * multiplier;
+                afterMultiplierOnly.put(key, adjustedDelta);
+                adjustedDelta = ValueAbsorptionAdjuster.applySeasonalAbsorption(player, key, adjustedDelta);
+                adjustedDelta = ValueAbsorptionAdjuster.applyAbsorptionModifiers(player, key, adjustedDelta);
+                adjustedDelta *= MarieAttributes.valueRegenMultiplier(player);
+                ValueModifierContext modifierCtx =
+                        ValueModifierContext.of(player, sourceResourceId, key);
+                adjustedDelta = KubeIntegration.applyValueDeltaModifier(modifierCtx, adjustedDelta);
+
+                ValueModifierEvent modifierEvent = new ValueModifierEvent(modifierCtx, adjustedDelta);
+                NeoForge.EVENT_BUS.post(modifierEvent);
+
+                if (modifierEvent.isCanceled()) {
+                    continue;
+                }
+
+                float finalDelta = modifierEvent.getAmount();
+                finalDelta = MarieContext.get().applyPostValueModifier(modifierCtx, finalDelta);
+                if (!Float.isFinite(finalDelta)) {
+                    MarieCore.LOGGER.warn("[MarieLib] non-finite finalDelta {} for player={} source={} value={} — skipping",
+                            finalDelta, player.getName().getString(), sourceKey, key);
+                    continue;
+                }
+                if (finalDelta == 0f) {
+                    continue;
+                }
+                finalApplied.put(key, finalDelta);
+                float oldValue = tracking.values.getOrDefault(key, 0f);
+                tracking.addValue(key, finalDelta);
+                float newValue = tracking.values.getOrDefault(key, 0f);
+
+                if (oldValue != newValue) {
+                    NeoForge.EVENT_BUS.post(new MarieEvents.ValueChangedEvent(
+                            player, key, oldValue, newValue));
+                }
+
+                NeoForge.EVENT_BUS.post(new MarieEvents.SourceAppliedEvent(
+                        player, sourceResourceId, key, finalDelta));
+                MilestoneTracker.onValueApplied(player, key, finalDelta);
+            }
+        }
+
+        if (FeatureFlagCache.enableSynergies()) {
+            var synergies = SynergyRegistry.getSourcePairSynergies();
+            if (!synergies.isEmpty()) {
+                long currentGameTick = player.level().getGameTime();
+                TrackingDataApplicationHistoryView historyView = new TrackingDataApplicationHistoryView(tracking);
+                for (SourcePairSynergy synergy : synergies) {
+                    ResourceLocation otherSourceId;
+                    if (sourceResourceId.equals(synergy.getSourceA())) {
+                        otherSourceId = synergy.getSourceB();
+                    } else if (sourceResourceId.equals(synergy.getSourceB())) {
+                        otherSourceId = synergy.getSourceA();
+                    } else {
+                        continue;
+                    }
+                    long elapsed = historyView.getTimeSinceSource(otherSourceId);
+                    if (elapsed == -1L || elapsed > synergy.getTimeWindowTicks()) {
+                        continue;
+                    }
+                    Long lastFiredTick = SynergyStateRegistry.getLastFired(player.getUUID(), synergy.getId());
+                    if (lastFiredTick != null && currentGameTick - lastFiredTick < synergy.getTimeWindowTicks()) {
+                        continue;
+                    }
+                    String bonusKey = synergy.getBonusValueKey();
+                    if (!tracking.values.containsKey(bonusKey)) {
+                        continue;
+                    }
+                    float bonusAmount = synergy.getBonusAmount();
+                    ValueModifierContext bonusCtx = ValueModifierContext.of(player, sourceResourceId, bonusKey);
+                    ValueModifierEvent bonusEvent = new ValueModifierEvent(bonusCtx, bonusAmount);
+                    NeoForge.EVENT_BUS.post(bonusEvent);
+                    if (bonusEvent.isCanceled()) {
+                        continue;
+                    }
+                    float finalBonus = bonusEvent.getAmount();
+                    finalBonus = MarieContext.get().applyPostValueModifier(bonusCtx, finalBonus);
+                    if (!Float.isFinite(finalBonus) || finalBonus == 0f) {
+                        continue;
+                    }
+                    float oldBonusValue = tracking.values.getOrDefault(bonusKey, 0f);
+                    tracking.addValue(bonusKey, finalBonus);
+                    float newBonusValue = tracking.values.getOrDefault(bonusKey, 0f);
+                    if (oldBonusValue != newBonusValue) {
+                        NeoForge.EVENT_BUS.post(new MarieEvents.ValueChangedEvent(
+                                player, bonusKey, oldBonusValue, newBonusValue));
+                    }
+                    NeoForge.EVENT_BUS.post(new MarieEvents.SourceAppliedEvent(
+                            player, sourceResourceId, bonusKey, finalBonus));
+                    MilestoneTracker.onValueApplied(player, bonusKey, finalBonus);
+                    SynergyStateRegistry.recordFired(player.getUUID(), synergy.getId(), currentGameTick);
+
+                    if (synergy.getValueModifier() != 1.0f && synergy.getModifierDurationTicks() > 0) {
+                        SynergyBuffTracker.activate(player.getUUID(), synergy.getBonusValueKey(),
+                                synergy.getValueModifier(), currentGameTick + synergy.getModifierDurationTicks());
+                    }
+                }
+            }
+        }
+
+        if (FeatureFlagCache.enableSynergies()) {
+            var valueSynergies = SynergyRegistry.getValueSynergies();
+            if (!valueSynergies.isEmpty()) {
+                for (SynergyDefinition synergy : valueSynergies) {
+                    String keyA = synergy.getValueKeyA();
+                    String keyB = synergy.getValueKeyB();
+                    ValueDefinition defA = MarieContext.get().valueDefinitionFor(keyA);
+                    ValueDefinition defB = MarieContext.get().valueDefinitionFor(keyB);
+                    if (defA == null || defB == null) {
+                        continue;
+                    }
+                    float levelA = tracking.values.getOrDefault(keyA, 0f);
+                    float levelB = tracking.values.getOrDefault(keyB, 0f);
+                    boolean currentlyActive = SynergyStateRegistry.meetsSynergyCondition(levelA, defA, synergy.getConditionA())
+                            && SynergyStateRegistry.meetsSynergyCondition(levelB, defB, synergy.getConditionB());
+                    boolean wasActive = SynergyStateRegistry.isActive(player.getUUID(), synergy.getId());
+                    if (currentlyActive && !wasActive) {
+                        SynergyStateRegistry.setActive(player.getUUID(), synergy.getId());
+                        ResourceLocation effectId = synergy.getBonusEffectId();
+                        if (effectId != null) {
+                            BuiltInRegistries.MOB_EFFECT.getHolder(effectId).ifPresentOrElse(
+                                    holder -> player.addEffect(new MobEffectInstance(
+                                            holder,
+                                            synergy.getEffectDuration(),
+                                            synergy.getEffectAmplifier())),
+                                    () -> MarieCore.LOGGER.warn(
+                                            "[MarieLib] ValueSynergy '{}' references unknown effect '{}'",
+                                            synergy.getId(), effectId));
+                        }
+                    } else if (!currentlyActive && wasActive) {
+                        SynergyStateRegistry.clearActive(player.getUUID(), synergy.getId());
+                    }
+                }
+            }
+        }
+
+        if (debugApplyLog) {
+            Map<String, Float> valuesAfter = snapshotValues(tracking);
+            SourceApplyDebugReporter.submitSourceApplyDebug(
+                    player,
+                    stack,
+                    gameTimeMs,
+                    sourceKey,
+                    sourceResourceId,
+                    override != null,
+                    matchedBarWeights,
+                    valueDeltas,
+                    afterMultiplierOnly,
+                    finalApplied,
+                    valuesBefore,
+                    valuesAfter,
+                    multiplier,
+                    multiplierBreakdown
+            );
+        }
+
+        ThresholdCrossingEvaluator.checkThresholdCrossings(player, tracking);
+
+        TrackingAttachment.setData(player, tracking);
+        ctx.trackingDeltaSyncer().accept(player, tracking);
+        ctx.effectApplier().accept(player, tracking);
+
+        MarieCore.LOGGER.debug("{} applied {} -> {}",
+                player.getName().getString(),
+                stack != null ? stack.getItem().getDescriptionId() : trigger.sourceId(),
+                tracking);
+    }
+
+    /**
+     * Applies an absolute value write (commands, KubeJS force-set, etc.).
+     * Fires {@link MarieEvents.ValueChangedEvent} and threshold crossings when the level changes.
+     *
+     * @return {@code true} if the stored level changed
+     */
+    @ApiStatus.Internal
+    public static boolean writeDirectValue(
+            ServerPlayer player, TrackingData tracking, String key, float newValue) {
+        if (ReloadGuardListener.isReloadInProgress()) {
+            return false;
+        }
+        if (!tracking.values.containsKey(key)) {
+            return false;
+        }
+        float oldValue = tracking.values.getOrDefault(key, 0f);
+        float clamped = Mth.clamp(newValue, 0f, 1f);
+        if (Float.isNaN(clamped)) {
+            clamped = 0f;
+        }
+        if (oldValue == clamped) {
+            return false;
+        }
+        tracking.lastValues.put(key, oldValue);
+        tracking.values.put(key, clamped);
+        NeoForge.EVENT_BUS.post(new MarieEvents.ValueChangedEvent(player, key, oldValue, clamped));
+        ThresholdCrossingEvaluator.checkThresholdCrossings(player, tracking);
+        tracking.lastValues.put(key, clamped);
+        return true;
+    }
+
+    /**
+     * Applies a direct delta write ({@link dev.marie.framework.api.marieapi.MarieAPI#modifyValue}).
+     *
+     * @return {@code true} if the stored level changed
+     */
+    @ApiStatus.Internal
+    public static boolean applyDirectDelta(
+            ServerPlayer player, TrackingData tracking, String key, float delta) {
+        if (!tracking.values.containsKey(key)) {
+            return false;
+        }
+        float oldValue = tracking.values.get(key);
+        return writeDirectValue(player, tracking, key, Mth.clamp(oldValue + delta, 0f, 1f));
+    }
+
+    @ApiStatus.Internal
+    public static void finalizeDirectWrite(ServerPlayer player, TrackingData tracking) {
+        TrackingAttachment.setData(player, tracking);
+        if (!MarieContext.isRegistered()) {
+            return;
+        }
+        var ctx = MarieContext.get();
+        ctx.trackingDeltaSyncer().accept(player, tracking);
+        ctx.effectApplier().accept(player, tracking);
+    }
+
+    private static DiminishingReturnsConfigOrNull resolveMemoryConfig() {
+        return new DiminishingReturnsConfigOrNull(IMarieConfig.get().trackingMemoryConfig(), false);
+    }
+
+    private static Map<String, Float> snapshotValues(TrackingData tracking) {
+        Map<String, Float> m = new HashMap<>();
+        for (String key : MarieContext.get().valueKeys()) {
+            m.put(key, tracking.values.getOrDefault(key, 0f));
+        }
+        return m;
+    }
+
+    static void resetSnapshotWarnings() {
+        WARN_ONCE_SOURCE_APPLIED.set(false);
+        THRESHOLD_WARN_ONCE.set(false);
+    }
+
+    private record DiminishingReturnsConfigOrNull(
+            dev.marie.framework.tracking.DiminishingReturnsConfig config,
+            boolean wasNullProvider
+    ) {}
+}
