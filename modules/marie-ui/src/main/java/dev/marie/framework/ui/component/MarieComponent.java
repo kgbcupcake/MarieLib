@@ -38,4 +38,8 @@ public interface MarieComponent {
     default boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         return false;
     }
+
+    default boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        return false;
+    }
 }

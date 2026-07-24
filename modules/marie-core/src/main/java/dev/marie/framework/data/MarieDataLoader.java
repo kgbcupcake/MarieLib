@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import dev.marie.framework.api.ApiStatus;
 import dev.marie.framework.api.progression.MilestoneDefinition;
 import dev.marie.framework.api.marieapi.MarieAPIState;
 import dev.marie.framework.api.progression.ProfileDefinition;
@@ -36,6 +37,7 @@ import java.util.Set;
 /**
  * Loads MarieLib datapack definitions from {@code data/<namespace>/<modid>/**}.
  */
+@ApiStatus.Experimental
 public final class MarieDataLoader extends SimpleJsonResourceReloadListener {
 
     /** Callbacks for delegating registration to the consuming mod. */

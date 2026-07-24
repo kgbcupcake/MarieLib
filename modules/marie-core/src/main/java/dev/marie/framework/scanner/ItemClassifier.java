@@ -1,13 +1,10 @@
 package dev.marie.framework.scanner;
 
 import dev.marie.framework.api.ApiStatus;
-import dev.marie.framework.api.source.SourcePropertySignal;
-import dev.marie.framework.api.registry.SourcePropertySignalRegistry;
 import dev.marie.framework.classification.ClassificationTraceStep;
 import dev.marie.framework.classification.TraceStepId;
 import dev.marie.framework.classification.TraceStepStatus;
 import dev.marie.framework.core.MarieContext;
-import dev.marie.framework.core.MarieCore;
 import dev.marie.framework.scan.ResolutionResult;
 import dev.marie.framework.scan.ResolutionStageHandler;
 import dev.marie.framework.scan.StageContext;
@@ -125,7 +122,7 @@ public final class ItemClassifier {
             communityTagContribs,
             this.scaleContributions(communityTagContribs, mult.communityTag())
          );
-         Map<String, Float> namespaceContribs = this.analyzeSignal2Namespace(namespace, spec.namespaceWeights());
+         Map<String, Float> namespaceContribs = ItemClassificationSignals.analyzeNamespace(namespace, spec.namespaceWeights());
          this.applySignal(scores, namespaceContribs, mult.namespace());
          if (!namespaceContribs.isEmpty()) {
             signals.add(new ClassificationSignal("NAMESPACE", namespace, this.scaleContributions(namespaceContribs, mult.namespace())));
@@ -146,19 +143,19 @@ public final class ItemClassifier {
          this.emitSignalStep(
             traceOut, TraceStepId.KEYWORD_SUFFIX_SCORING, "keyword_suffix", keywordContribs, this.scaleContributions(keywordContribs, mult.keyword())
          );
-         Map<String, Float> negativeContribs = this.analyzeSignal5NegativeKeywords(path, spec.negativeKeywords());
+         Map<String, Float> negativeContribs = ItemClassificationSignals.analyzeNegativeKeywords(path, spec.negativeKeywords());
          this.applySignal(scores, negativeContribs, 1.0F);
          if (!negativeContribs.isEmpty()) {
             signals.add(new ClassificationSignal("NEGATIVE_KEYWORD", path, negativeContribs));
          }
 
-         Map<String, Float> archetypeContribs = this.analyzeSignal6Archetypes(path, spec.archetypes());
+         Map<String, Float> archetypeContribs = ItemClassificationSignals.analyzeArchetypes(path, spec.archetypes());
          this.applySignal(scores, archetypeContribs, mult.archetype());
          if (!archetypeContribs.isEmpty()) {
             signals.add(new ClassificationSignal("ARCHETYPE", path, this.scaleContributions(archetypeContribs, mult.archetype())));
          }
 
-         Map<String, Float> sourcePropContribs = this.analyzeSignal7SourcePropertySignals(stack);
+         Map<String, Float> sourcePropContribs = ItemClassificationSignals.analyzeSourcePropertySignals(stack);
          this.applySignal(scores, sourcePropContribs, 1.0F);
          if (!sourcePropContribs.isEmpty()) {
             signals.add(
@@ -185,7 +182,7 @@ public final class ItemClassifier {
          );
          Map<String, Float> peerAvg = namespaceAverages.get(namespace);
          if (peerAvg != null && !peerAvg.isEmpty()) {
-            Map<String, Float> peerContribs = this.analyzeSignal9NamespacePeers(peerAvg, mult.namespacePeerAverageWeight());
+            Map<String, Float> peerContribs = ItemClassificationSignals.analyzeNamespacePeers(peerAvg, mult.namespacePeerAverageWeight());
             this.applySignal(scores, peerContribs, mult.namespacePeer());
             if (!peerContribs.isEmpty()) {
                signals.add(new ClassificationSignal("NAMESPACE_PEER", namespace + "_peers", this.scaleContributions(peerContribs, mult.namespacePeer())));
@@ -249,72 +246,6 @@ public final class ItemClassifier {
       ResourceLocation safeId = id != null ? id : ResourceLocation.withDefaultNamespace("unknown");
       StageContext ingredientCtx = new StageContext(BuiltInRegistries.ITEM.wrapAsHolder(item), safeId, null, Map.of(), validKeys);
       return this.stageValues(COMMUNITY_TAG_STAGE, safeId, ingredientCtx);
-   }
-
-   private Map<String, Float> analyzeSignal2Namespace(String namespace, Map<String, Map<String, Float>> namespaceWeights) {
-      Map<String, Float> weights = namespaceWeights.get(namespace);
-      return (Map<String, Float>)(weights != null ? new HashMap<>(weights) : Map.of());
-   }
-
-   private Map<String, Float> analyzeSignal5NegativeKeywords(String path, Map<String, Map<String, Float>> negativeKeywords) {
-      Map<String, Float> contributions = new HashMap<>();
-
-      for (String root : TokenStemmer.tokenizeForScoring(path)) {
-         Map<String, Float> weights = negativeKeywords.get(root);
-         if (weights != null) {
-            for (Entry<String, Float> e : weights.entrySet()) {
-               contributions.merge(e.getKey(), e.getValue(), Float::sum);
-            }
-         }
-      }
-
-      return contributions;
-   }
-
-   private Map<String, Float> analyzeSignal6Archetypes(String path, List<ArchetypePattern> archetypes) {
-      Map<String, Float> contributions = new HashMap<>();
-      String lowerPath = path.toLowerCase();
-
-      for (ArchetypePattern archetype : archetypes) {
-         if (archetype.matches(lowerPath)) {
-            for (Entry<String, Float> e : archetype.contributions().entrySet()) {
-               contributions.merge(e.getKey(), e.getValue(), Float::sum);
-            }
-         }
-      }
-
-      return contributions;
-   }
-
-   private Map<String, Float> analyzeSignal7SourcePropertySignals(ItemStack stack) {
-      List<SourcePropertySignal> signals = SourcePropertySignalRegistry.getAll();
-      if (signals.isEmpty()) {
-         return Map.of();
-      }
-      Map<String, Float> contributions = new HashMap<>();
-      for (SourcePropertySignal signal : signals) {
-         try {
-            Map<String, Float> result = signal.evaluate(stack);
-            if (result != null) {
-               result.forEach((k, v) -> contributions.merge(k, v, Float::sum));
-            }
-         } catch (Exception ex) {
-            MarieCore.LOGGER.warn(
-               "[MarieLib] SourcePropertySignal '{}' threw during evaluate(): {}",
-               signal.signalId(), ex.getMessage());
-         }
-      }
-      return contributions;
-   }
-
-   private Map<String, Float> analyzeSignal9NamespacePeers(Map<String, Float> peerAverages, float averageWeight) {
-      Map<String, Float> contributions = new HashMap<>();
-
-      for (Entry<String, Float> e : peerAverages.entrySet()) {
-         contributions.put(e.getKey(), e.getValue() * averageWeight);
-      }
-
-      return contributions;
    }
 
    private void applySignal(Map<String, Float> scores, Map<String, Float> contributions, float multiplier) {

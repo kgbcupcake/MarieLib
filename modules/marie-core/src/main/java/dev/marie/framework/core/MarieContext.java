@@ -47,7 +47,7 @@ import net.minecraft.world.level.Level;
  * <p>Only {@link Builder#build()} requires {@code modId}; every other builder field has a
  * safe lib-owned default. Use {@link MarieBootstrap#attach} for zero-config wiring.</p>
  */
-@ApiStatus.Internal
+@ApiStatus.Experimental
 public final class MarieContext implements MarieLibSettings, IMarieConfig {
 
     @ApiStatus.Internal

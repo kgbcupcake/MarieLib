@@ -45,7 +45,7 @@ import java.util.function.Consumer;
  *
  * <p>This is a developer-facing tool, not player-facing. Zero impact on normal gameplay.</p>
  */
-@ApiStatus.Internal
+@ApiStatus.Experimental
 public final class ItemScanner {
 
     private static final float DEFAULT_SPREAD_THRESHOLD = 0f;

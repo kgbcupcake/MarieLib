@@ -1,5 +1,6 @@
 package dev.marie.framework.ui.edit;
 
+import dev.marie.framework.api.ApiStatus;
 import dev.marie.framework.ui.PersistenceProvider;
 import dev.marie.framework.ui.component.Constraint;
 import dev.marie.framework.ui.component.MarieComponent;
@@ -26,6 +27,7 @@ import java.util.function.BiConsumer;
  * committed {@link Bounds} to the {@code onCommit} callback supplied at construction — the caller
  * decides whether/how to run that through a {@link PersistenceProvider}.
  */
+@ApiStatus.Experimental
 public final class DraggableResizable {
 
     public static final int RESIZE_HANDLE_SIZE = 8;
@@ -45,6 +47,7 @@ public final class DraggableResizable {
     private int snapThresholdPx = DEFAULT_SNAP_THRESHOLD_PX;
     private List<Integer> snapXLines = List.of();
     private List<Integer> snapYLines = List.of();
+    private Bounds parentBounds;
 
     private boolean dragging;
     private boolean resizing;
@@ -66,9 +69,29 @@ public final class DraggableResizable {
     private ResizeMode lastCommitResizeMode;
 
     public DraggableResizable(MarieComponent target, Constraint constraint, BiConsumer<MarieComponent, Bounds> onCommit) {
+        this(target, constraint, onCommit, null);
+    }
+
+    /**
+     * As {@link #DraggableResizable(MarieComponent, Constraint, BiConsumer)}, but every subsequent
+     * drag/resize preview and commit is clamped to stay fully inside {@code parentBounds} — for a
+     * tracker that positions a component's content within its own (separately tracked) box bounds,
+     * rather than the box itself. Pass {@code null} for the original unclamped behavior.
+     */
+    public DraggableResizable(MarieComponent target, Constraint constraint, BiConsumer<MarieComponent, Bounds> onCommit, Bounds parentBounds) {
         this.target = target;
         this.constraint = constraint;
         this.onCommit = onCommit;
+        this.parentBounds = parentBounds;
+    }
+
+    /**
+     * Replaces the clamp region used by every subsequent drag/resize preview until the next call —
+     * {@code null} disables clamping. Callers whose parent region can move/resize across a single
+     * edit-mode session should call this every frame, same reasoning as {@link #setConstraint}.
+     */
+    public void setParentBounds(Bounds parentBounds) {
+        this.parentBounds = parentBounds;
     }
 
     /**
@@ -283,11 +306,11 @@ public final class DraggableResizable {
             int rawY = my - grabOffsetY;
             int snappedX = snapPosition(rawX, previewBounds.width(), snapXLines);
             int snappedY = snapPosition(rawY, previewBounds.height(), snapYLines);
-            previewBounds = new Bounds(snappedX, snappedY, previewBounds.width(), previewBounds.height());
+            previewBounds = clampToParent(new Bounds(snappedX, snappedY, previewBounds.width(), previewBounds.height()));
             return previewBounds;
         }
         if (resizing) {
-            previewBounds = switch (resizeMode) {
+            previewBounds = clampToParent(switch (resizeMode) {
                 case CORNER -> {
                     // Width/height each track the cursor directly, like RIGHT+BOTTOM combined — not a
                     // locked-aspect diagonal scale. Matches how every desktop window manager resizes
@@ -326,7 +349,7 @@ public final class DraggableResizable {
                     newHeight = clampHeight(resizeFixedBottom - snapToNearest(resizeFixedBottom - newHeight, snapYLines));
                     yield new Bounds(resizeOriginX, resizeFixedBottom - newHeight, resizeStartWidth, newHeight);
                 }
-            };
+            });
             return previewBounds;
         }
         return null;
@@ -411,6 +434,28 @@ public final class DraggableResizable {
     public boolean lastCommitWasLeftEdge() {
         return lastCommitWasResize && (lastCommitResizeMode == ResizeMode.LEFT
                 || lastCommitResizeMode == ResizeMode.CORNER_BOTTOM_LEFT);
+    }
+
+    /**
+     * Clamps {@code b}'s position so it stays fully inside {@link #parentBounds}, leaving its size
+     * untouched; a no-op if {@link #parentBounds} is {@code null}. If {@code b} is wider/taller
+     * than the parent, it's pinned to the parent's near edge (top-left) and allowed to overflow the
+     * far edge, rather than producing an inverted clamp range.
+     */
+    private Bounds clampToParent(Bounds b) {
+        if (parentBounds == null) {
+            return b;
+        }
+        int minX = parentBounds.x();
+        int minY = parentBounds.y();
+        int maxX = Math.max(minX, parentBounds.x() + parentBounds.width() - b.width());
+        int maxY = Math.max(minY, parentBounds.y() + parentBounds.height() - b.height());
+        int clampedX = Math.min(Math.max(b.x(), minX), maxX);
+        int clampedY = Math.min(Math.max(b.y(), minY), maxY);
+        if (clampedX == b.x() && clampedY == b.y()) {
+            return b;
+        }
+        return new Bounds(clampedX, clampedY, b.width(), b.height());
     }
 
     private int clampWidth(int width) {

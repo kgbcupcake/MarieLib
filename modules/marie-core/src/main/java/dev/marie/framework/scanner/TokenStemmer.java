@@ -18,7 +18,7 @@ import java.util.regex.Pattern;
  * classifier never needs duplicate entries in scanner_spec.json. Rules are
  * narrow and source-context justified — this is NOT a generic NLP stemmer.</p>
  */
-@ApiStatus.Internal
+@ApiStatus.Experimental
 public final class TokenStemmer {
 
     private static final boolean DEBUG = Boolean.getBoolean("marielib.stemmer.debug");

@@ -106,7 +106,8 @@ public final class MarieConfigPersistenceProvider implements PersistenceProvider
                         o.has("collapsed") && o.get("collapsed").getAsBoolean(),
                         o.has("widthManual") && o.get("widthManual").getAsBoolean(),
                         o.has("heightManual") && o.get("heightManual").getAsBoolean(),
-                        o.has("leftMargin") ? o.get("leftMargin").getAsInt() : 0
+                        o.has("leftMargin") ? o.get("leftMargin").getAsInt() : 0,
+                        o.has("contentScale") ? o.get("contentScale").getAsDouble() : ComponentState.DEFAULT_CONTENT_SCALE
                 ));
             }
         } catch (IOException e) {
@@ -130,6 +131,7 @@ public final class MarieConfigPersistenceProvider implements PersistenceProvider
                 o.addProperty("widthManual", s.widthManual());
                 o.addProperty("heightManual", s.heightManual());
                 o.addProperty("leftMargin", s.leftMargin());
+                o.addProperty("contentScale", s.contentScale());
                 root.add(entry.getKey(), o);
             }
             try (Writer w = Files.newBufferedWriter(file)) {

@@ -34,6 +34,8 @@ final class MultiValueAnalysisWriter {
     private static final DateTimeFormatter TIMESTAMP_FORMAT = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
     private static final String OUTPUT_SUBDIR = "scanner_analysis";
     private static final String DATAPACK_SUBDIR = "generated-multi-value-datapack";
+    private static final String BORDER =
+            "═══════════════════════════════════════════════════════════════════════════════\n";
 
     private MultiValueAnalysisWriter() {}
 
@@ -85,6 +87,17 @@ final class MultiValueAnalysisWriter {
     @FunctionalInterface
     private interface WriteAction {
         void run() throws IOException;
+    }
+
+    private static void writeBanner(Writer writer, String title) throws IOException {
+        writer.write(BORDER);
+        writer.write(title);
+        writer.write(BORDER);
+        writer.write("\n");
+    }
+
+    private static void writeGeneratedLine(Writer writer) throws IOException {
+        writer.write("Generated: " + LocalDateTime.now().format(TIMESTAMP_FORMAT) + "\n");
     }
 
     private static void writeRecommendationsJson(
@@ -150,10 +163,9 @@ final class MultiValueAnalysisWriter {
             Path outputFile
     ) throws IOException {
         try (Writer writer = Files.newBufferedWriter(outputFile)) {
-            writer.write("═══════════════════════════════════════════════════════════════════════════════\n");
-            writer.write("                  MULTI-VALUE TAG RECOMMENDATIONS\n");
-            writer.write("═══════════════════════════════════════════════════════════════════════════════\n\n");
-            writer.write("Generated: " + LocalDateTime.now().format(TIMESTAMP_FORMAT) + "\n\n");
+            writeBanner(writer, "                  MULTI-VALUE TAG RECOMMENDATIONS\n");
+            writeGeneratedLine(writer);
+            writer.write("\n");
             writer.write("Instructions:\n");
             writer.write("  Add items below to their secondary value tag file:\n");
             writer.write("  data/" + MarieContext.get().modId() + "/tags/item/values/<category>.json\n\n");
@@ -178,9 +190,7 @@ final class MultiValueAnalysisWriter {
                 writer.write("\n");
             }
 
-            writer.write("═══════════════════════════════════════════════════════════════════════════════\n");
-            writer.write("                           QUICK COPY BLOCKS\n");
-            writer.write("═══════════════════════════════════════════════════════════════════════════════\n\n");
+            writeBanner(writer, "                           QUICK COPY BLOCKS\n");
 
             for (Map.Entry<String, List<MultiValueEntry>> entry : result.secondaryByValue().entrySet()) {
                 String value = entry.getKey();
@@ -209,10 +219,8 @@ final class MultiValueAnalysisWriter {
             Path outputFile
     ) throws IOException {
         try (Writer writer = Files.newBufferedWriter(outputFile)) {
-            writer.write("═══════════════════════════════════════════════════════════════════════════════\n");
-            writer.write("                     AMBIGUOUS SOURCES — MANUAL REVIEW\n");
-            writer.write("═══════════════════════════════════════════════════════════════════════════════\n\n");
-            writer.write("Generated: " + LocalDateTime.now().format(TIMESTAMP_FORMAT) + "\n");
+            writeBanner(writer, "                     AMBIGUOUS SOURCES — MANUAL REVIEW\n");
+            writeGeneratedLine(writer);
             writer.write("Count: " + result.ambiguousSources().size() + "\n\n");
 
             if (result.ambiguousSources().isEmpty()) {
@@ -246,10 +254,8 @@ final class MultiValueAnalysisWriter {
         List<String> valueKeys = matrix.valueKeys();
 
         try (Writer writer = Files.newBufferedWriter(outputFile)) {
-            writer.write("═══════════════════════════════════════════════════════════════════════════════\n");
-            writer.write("                     VALUE OVERLAP MATRIX\n");
-            writer.write("═══════════════════════════════════════════════════════════════════════════════\n\n");
-            writer.write("Generated: " + LocalDateTime.now().format(TIMESTAMP_FORMAT) + "\n");
+            writeBanner(writer, "                     VALUE OVERLAP MATRIX\n");
+            writeGeneratedLine(writer);
             writer.write("Co-occurrence counts for value pairs in multi-value sources.\n\n");
 
             if (valueKeys.isEmpty()) {
@@ -284,10 +290,9 @@ final class MultiValueAnalysisWriter {
         ScannerMetrics m = result.metrics();
 
         try (Writer writer = Files.newBufferedWriter(outputFile)) {
-            writer.write("═══════════════════════════════════════════════════════════════════════════════\n");
-            writer.write("                     SCANNER ANALYSIS METRICS\n");
-            writer.write("═══════════════════════════════════════════════════════════════════════════════\n\n");
-            writer.write("Generated: " + LocalDateTime.now().format(TIMESTAMP_FORMAT) + "\n\n");
+            writeBanner(writer, "                     SCANNER ANALYSIS METRICS\n");
+            writeGeneratedLine(writer);
+            writer.write("\n");
             writer.write(String.format("  Total sources analyzed:       %d\n", m.total()));
             writer.write(String.format("  Single-value:            %d\n", m.singleValue()));
             writer.write(String.format("  Multi-value:             %d\n", m.multiValue()));

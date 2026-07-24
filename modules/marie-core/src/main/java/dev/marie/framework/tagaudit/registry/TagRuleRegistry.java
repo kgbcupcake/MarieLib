@@ -9,7 +9,10 @@ import java.util.Map;
 
 /**
  * Registry of {@link TagRule} implementations. Reusable infrastructure —
- * register-once semantics, mirroring {@code ExportResolverRegistry}'s shape.
+ * register-once semantics, keyed by id similar to
+ * {@code dev.marie.framework.export.ExportResolverRegistry}, though that
+ * registry is a plain unfrozen map by design (see its class Javadoc) and
+ * does not use this class's {@link AbstractRegistry} freeze/reset lifecycle.
  * Rules are behavior (code), not data, so there is no config/datapack/KubeJS
  * override stack for registration itself — a rule's own internal parameters
  * (thresholds, weights) are each rule's own concern, not this registry's.

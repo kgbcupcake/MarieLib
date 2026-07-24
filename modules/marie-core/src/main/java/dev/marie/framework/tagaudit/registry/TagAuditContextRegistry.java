@@ -7,7 +7,8 @@ import dev.marie.framework.tagaudit.model.TagAuditContext;
 /**
  * Registry of TagAuditContext implementations, keyed by the consuming mod's
  * modId, so {@code /marieslib audit_tags <modid>} can look up which mod's
- * context to scan against. Mirrors how ExportResolverRegistry/ConfigValidator
+ * context to scan against. Mirrors how
+ * {@code dev.marie.framework.export.ExportResolverRegistry}/ConfigValidator
  * are looked up by id.
  */
 @ApiStatus.Internal

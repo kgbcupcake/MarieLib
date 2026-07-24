@@ -45,7 +45,7 @@ import java.util.Set;
  * used by {@link ItemClassifier}. Domain-specific source property signals are
  * registered via {@link dev.marie.framework.api.marieapi.MarieAPI#registerSourcePropertySignal}.</p>
  */
-@ApiStatus.Internal
+@ApiStatus.Experimental
 public final class ScannerSpecRegistry {
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();

@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
  *   <li>Modpack override (config/&lt;modid&gt;/compat_overrides.json)</li>
  * </ol>
  */
-@ApiStatus.Internal
+@ApiStatus.Experimental
 public final class ModCompat {
 
     private static final Logger LOGGER = MarieCore.LOGGER;

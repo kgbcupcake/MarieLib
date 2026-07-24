@@ -3,25 +3,16 @@ package dev.marie.framework.handler;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 
 import dev.marie.framework.api.ApiStatus;
 import dev.marie.framework.api.marie.MarieEvents;
-import dev.marie.framework.api.marie.MarieSeasonHook;
-import dev.marie.framework.api.effects.AbsorptionModifier;
 import dev.marie.framework.api.source.SourcePairSynergy;
 import dev.marie.framework.api.effects.SynergyDefinition;
 import dev.marie.framework.api.value.ValueDefinition;
 import dev.marie.framework.api.value.ValueModifierContext;
 import dev.marie.framework.api.value.ValueModifierEvent;
 import dev.marie.framework.api.value.ValueSourceTrigger;
-import dev.marie.framework.api.registry.AbsorptionModifierRegistry;
-import dev.marie.framework.api.registry.SeasonHookRegistry;
 import dev.marie.framework.api.registry.SynergyRegistry;
 import dev.marie.framework.tracking.TrackingDataApplicationHistoryView;
 
@@ -31,7 +22,6 @@ import dev.marie.framework.config.FeatureFlagCache;
 import dev.marie.framework.core.IMarieConfig;
 import dev.marie.framework.core.MarieContext;
 import dev.marie.framework.core.MarieCore;
-import dev.marie.framework.debug.MarieDebugLogger;
 import dev.marie.framework.runtime.SourceClassificationRegistry;
 import dev.marie.framework.runtime.SourceTriggerRegistry;
 import dev.marie.framework.tracking.MilestoneTracker;
@@ -56,14 +46,6 @@ public final class SourceApplicationPipeline {
     private static final java.util.concurrent.atomic.AtomicBoolean WARN_ONCE_SOURCE_APPLIED =
             new java.util.concurrent.atomic.AtomicBoolean(false);
 
-    // per-player, per-synergy-id last-fired game tick — transient, not persisted
-    private static final ConcurrentHashMap<UUID, Map<String, Long>> SYNERGY_LAST_FIRED =
-            new ConcurrentHashMap<>();
-
-    // tracks which value-synergy ids are currently in their "both conditions met" state per player
-    private static final ConcurrentHashMap<UUID, Set<String>> VALUE_SYNERGY_ACTIVE_STATE =
-            new ConcurrentHashMap<>();
-
     private SourceApplicationPipeline() {}
 
     /**
@@ -72,8 +54,7 @@ public final class SourceApplicationPipeline {
      * @param playerId the player's UUID
      */
     public static void clearPlayer(UUID playerId) {
-        SYNERGY_LAST_FIRED.remove(playerId);
-        VALUE_SYNERGY_ACTIVE_STATE.remove(playerId);
+        SynergyStateRegistry.clearPlayer(playerId);
     }
 
     public static void process(ServerPlayer player, ValueSourceTrigger trigger, ItemStack stack,
@@ -193,8 +174,8 @@ public final class SourceApplicationPipeline {
             if (valueDelta != 0f) {
                 float adjustedDelta = valueDelta * multiplier;
                 afterMultiplierOnly.put(key, adjustedDelta);
-                adjustedDelta = applySeasonalAbsorption(player, key, adjustedDelta);
-                adjustedDelta = applyAbsorptionModifiers(player, key, adjustedDelta);
+                adjustedDelta = ValueAbsorptionAdjuster.applySeasonalAbsorption(player, key, adjustedDelta);
+                adjustedDelta = ValueAbsorptionAdjuster.applyAbsorptionModifiers(player, key, adjustedDelta);
                 adjustedDelta *= MarieAttributes.valueRegenMultiplier(player);
                 ValueModifierContext modifierCtx =
                         ValueModifierContext.of(player, sourceResourceId, key);
@@ -251,9 +232,7 @@ public final class SourceApplicationPipeline {
                     if (elapsed == -1L || elapsed > synergy.getTimeWindowTicks()) {
                         continue;
                     }
-                    Map<String, Long> playerFires = SYNERGY_LAST_FIRED.computeIfAbsent(
-                            player.getUUID(), k -> new ConcurrentHashMap<>());
-                    Long lastFiredTick = playerFires.get(synergy.getId());
+                    Long lastFiredTick = SynergyStateRegistry.getLastFired(player.getUUID(), synergy.getId());
                     if (lastFiredTick != null && currentGameTick - lastFiredTick < synergy.getTimeWindowTicks()) {
                         continue;
                     }
@@ -283,7 +262,7 @@ public final class SourceApplicationPipeline {
                     NeoForge.EVENT_BUS.post(new MarieEvents.SourceAppliedEvent(
                             player, sourceResourceId, bonusKey, finalBonus));
                     MilestoneTracker.onValueApplied(player, bonusKey, finalBonus);
-                    playerFires.put(synergy.getId(), currentGameTick);
+                    SynergyStateRegistry.recordFired(player.getUUID(), synergy.getId(), currentGameTick);
 
                     if (synergy.getValueModifier() != 1.0f && synergy.getModifierDurationTicks() > 0) {
                         SynergyBuffTracker.activate(player.getUUID(), synergy.getBonusValueKey(),
@@ -296,8 +275,6 @@ public final class SourceApplicationPipeline {
         if (FeatureFlagCache.enableSynergies()) {
             var valueSynergies = SynergyRegistry.getValueSynergies();
             if (!valueSynergies.isEmpty()) {
-                Set<String> activeForPlayer = VALUE_SYNERGY_ACTIVE_STATE.computeIfAbsent(
-                        player.getUUID(), k -> ConcurrentHashMap.newKeySet());
                 for (SynergyDefinition synergy : valueSynergies) {
                     String keyA = synergy.getValueKeyA();
                     String keyB = synergy.getValueKeyB();
@@ -308,11 +285,11 @@ public final class SourceApplicationPipeline {
                     }
                     float levelA = tracking.values.getOrDefault(keyA, 0f);
                     float levelB = tracking.values.getOrDefault(keyB, 0f);
-                    boolean currentlyActive = meetsSynergyCondition(levelA, defA, synergy.getConditionA())
-                            && meetsSynergyCondition(levelB, defB, synergy.getConditionB());
-                    boolean wasActive = activeForPlayer.contains(synergy.getId());
+                    boolean currentlyActive = SynergyStateRegistry.meetsSynergyCondition(levelA, defA, synergy.getConditionA())
+                            && SynergyStateRegistry.meetsSynergyCondition(levelB, defB, synergy.getConditionB());
+                    boolean wasActive = SynergyStateRegistry.isActive(player.getUUID(), synergy.getId());
                     if (currentlyActive && !wasActive) {
-                        activeForPlayer.add(synergy.getId());
+                        SynergyStateRegistry.setActive(player.getUUID(), synergy.getId());
                         ResourceLocation effectId = synergy.getBonusEffectId();
                         if (effectId != null) {
                             BuiltInRegistries.MOB_EFFECT.getHolder(effectId).ifPresentOrElse(
@@ -325,7 +302,7 @@ public final class SourceApplicationPipeline {
                                             synergy.getId(), effectId));
                         }
                     } else if (!currentlyActive && wasActive) {
-                        activeForPlayer.remove(synergy.getId());
+                        SynergyStateRegistry.clearActive(player.getUUID(), synergy.getId());
                     }
                 }
             }
@@ -333,7 +310,7 @@ public final class SourceApplicationPipeline {
 
         if (debugApplyLog) {
             Map<String, Float> valuesAfter = snapshotValues(tracking);
-            submitSourceApplyDebug(
+            SourceApplyDebugReporter.submitSourceApplyDebug(
                     player,
                     stack,
                     gameTimeMs,
@@ -351,7 +328,7 @@ public final class SourceApplicationPipeline {
             );
         }
 
-        checkThresholdCrossings(player, tracking);
+        ThresholdCrossingEvaluator.checkThresholdCrossings(player, tracking);
 
         TrackingAttachment.setData(player, tracking);
         ctx.trackingDeltaSyncer().accept(player, tracking);
@@ -389,7 +366,7 @@ public final class SourceApplicationPipeline {
         tracking.lastValues.put(key, oldValue);
         tracking.values.put(key, clamped);
         NeoForge.EVENT_BUS.post(new MarieEvents.ValueChangedEvent(player, key, oldValue, clamped));
-        checkThresholdCrossings(player, tracking);
+        ThresholdCrossingEvaluator.checkThresholdCrossings(player, tracking);
         tracking.lastValues.put(key, clamped);
         return true;
     }
@@ -432,164 +409,9 @@ public final class SourceApplicationPipeline {
         return m;
     }
 
-    private static void submitSourceApplyDebug(
-            ServerPlayer player,
-            ItemStack stack,
-            long gameTimeMs,
-            String itemIdStr,
-            ResourceLocation sourceResourceId,
-            boolean sourceOverride,
-            Map<String, Float> matchedBarWeights,
-            Map<String, Float> rawValueDelta,
-            Map<String, Float> afterMultiplierOnly,
-            Map<String, Float> finalApplied,
-            Map<String, Float> valuesBefore,
-            Map<String, Float> valuesAfter,
-            float multiplier,
-            TrackingData.MultiplierBreakdown breakdown
-    ) {
-        JsonObject root = new JsonObject();
-        root.addProperty("timestamp", MarieDebugLogger.isoTimestamp());
-        root.addProperty("classifier_path", sourceOverride ? "SOURCE_OVERRIDE" : "RESOLVER");
-        root.addProperty("pipeline_stage", sourceOverride ? "SOURCE_OVERRIDE" : "RESOLVER");
-
-        JsonObject playerJo = new JsonObject();
-        playerJo.addProperty("name", player.getName().getString());
-        playerJo.addProperty("uuid", player.getUUID().toString());
-        root.add("player", playerJo);
-
-        JsonObject itemJo = new JsonObject();
-        itemJo.addProperty("id", itemIdStr);
-        itemJo.addProperty("namespace", sourceResourceId.getNamespace());
-        root.add("item", itemJo);
-
-        JsonArray tagMatch = new JsonArray();
-        if (sourceOverride) {
-            String tagPath = MarieContext.get().resolveTagRole("source_override");
-            if (tagPath != null) {
-                tagMatch.add(IMarieConfig.get().modId() + ":" + tagPath);
-            }
-        } else if (matchedBarWeights.isEmpty()) {
-            tagMatch.add("none");
-        } else {
-            matchedBarWeights.keySet().forEach(tagMatch::add);
-        }
-        root.add("tag_match", tagMatch);
-
-        root.add("classifier_signals", new JsonArray());
-        root.add("matched_bars", MarieDebugLogger.floatMapToJson(matchedBarWeights));
-        root.add("recipe_inheritance", new JsonArray());
-        root.add("raw_value_delta", MarieDebugLogger.floatMapToJson(rawValueDelta));
-        root.addProperty("multiplier", MarieDebugLogger.round4(multiplier));
-        root.add("multiplier_breakdown", buildMultiplierBreakdownJson(breakdown));
-        root.add("after_multiplier_value_delta", MarieDebugLogger.floatMapToJson(afterMultiplierOnly));
-        root.add("final_value_delta", MarieDebugLogger.floatMapToJson(finalApplied));
-        root.add("values_before", MarieDebugLogger.floatMapToJson(valuesBefore));
-        root.add("values_after", MarieDebugLogger.floatMapToJson(valuesAfter));
-
-        root.addProperty("game_time_ms", gameTimeMs);
-        root.addProperty("game_time_ticks", player.level().getGameTime());
-        root.addProperty("dimension", player.level().dimension().location().toString());
-
-        MarieDebugLogger.submitSourceLog(root);
-    }
-
-    private static JsonObject buildMultiplierBreakdownJson(TrackingData.MultiplierBreakdown b) {
-        JsonObject o = new JsonObject();
-        if (b == null) {
-            return o;
-        }
-        float fin = b.finalMultiplier();
-        o.addProperty("item_contribution", MarieDebugLogger.round4(b.itemContribution()));
-        o.addProperty("category_contribution", MarieDebugLogger.round4(b.categoryContribution()));
-        o.addProperty("family_contribution", MarieDebugLogger.round4(b.familyContribution()));
-        o.addProperty("novelty_contribution", MarieDebugLogger.round4(b.noveltyContribution()));
-        o.addProperty("final_multiplier", MarieDebugLogger.round4(fin));
-        o.addProperty("item_weight", MarieDebugLogger.round4(b.itemWeight()));
-        o.addProperty("category_weight", MarieDebugLogger.round4(b.categoryWeight()));
-        o.addProperty("family_weight", MarieDebugLogger.round4(b.familyWeight()));
-        o.addProperty("item_percent_of_final", MarieDebugLogger.pctOfFinal(b.itemContribution(), fin));
-        o.addProperty("category_percent_of_final", MarieDebugLogger.pctOfFinal(b.categoryContribution(), fin));
-        o.addProperty("family_percent_of_final", MarieDebugLogger.pctOfFinal(b.familyContribution(), fin));
-        return o;
-    }
-
-    private static void checkThresholdCrossings(ServerPlayer player, TrackingData tracking) {
-        float excessThreshold = IMarieConfig.get().excessThreshold();
-        for (String key : MarieContext.get().valueKeys()) {
-            float current = tracking.values.getOrDefault(key, 0f);
-            float previous = tracking.lastValues.getOrDefault(key, 0f);
-            boolean beneficial = MarieContext.isValueBeneficial(key);
-            float criticalThreshold = IMarieConfig.get().criticalThresholdFor(key);
-
-            if (beneficial) {
-                if (current <= criticalThreshold && previous > criticalThreshold) {
-                    NeoForge.EVENT_BUS.post(new MarieEvents.ValueCriticalEvent(player, key));
-                }
-                if (current >= excessThreshold && previous < excessThreshold) {
-                    NeoForge.EVENT_BUS.post(new MarieEvents.ValueExcessEvent(player, key));
-                }
-            } else {
-                if (current >= excessThreshold && previous < excessThreshold) {
-                    NeoForge.EVENT_BUS.post(new MarieEvents.ValueCriticalEvent(player, key));
-                }
-            }
-        }
-    }
-
-    private static float applySeasonalAbsorption(ServerPlayer player, String valueKey, float baseAmount) {
-        var hooks = SeasonHookRegistry.getAll();
-        if (!FeatureFlagCache.enableSeasonHooks() || hooks.isEmpty()) {
-            return baseAmount;
-        }
-        float amount = baseAmount;
-        for (MarieSeasonHook hook : hooks) {
-            float mult = hook.getSeasonalAbsorptionModifier(valueKey, MarieSeasonHook.Season.SPRING);
-            if (!Float.isFinite(mult)) {
-                MarieCore.LOGGER.warn("[MarieLib] Seasonal modifier returned non-finite value {} for value={} — using 0", mult, valueKey);
-                mult = 0f;
-            }
-            amount *= Math.max(0f, mult);
-        }
-        if (!Float.isFinite(amount)) {
-            MarieCore.LOGGER.warn("[MarieLib] Seasonal absorption result non-finite for value={} — using 0", valueKey);
-            return 0f;
-        }
-        return amount;
-    }
-
-    private static float applyAbsorptionModifiers(ServerPlayer player, String valueKey, float baseAmount) {
-        var modifiers = AbsorptionModifierRegistry.getAll();
-        if (!FeatureFlagCache.enableAbsorptionModifiers() || modifiers.isEmpty()) {
-            return baseAmount;
-        }
-        float amount = baseAmount;
-        for (AbsorptionModifier modifier : modifiers) {
-            float factor = modifier.getAbsorptionMultiplier(player, valueKey, amount);
-            if (!Float.isFinite(factor)) {
-                MarieCore.LOGGER.warn("[MarieLib] Absorption modifier returned non-finite value {} for value={} — using 0", factor, valueKey);
-                factor = 0f;
-            }
-            amount *= Math.max(0f, factor);
-        }
-        if (!Float.isFinite(amount)) {
-            MarieCore.LOGGER.warn("[MarieLib] Absorption modifier result non-finite for value={} — using 0", valueKey);
-            return 0f;
-        }
-        return amount;
-    }
-
     static void resetSnapshotWarnings() {
         WARN_ONCE_SOURCE_APPLIED.set(false);
         THRESHOLD_WARN_ONCE.set(false);
-    }
-
-    private static boolean meetsSynergyCondition(float value, ValueDefinition def, SynergyDefinition.LevelCondition condition) {
-        return switch (condition) {
-            case HIGH -> value >= def.getExcessThreshold();
-            case LOW -> value <= def.getLowThreshold();
-            case OPTIMAL -> value > def.getLowThreshold() && value < def.getExcessThreshold();
-        };
     }
 
     private record DiminishingReturnsConfigOrNull(

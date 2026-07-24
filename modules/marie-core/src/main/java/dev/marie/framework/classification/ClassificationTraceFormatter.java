@@ -3,12 +3,10 @@ package dev.marie.framework.classification;
 import dev.marie.framework.core.MarieContext;
 import net.minecraft.world.item.ItemStack;
 
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * Formats a {@link ClassificationTrace} into the full SOURCE INSPECTOR output.
@@ -17,7 +15,7 @@ import java.util.UUID;
 public final class ClassificationTraceFormatter {
 
     private static final String SEP_FULL = "==================================================";
-    private static final String SEP_HALF = "--------------------------------------------------";
+    static final String SEP_HALF = "--------------------------------------------------";
 
     private ClassificationTraceFormatter() {}
 
@@ -35,8 +33,8 @@ public final class ClassificationTraceFormatter {
         appendInheritanceBreakdown(sb, trace);
         appendAggregation(sb, trace);
         appendWhyWon(sb, trace);
-        appendDiagnostics(sb, trace);
-        appendDeveloperMetadata(sb, trace);
+        ClassificationDiagnosticsFormatter.appendDiagnostics(sb, trace);
+        ClassificationDiagnosticsFormatter.appendDeveloperMetadata(sb, trace);
 
         return sb.toString();
     }
@@ -210,126 +208,6 @@ public final class ClassificationTraceFormatter {
         appendLine(sb, "");
     }
 
-    private static void appendDiagnostics(StringBuilder sb, ClassificationTrace trace) {
-        List<DiagnosticEntry> diagnostics = collectDiagnostics(trace);
-
-        long errorCount = diagnostics.stream().filter(d -> d.isError).count();
-        long warnCount = diagnostics.stream().filter(d -> !d.isError).count();
-        long infoCount = trace.steps().stream().filter(s -> s.status() == TraceStepStatus.SUCCESS).count();
-
-        appendLine(sb, "Diagnostics");
-        appendLine(sb, SEP_HALF);
-        appendKv(sb, "Errors", String.valueOf(errorCount));
-        appendKv(sb, "Warnings", String.valueOf(warnCount));
-        appendKv(sb, "Infos", String.valueOf(infoCount));
-
-        if (!diagnostics.isEmpty()) {
-            appendLine(sb, "");
-            for (DiagnosticEntry entry : diagnostics) {
-                appendLine(sb, (entry.isError ? "ERROR " : "WARNING ") + entry.code);
-                appendLine(sb, "  " + entry.summary);
-                appendLine(sb, "  Cause: " + entry.cause);
-                appendLine(sb, "  Impact: " + entry.impact);
-                if (entry.fix != null) {
-                    appendLine(sb, "  Suggested Fix: " + entry.fix);
-                }
-                appendLine(sb, "");
-            }
-        }
-    }
-
-    private static void appendDeveloperMetadata(StringBuilder sb, ClassificationTrace trace) {
-        List<ClassificationTraceStep> cacheSteps = collectSteps(trace, TraceStepId.RESOLVER_CACHE);
-        String cacheStatus = "MISS";
-        if (!cacheSteps.isEmpty()) {
-            Object hit = cacheSteps.get(0).detail().get("hit");
-            if (Boolean.TRUE.equals(hit)) {
-                cacheStatus = "HIT";
-            }
-        }
-
-        // Trace ID: first 8 chars of UUID derived from itemId + step count
-        String traceSource = trace.itemId() + trace.steps().size();
-        String traceId = UUID.nameUUIDFromBytes(traceSource.getBytes()).toString().substring(0, 8);
-
-        appendLine(sb, "Developer Metadata");
-        appendLine(sb, SEP_HALF);
-        appendKv(sb, "Pipeline", trace.pipeline().name());
-        appendKv(sb, "Trace ID", traceId);
-        appendKv(sb, "Steps", String.valueOf(trace.steps().size()));
-        appendKv(sb, "Uncertain", String.valueOf(trace.uncertain()));
-        appendKv(sb, "Cache", cacheStatus);
-    }
-
-    // ─── Diagnostics collection ───────────────────────────────────────────────
-
-    private static List<DiagnosticEntry> collectDiagnostics(ClassificationTrace trace) {
-        List<DiagnosticEntry> list = new ArrayList<>();
-
-        for (ClassificationTraceStep step : trace.steps()) {
-            Map<String, Object> d = step.detail();
-
-            if (step.id() == TraceStepId.INGREDIENT_RESOLUTION
-                    && (step.status() == TraceStepStatus.FAILURE || step.status() == TraceStepStatus.WARNING)) {
-                String ingredientId = getString(d, "ingredientId", "unknown");
-                list.add(new DiagnosticEntry(
-                        false,
-                        "NRS-W001",
-                        ingredientId + " is currently unclassified.",
-                        "No value source found for ingredient.",
-                        "Ingredient ignored during inheritance.",
-                        "Add to a values/primary tag\n                 OR create a source_classifications datapack entry."
-                ));
-            }
-
-            if (step.id() == TraceStepId.CONFIDENCE && step.status() == TraceStepStatus.WARNING) {
-                list.add(new DiagnosticEntry(
-                        false,
-                        "NRS-W002",
-                        "Classification confidence is below threshold.",
-                        "Signal spread below spread threshold.",
-                        "Classification marked as UNCERTAIN.",
-                        null
-                ));
-            }
-
-            if (step.id() == TraceStepId.HARD_FALLBACK && step.status() == TraceStepStatus.FAILURE) {
-                list.add(new DiagnosticEntry(
-                        true,
-                        "NRS-001",
-                        "Item could not be classified through any pipeline path.",
-                        "No signal source produced a valid classification.",
-                        "Item will appear as unclassified in tracking tracking.",
-                        "Add to a values/* tag or create a datapack entry."
-                ));
-            }
-
-            if (step.id() == TraceStepId.RECIPE_LOOKUP && step.status() == TraceStepStatus.FAILURE) {
-                list.add(new DiagnosticEntry(
-                        true,
-                        "NRS-002",
-                        "No recipe found for this item.",
-                        "Item has no known crafting recipe on the server.",
-                        "Recipe inheritance path unavailable.",
-                        null
-                ));
-            }
-
-            if (step.id() == TraceStepId.PRIMARY_RECIPE_MERGE && step.status() == TraceStepStatus.FAILURE) {
-                list.add(new DiagnosticEntry(
-                        true,
-                        "NRS-003",
-                        "No classified ingredients found in recipe.",
-                        "All recipe ingredients are unclassified.",
-                        "Recipe inheritance produced no value keys.",
-                        "Classify at least one recipe ingredient via value tags."
-                ));
-            }
-        }
-
-        return list;
-    }
-
     // ─── Helpers ─────────────────────────────────────────────────────────────────
 
     private static String deriveConfidence(ClassificationTrace trace) {
@@ -364,7 +242,7 @@ public final class ClassificationTraceFormatter {
         return "N/A";
     }
 
-    private static List<ClassificationTraceStep> collectSteps(ClassificationTrace trace, TraceStepId id) {
+    static List<ClassificationTraceStep> collectSteps(ClassificationTrace trace, TraceStepId id) {
         List<ClassificationTraceStep> result = new ArrayList<>();
         for (ClassificationTraceStep step : trace.steps()) {
             if (step.id() == id) result.add(step);
@@ -372,12 +250,12 @@ public final class ClassificationTraceFormatter {
         return result;
     }
 
-    private static String getString(Map<String, Object> map, String key, String fallback) {
+    static String getString(Map<String, Object> map, String key, String fallback) {
         Object v = map.get(key);
         return v != null ? v.toString() : fallback;
     }
 
-    private static void appendLine(StringBuilder sb, String line) {
+    static void appendLine(StringBuilder sb, String line) {
         sb.append(line).append('\n');
     }
 
@@ -385,18 +263,7 @@ public final class ClassificationTraceFormatter {
         sb.append(line).append('\n');
     }
 
-    private static void appendKv(StringBuilder sb, String label, String value) {
+    static void appendKv(StringBuilder sb, String label, String value) {
         sb.append(label).append(": ").append(value).append('\n');
     }
-
-    // ─── Diagnostic entry ─────────────────────────────────────────────────────
-
-    private record DiagnosticEntry(
-            boolean isError,
-            String code,
-            String summary,
-            String cause,
-            String impact,
-            @Nullable String fix
-    ) {}
 }

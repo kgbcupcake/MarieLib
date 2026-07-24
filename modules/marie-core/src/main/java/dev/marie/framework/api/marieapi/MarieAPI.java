@@ -19,47 +19,16 @@ import dev.marie.framework.api.source.SourcePropertySignal;
 import dev.marie.framework.api.source.SourceTriggerDefinition;
 import dev.marie.framework.api.source.SourceTriggerListener;
 import dev.marie.framework.api.value.ValueDefinition;
-import dev.marie.framework.api.value.ValueModifierContext;
-import dev.marie.framework.api.value.ValueModifierEvent;
 import dev.marie.framework.api.value.ValueSourceTrigger;
-
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 import javax.annotation.Nullable;
 
-import dev.marie.framework.api.impl.EmptyApplicationHistoryView;
-import dev.marie.framework.api.registry.AbsorptionModifierRegistry;
-import dev.marie.framework.api.registry.BlockHoverProviderRegistry;
-import dev.marie.framework.api.registry.MilestoneRegistry;
-import dev.marie.framework.api.registry.ProfileRegistry;
-import dev.marie.framework.api.registry.ReportProviderRegistry;
-import dev.marie.framework.api.registry.SeasonHookRegistry;
-import dev.marie.framework.api.registry.SleepBonusEvaluatorRegistry;
-import dev.marie.framework.api.registry.SourcePropertySignalRegistry;
-import dev.marie.framework.api.registry.SynergyRegistry;
-import dev.marie.framework.api.registry.ValueRegistry;
 import dev.marie.framework.command.CommandCapability;
-import dev.marie.framework.command.CommandCapabilityRegistry;
 import dev.marie.framework.compat.CompatDefinition;
-import dev.marie.framework.core.IMarieConfig;
-import dev.marie.framework.core.MarieContext;
-import dev.marie.framework.core.MarieDataProvider;
-import dev.marie.framework.core.MarieRegistrationDelegate;
-import dev.marie.framework.handler.SourceApplicationPipeline;
-import dev.marie.framework.runtime.SourceTriggerRegistry;
-import dev.marie.framework.runtime.TriggerHandlerRegistry;
-import dev.marie.framework.tagaudit.rule.TagRule;
-import dev.marie.framework.tracking.TrackingAttachment;
-import dev.marie.framework.tracking.TrackingData;
-import dev.marie.framework.util.MarieRegistryUtils;
-import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.neoforge.common.NeoForge;
 
 /**
  * Static entry point for the MarieLib public API.
@@ -73,11 +42,6 @@ import net.neoforged.neoforge.common.NeoForge;
  */
 @ApiStatus.Stable
 public final class MarieAPI {
-
-    private static ResourceLocation apiModifierSource() {
-        String modId = IMarieConfig.get().modId();
-        return ResourceLocation.fromNamespaceAndPath(modId, "api");
-    }
 
     private MarieAPI() {}
 
@@ -95,14 +59,7 @@ public final class MarieAPI {
      */
     @ApiStatus.Stable
     public static float getAggregateLevel(Player player) {
-        if (player == null) {
-            return 0f;
-        }
-        MarieDataProvider provider = MarieContext.get().dataProvider();
-        if (provider == null) {
-            return 0f;
-        }
-        return provider.getAggregateLevel(player);
+        return PlayerStateDelegate.getAggregateLevel(player);
     }
 
     /**
@@ -115,14 +72,7 @@ public final class MarieAPI {
      */
     @ApiStatus.Stable
     public static float getValueLevel(Player player, String valueKey) {
-        if (player == null) {
-            return -1.0f;
-        }
-        MarieDataProvider provider = MarieContext.get().dataProvider();
-        if (provider == null) {
-            return -1.0f;
-        }
-        return provider.getValueLevel(player, valueKey);
+        return PlayerStateDelegate.getValueLevel(player, valueKey);
     }
 
     /**
@@ -135,14 +85,7 @@ public final class MarieAPI {
      */
     @ApiStatus.Stable
     public static ApplicationHistoryView getApplicationHistory(Player player) {
-        if (player == null) {
-            return EmptyApplicationHistoryView.INSTANCE;
-        }
-        MarieDataProvider provider = MarieContext.get().dataProvider();
-        if (provider == null) {
-            return EmptyApplicationHistoryView.INSTANCE;
-        }
-        return provider.getApplicationHistoryView(player);
+        return PlayerStateDelegate.getApplicationHistory(player);
     }
     /**
      * Alias for {@link #getAggregateLevel(Player)}.
@@ -164,18 +107,7 @@ public final class MarieAPI {
      */
     @ApiStatus.Stable
     public static MariePlayerData getTrackingData(Player player) {
-        Map<String, Float> values = new LinkedHashMap<>();
-        MarieRegistrationDelegate delegate = MarieContext.get().registrationDelegate();
-        if (delegate != null) {
-            for (String valueKey : delegate.getValueKeys()) {
-                values.put(valueKey, getValueLevel(player, valueKey));
-            }
-        }
-        return new MariePlayerData(
-                getAggregateLevel(player),
-                Collections.unmodifiableMap(values),
-                getApplicationHistory(player)
-        );
+        return PlayerStateDelegate.getTrackingData(player);
     }
 
     /**
@@ -188,18 +120,7 @@ public final class MarieAPI {
      */
     @ApiStatus.Stable
     public static void modifyValue(Player player, String valueKey, float delta) {
-        MarieRegistryUtils.requireValueKey(valueKey, "MarieAPI.modifyValue");
-        MarieDataProvider provider = MarieContext.get().dataProvider();
-        if (provider == null) {
-            return;
-        }
-        ValueModifierEvent modifierEvent = new ValueModifierEvent(
-                ValueModifierContext.of(player, apiModifierSource(), valueKey), delta);
-        NeoForge.EVENT_BUS.post(modifierEvent);
-        if (modifierEvent.isCanceled()) {
-            return;
-        }
-        provider.modifyValue(player, valueKey, modifierEvent.getAmount());
+        PlayerStateDelegate.modifyValue(player, valueKey, delta);
     }
 
     @ApiStatus.Stable
@@ -223,24 +144,7 @@ public final class MarieAPI {
      */
     @ApiStatus.Stable
     public static void registerValue(ValueDefinition definition) {
-        MarieAPIState.assertRegistrationAllowed("registerValue");
-        MarieRegistrationDelegate delegate = MarieContext.get().registrationDelegate();
-        if (delegate == null) {
-            throw new IllegalStateException("MarieLib registration delegate not configured");
-        }
-        if (definition == null) {
-            throw new IllegalArgumentException("registerValue: definition must not be null");
-        }
-        String id = definition.getId();
-        if (!dev.marie.framework.util.MarieValidation.sanitizeModId(id)) {
-            throw new IllegalArgumentException(
-                    "registerValue: value id must match [a-z0-9_]{1,64}, got: '" + id + "'");
-        }
-        if (delegate.getValueKeys().contains(id)) {
-            throw new IllegalArgumentException("Value already registered: " + id);
-        }
-        delegate.registerValue(definition);
-        ValueRegistry.register(definition);
+        ValueSourceRegistrationDelegate.registerValue(definition);
     }
 
     /**
@@ -264,20 +168,7 @@ public final class MarieAPI {
      */
     @ApiStatus.Stable
     public static void registerSourceClassification(ResourceLocation sourceId, String valueKey, float amount) {
-        MarieAPIState.assertRegistrationAllowed("registerSourceClassification");
-        dev.marie.framework.util.MarieValidation.requireNonNullId(sourceId, "MarieAPI.registerSourceClassification");
-        if (!Float.isFinite(amount)) {
-            throw new IllegalArgumentException("MarieAPI.registerSourceClassification.amount: value must be finite, got " + amount);
-        }
-        if (!net.minecraft.core.registries.BuiltInRegistries.ITEM.containsKey(sourceId)) {
-            org.slf4j.LoggerFactory.getLogger(MarieAPI.class).warn("[MarieAPI] registerSourceClassification: item '{}' not found in BuiltInRegistries.ITEM", sourceId);
-        }
-        MarieRegistryUtils.requireValueKey(valueKey, "MarieAPI.registerSourceClassification");
-        MarieRegistrationDelegate delegate = MarieContext.get().registrationDelegate();
-        if (delegate == null) {
-            throw new IllegalStateException("MarieLib registration delegate not configured");
-        }
-        delegate.registerSourceClassification(sourceId, valueKey, amount);
+        ValueSourceRegistrationDelegate.registerSourceClassification(sourceId, valueKey, amount);
     }
 
     /**
@@ -304,12 +195,7 @@ public final class MarieAPI {
      */
     @ApiStatus.Stable
     public static void registerCustomEffect(ThresholdEffect definition) {
-        MarieAPIState.assertRegistrationAllowed("registerCustomEffect");
-        MarieRegistrationDelegate delegate = MarieContext.get().registrationDelegate();
-        if (delegate == null) {
-            throw new IllegalStateException("MarieLib registration delegate not configured");
-        }
-        delegate.registerEffect(definition);
+        EffectRegistrationDelegate.registerCustomEffect(definition);
     }
 
     /**
@@ -334,8 +220,7 @@ public final class MarieAPI {
      */
     @ApiStatus.Stable
     public static void registerCompatEntry(CompatDefinition definition) {
-        MarieAPIState.assertRegistrationAllowed("registerCompatEntry");
-        dev.marie.framework.compat.ModCompat.registerExternal(definition);
+        CompatRegistrationDelegate.registerCompatEntry(definition);
     }
 
     /**
@@ -362,8 +247,7 @@ public final class MarieAPI {
      */
     @ApiStatus.Stable
     public static void registerValueSynergy(SynergyDefinition definition) {
-        MarieAPIState.assertRegistrationAllowed("registerValueSynergy");
-        SynergyRegistry.registerValueSynergy(definition);
+        SynergyRegistrationDelegate.registerValueSynergy(definition);
     }
 
     /**
@@ -384,8 +268,7 @@ public final class MarieAPI {
      */
     @ApiStatus.Stable
     public static void registerSourcePairSynergy(SourcePairSynergy definition) {
-        MarieAPIState.assertRegistrationAllowed("registerSourcePairSynergy");
-        SynergyRegistry.registerSourcePairSynergy(definition);
+        SynergyRegistrationDelegate.registerSourcePairSynergy(definition);
     }
 
     /**
@@ -410,8 +293,7 @@ public final class MarieAPI {
      */
     @ApiStatus.Stable
     public static void registerTrackingProfile(ProfileDefinition definition) {
-        MarieAPIState.assertRegistrationAllowed("registerTrackingProfile");
-        ProfileRegistry.register(definition);
+        ProfileMilestoneSeasonDelegate.registerTrackingProfile(definition);
     }
 
     /**
@@ -433,8 +315,7 @@ public final class MarieAPI {
      */
     @ApiStatus.Stable
     public static void registerMilestone(MilestoneDefinition definition) {
-        MarieAPIState.assertRegistrationAllowed("registerMilestone");
-        MilestoneRegistry.register(definition);
+        ProfileMilestoneSeasonDelegate.registerMilestone(definition);
     }
 
     /**
@@ -459,8 +340,7 @@ public final class MarieAPI {
      */
     @ApiStatus.Stable
     public static void registerSeasonHook(MarieSeasonHook hook) {
-        MarieAPIState.assertRegistrationAllowed("registerSeasonHook");
-        SeasonHookRegistry.register(hook);
+        ProfileMilestoneSeasonDelegate.registerSeasonHook(hook);
     }
 
     /**
@@ -481,8 +361,7 @@ public final class MarieAPI {
      */
     @ApiStatus.Stable
     public static void registerAbsorptionModifier(AbsorptionModifier modifier) {
-        MarieAPIState.assertRegistrationAllowed("registerAbsorptionModifier");
-        AbsorptionModifierRegistry.register(modifier);
+        HookProviderRegistrationDelegate.registerAbsorptionModifier(modifier);
     }
 
     /**
@@ -503,8 +382,7 @@ public final class MarieAPI {
      */
     @ApiStatus.Stable
     public static void registerReportProvider(ReportProvider provider) {
-        MarieAPIState.assertRegistrationAllowed("registerReportProvider");
-        ReportProviderRegistry.register(provider);
+        ReportingRegistrationDelegate.registerReportProvider(provider);
     }
 
     /**
@@ -527,14 +405,7 @@ public final class MarieAPI {
      */
     @ApiStatus.Experimental
     public static void registerBlockHoverProvider(BlockHoverProvider provider) {
-        if (!MarieAPIState.isRegistrationAllowed()) {
-            throw new IllegalStateException(
-                    "[MarieAPI] Registration closed — registerBlockHoverProvider must be called during mod initialization or datapack reload.");
-        }
-        if (provider == null) {
-            throw new IllegalArgumentException("provider cannot be null");
-        }
-        BlockHoverProviderRegistry.register(provider);
+        HookProviderRegistrationDelegate.registerBlockHoverProvider(provider);
     }
 
     /**
@@ -544,11 +415,22 @@ public final class MarieAPI {
      */
     @ApiStatus.Stable
     public static void registerSourcePropertySignal(SourcePropertySignal signal) {
-        MarieAPIState.assertRegistrationAllowed("registerSourcePropertySignal");
-        if (signal == null) {
-            throw new IllegalArgumentException("signal cannot be null");
-        }
-        SourcePropertySignalRegistry.register(signal);
+        HookProviderRegistrationDelegate.registerSourcePropertySignal(signal);
+    }
+
+    /**
+     * @deprecated {@link ExportResolver} carries no registry key, so this overload has no way
+     * to know which registry to iterate — it cannot be implemented correctly. Use
+     * {@link #registerExportResolver(String, net.minecraft.resources.ResourceKey, ExportResolver)}
+     * instead, which takes the registry key explicitly.
+     * @param resolver the resolver (unused — this overload always throws)
+     * @param <T> the registry entry type
+     * @throws UnsupportedOperationException always
+     */
+    @ApiStatus.Stable
+    @Deprecated
+    public static <T> void registerExportResolver(ExportResolver<T> resolver) {
+        HookProviderRegistrationDelegate.registerExportResolver(resolver);
     }
 
     /**
@@ -556,24 +438,17 @@ public final class MarieAPI {
      * written to an editable config file when {@code /marieslib dump <resolverId>} is run.
      * The consuming mod decides what the exported data means for each entry.
      *
-     * @param resolverId  unique identifier for this export, used as the output filename prefix
+     * @param key         unique identifier for this export, used as the output filename prefix
      * @param registryKey the registry this resolver applies to (e.g. {@link net.minecraft.core.registries.Registries#ITEM})
      * @param resolver    produces exportable data for each entry in the registry
      * @param <T> the registry entry type
      */
     @ApiStatus.Stable
-    public static <T> void registerExportResolver(ExportResolver<T> resolver) {
-        dev.marie.framework.export.ExportResolverRegistry.register(
-                resolver.resolverId(),
-                () -> null);
-    }
-
-    @ApiStatus.Stable
     public static <T> void registerExportResolver(
             String key,
             net.minecraft.resources.ResourceKey<net.minecraft.core.Registry<T>> registryKey,
             ExportResolver<T> resolver) {
-        dev.marie.framework.export.ExportResolverRegistry.registerWithRegistry(key, registryKey, resolver);
+        HookProviderRegistrationDelegate.registerExportResolver(key, registryKey, resolver);
     }
 
     /**
@@ -585,28 +460,7 @@ public final class MarieAPI {
      */
     @ApiStatus.Stable
     public static void registerConfigValidator(ConfigValidator validator) {
-        dev.marie.framework.config.ConfigValidatorRegistry.registerRaw(validator);
-        dev.marie.framework.config.ConfigValidatorRegistry.register(
-                validator.validatorId(),
-                ctx -> {
-                    dev.marie.framework.config.validation.ValidationResult result = validator.validate();
-                    CommandSourceStack source = ctx.getSource();
-                    String prefix = "[" + validator.validatorId() + "] ";
-                    if (result.status() == dev.marie.framework.config.validation.ValidationResult.Status.PASS) {
-                        source.sendSuccess(() -> net.minecraft.network.chat.Component.literal(
-                                prefix + "PASS — no issues found."), false);
-                    } else {
-                        for (dev.marie.framework.config.validation.Finding f : result.findings()) {
-                            String msg = prefix + f.severity().name() + " [" + f.file() + " / " + f.key() + "] " + f.message();
-                            if (f.severity() == dev.marie.framework.config.validation.ValidationResult.Status.FAIL) {
-                                source.sendFailure(net.minecraft.network.chat.Component.literal(msg));
-                            } else {
-                                source.sendSuccess(() -> net.minecraft.network.chat.Component.literal(msg), false);
-                            }
-                        }
-                    }
-                    return result.status() == dev.marie.framework.config.validation.ValidationResult.Status.FAIL ? 0 : 1;
-                });
+        ConfigValidationDelegate.registerConfigValidator(validator);
     }
 
     /**
@@ -617,11 +471,7 @@ public final class MarieAPI {
      */
     @ApiStatus.Stable
     public static void registerSleepBonusEvaluator(SleepBonusEvaluator evaluator) {
-        MarieAPIState.assertRegistrationAllowed("registerSleepBonusEvaluator");
-        if (evaluator == null) {
-            throw new IllegalArgumentException("evaluator cannot be null");
-        }
-        SleepBonusEvaluatorRegistry.register(evaluator);
+        HookProviderRegistrationDelegate.registerSleepBonusEvaluator(evaluator);
     }
 
     /**
@@ -636,11 +486,7 @@ public final class MarieAPI {
      */
     @ApiStatus.Stable
     public static void registerTriggerHandler(SourceTriggerListener handler) {
-        MarieAPIState.assertRegistrationAllowed("registerTriggerHandler");
-        if (handler == null) {
-            throw new IllegalArgumentException("handler cannot be null");
-        }
-        TriggerHandlerRegistry.register(handler);
+        TriggerRegistrationDelegate.registerTriggerHandler(handler);
     }
 
     /**
@@ -652,12 +498,7 @@ public final class MarieAPI {
      */
     @ApiStatus.Stable
     public static void registerTriggerSource(SourceTriggerDefinition definition) {
-        MarieAPIState.assertRegistrationAllowed("registerTriggerSource");
-        if (definition == null) {
-            throw new IllegalArgumentException("definition cannot be null");
-        }
-        MarieRegistryUtils.requireValueKey(definition.getValueKey(), "registerTriggerSource");
-        SourceTriggerRegistry.register(definition);
+        TriggerRegistrationDelegate.registerTriggerSource(definition);
     }
 
     /** Alias for registerTriggerSource. */
@@ -679,7 +520,7 @@ public final class MarieAPI {
      */
     @ApiStatus.Stable
     public static void registerTagRule(dev.marie.framework.tagaudit.rule.TagRule rule) {
-        dev.marie.framework.tagaudit.TagRuleRegistry.register(rule);
+        TagAuditRegistrationDelegate.registerTagRule(rule);
     }
 
     /**
@@ -691,7 +532,7 @@ public final class MarieAPI {
      */
     @ApiStatus.Stable
     public static void registerTagAuditContext(String modId, dev.marie.framework.tagaudit.model.TagAuditContext context) {
-        dev.marie.framework.tagaudit.TagAuditContextRegistry.register(modId, context);
+        TagAuditRegistrationDelegate.registerTagAuditContext(modId, context);
     }
 
     // ───────────────────────────────────────────────────────────────
@@ -703,8 +544,7 @@ public final class MarieAPI {
             ResourceLocation modId,
             ResourceLocation capability,
             CommandCapability handler) {
-        MarieAPIState.assertRegistrationAllowed("registerCommandCapability");
-        CommandCapabilityRegistry.register(modId, capability, handler);
+        CommandCapabilityDelegate.registerCommandCapability(modId, capability, handler);
     }
 
     /**
@@ -721,7 +561,7 @@ public final class MarieAPI {
      */
     @ApiStatus.Stable
     public static void fireSourceTrigger(ServerPlayer player, ValueSourceTrigger trigger) {
-        fireSourceTrigger(player, trigger, null);
+        SourceTriggerFiringDelegate.fireSourceTrigger(player, trigger);
     }
 
     /**
@@ -735,12 +575,6 @@ public final class MarieAPI {
      */
     @ApiStatus.Stable
     public static void fireSourceTrigger(ServerPlayer player, ValueSourceTrigger trigger, @Nullable ItemStack stack) {
-        if (player == null || trigger == null) return;
-        if (!TrackingAttachment.isRegistered()) return;
-        TrackingData tracking = TrackingAttachment.getData(player);
-        long gameTimeMs = player.level().getGameTime() * 50L;
-        tracking.tickTime(gameTimeMs);
-        tracking.tick();
-        SourceApplicationPipeline.process(player, trigger, stack, tracking, gameTimeMs);
+        SourceTriggerFiringDelegate.fireSourceTrigger(player, trigger, stack);
     }
 }

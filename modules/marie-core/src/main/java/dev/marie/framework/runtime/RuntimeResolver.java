@@ -35,9 +35,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReference;
 
 @ApiStatus.Internal
 public final class RuntimeResolver {
@@ -59,12 +56,7 @@ public final class RuntimeResolver {
     private final BoundedLRU<ResourceLocation, ResolutionResult> resolvedCache = new BoundedLRU<>();
     private final BoundedLRU<ResourceLocation, List<ResourceLocation>> recipeCache = new BoundedLRU<>();
     private final ConcurrentHashMap<String, RunningAverage> namespacePeers = new ConcurrentHashMap<>();
-    private final AtomicInteger cacheHits = new AtomicInteger();
-    private final AtomicInteger cacheMisses = new AtomicInteger();
-    private final AtomicLong totalResolveNanos = new AtomicLong(0);
-    private final AtomicLong slowestResolveNanos = new AtomicLong(0);
-    private final AtomicReference<ResourceLocation> slowestItem = new AtomicReference<>(null);
-    private final AtomicInteger recipeTimeouts = new AtomicInteger(0);
+    private final RuntimeResolverStats stats = new RuntimeResolverStats();
 
     private RuntimeResolver() {}
 
@@ -89,11 +81,11 @@ public final class RuntimeResolver {
 
         ResolutionResult cached = resolvedCache.get(itemId);
         if (cached != null) {
-            cacheHits.incrementAndGet();
+            stats.recordHit();
             return cached.toValueMap();
         }
 
-        cacheMisses.incrementAndGet();
+        stats.recordMiss();
         return resolveUncached(stack, itemId, recipeManager).toValueMap();
     }
 
@@ -114,11 +106,11 @@ public final class RuntimeResolver {
 
         ResolutionResult cached = resolvedCache.get(itemId);
         if (cached != null) {
-            cacheHits.incrementAndGet();
+            stats.recordHit();
             return cached.withCacheHit(true);
         }
 
-        cacheMisses.incrementAndGet();
+        stats.recordMiss();
         return resolveUncached(stack, itemId, recipeManager);
     }
 
@@ -176,7 +168,7 @@ public final class RuntimeResolver {
 
         ResolutionResult cached = resolvedCache.get(itemId);
         if (cached != null) {
-            cacheHits.incrementAndGet();
+            stats.recordHit();
             Map<String, Object> cacheDetail = new LinkedHashMap<>();
             cacheDetail.put("cacheKey", itemId.toString());
             cacheDetail.put("hit", true);
@@ -189,7 +181,7 @@ public final class RuntimeResolver {
             return buildTraceFromResult(itemId.toString(), cached.withCacheHit(true), traceOut);
         }
 
-        cacheMisses.incrementAndGet();
+        stats.recordMiss();
         ResolutionResult result = resolveUncached(stack, itemId, recipeManager, traceOut);
         return buildTraceFromResult(itemId.toString(), result, traceOut);
     }
@@ -458,7 +450,7 @@ public final class RuntimeResolver {
                 RunningAverage peerAvg = namespacePeers.get(ns);
                 int peerCount = peerAvg != null ? peerAvg.count() : 0;
                 Map<String, Float> avg = peerAvg != null ? peerAvg.average() : Map.of();
-                float peerSpread = computeSpread(avg);
+                float peerSpread = RuntimeResolverStats.computeSpread(avg);
                 Map<String, Object> peerDetail = new LinkedHashMap<>();
                 peerDetail.put("peerCount", peerCount);
                 peerDetail.put("peerSpread", (double) peerSpread);
@@ -520,31 +512,13 @@ public final class RuntimeResolver {
                 itemId, result.stage().displayName(), String.format("%.2f", result.confidence()), result.debugReason());
 
         long elapsed = System.nanoTime() - start;
-        recordTiming(elapsed, itemId);
+        stats.recordTiming(elapsed, itemId);
 
         return result;
     }
 
-    private void recordTiming(long elapsedNanos, ResourceLocation itemId) {
-        totalResolveNanos.addAndGet(elapsedNanos);
-        for (; ; ) {
-            long prev = slowestResolveNanos.get();
-            if (elapsedNanos < prev) {
-                break;
-            }
-            if (slowestResolveNanos.compareAndSet(prev, elapsedNanos)) {
-                slowestItem.set(itemId);
-                break;
-            }
-        }
-    }
-
     public static void recordRecipeTimeout() {
-        getInstance().incrementRecipeTimeoutsInternal();
-    }
-
-    void incrementRecipeTimeoutsInternal() {
-        recipeTimeouts.incrementAndGet();
+        getInstance().stats.recordRecipeTimeout();
     }
 
     public void invalidateCache() {
@@ -552,40 +526,11 @@ public final class RuntimeResolver {
         resolvedCache.clear();
         recipeCache.clear();
         namespacePeers.clear();
-        totalResolveNanos.set(0);
-        slowestResolveNanos.set(0);
-        slowestItem.set(null);
-        recipeTimeouts.set(0);
+        stats.reset();
         LOGGER.info("[RuntimeResolver] Cache invalidated. Was: {} entries", size);
     }
 
     public CacheStats getCacheStats() {
-        int total = cacheMisses.get();
-        long avg = total == 0 ? 0L : totalResolveNanos.get() / total;
-        return new CacheStats(
-                cacheHits.get(),
-                cacheMisses.get(),
-                resolvedCache.size(),
-                avg,
-                slowestResolveNanos.get(),
-                slowestItem.get(),
-                recipeTimeouts.get()
-        );
-    }
-
-    private static float computeSpread(Map<String, Float> scores) {
-        float first = Float.NEGATIVE_INFINITY;
-        float second = Float.NEGATIVE_INFINITY;
-        for (float v : scores.values()) {
-            if (v > first) {
-                second = first;
-                first = v;
-            } else if (v > second) {
-                second = v;
-            }
-        }
-        if (first == Float.NEGATIVE_INFINITY) return 0f;
-        if (second == Float.NEGATIVE_INFINITY) return first;
-        return first - second;
+        return stats.getCacheStats(resolvedCache.size());
     }
 }

@@ -104,6 +104,12 @@ public final class EditOverlayScreen extends Screen {
         return true;
     }
 
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        target.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
+        return true;
+    }
+
     /** Called when Minecraft closes the screen externally (e.g. player death). */
     @Override
     public void onClose() {

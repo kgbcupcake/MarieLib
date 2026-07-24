@@ -39,7 +39,7 @@ import java.util.function.Function;
  *   <li>Apply 0.5x confidence decay per level</li>
  * </ul>
  */
-@ApiStatus.Internal
+@ApiStatus.Experimental
 public final class RecipeInheritanceResolver {
 
     /**
