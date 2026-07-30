@@ -1,5 +1,6 @@
 package dev.marie.framework.client.config.render;
 
+import dev.marie.framework.api.ApiStatus;
 import dev.marie.framework.api.value.ValueDefinition;
 import dev.marie.framework.color.ColorRegistry;
 import dev.marie.framework.core.MarieContext;
@@ -13,6 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Shared ARGB palette for value keys. Uses registry index for dynamic lookup.
  */
+@ApiStatus.Experimental
 public final class MarieValueColors {
 
     /** Transient UI overrides (e.g. config preview / color pickers); never persisted to disk. */

@@ -1,5 +1,7 @@
 package dev.marie.framework.ui.component;
 
+import dev.marie.framework.api.ApiStatus;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -15,6 +17,7 @@ import java.util.Map;
  * param below for how a consumer gets independent, non-interfering module lists (e.g. one per
  * screen region) out of a single shared static instance.
  */
+@ApiStatus.Experimental
 public final class ModuleRegistry {
 
     private static final Map<String, List<ModuleFactory<?>>> MODULES = new LinkedHashMap<>();

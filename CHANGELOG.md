@@ -2,6 +2,38 @@
 
 <!-- markdownlint-disable MD013 -->
 
+## [Unreleased]
+
+### Changed
+
+- `ModuleRegistry` / `ComponentState` / `MarieComponent` (`dev.marie.framework.ui.component`, marie-ui) now carry `@ApiStatus.Experimental`, matching the tier already used on `DraggableResizable` / `ForeignScreenDetector` in the same module — these three were previously unannotated despite being load-bearing extension points with real external consumers. Documentation/API-surface clarity only, no behavior change.
+
+## [MariesLib 0.1.1-beta.5] — 2026-07-26
+
+Two new generic, consumer-agnostic primitives: client-side foreign-screen detection by menu-type registry name, and a generic block-scoped state sync packet from client to server.
+
+### Added
+
+- `ForeignScreenDetector` (`dev.marie.framework.ui`, marie-ui)
+  - Lets a consuming mod register a `(ResourceLocation menuTypeId, Consumer<Screen> callback)` pair and get called back whenever a `ScreenEvent.Opening` screen's menu type matches, by registry name only
+  - Never references any foreign mod's screen/menu class — matches purely via `BuiltInRegistries.MENU.getKey(...)` read off the opened menu
+  - Lazily subscribes to `NeoForge.EVENT_BUS` on first `registerInterest` call
+- `GenericStateSyncPayload` (`dev.marie.framework.network`, marie-core)
+  - `CustomPacketPayload` carrying a `BlockPos` plus an opaque `CompoundTag`, for a consuming mod to sync small block-scoped state to the server without defining its own payload type or channel
+  - `sendToServer(BlockPos, CompoundTag)` for client-side callers
+- `MarieAPI.registerGenericStateSyncHandler(BiConsumer<ServerPlayer, GenericStateSyncPayload>)`
+  - Registers a server-side handler for inbound `GenericStateSyncPayload`s, gated by `MarieAPIState.assertRegistrationAllowed` like the rest of `MarieAPI`'s registration surface
+  - `MarieNetworking` registers the payload type via `RegisterPayloadHandlersEvent` and dispatches received payloads to all registered handlers
+
+### Changed
+
+- `MarieValueColors` / `GuiValueRenderer` (`dev.marie.framework.client.config.render`, marie-ui) now carry `@ApiStatus.Experimental`, matching their confirmed use by an external consumer mod — documentation/API-surface clarity only, no behavior change
+
+### Fixed
+
+- `ForeignScreenDetector.onScreenOpening` no longer crashes when the opened screen's menu wasn't constructed through the standard type-registry path (e.g. `advancements_reloaded`'s custom advancements screen), which previously threw an uncaught `UnsupportedOperationException` from `AbstractContainerMenu.getType()`
+  - A screen with no menu is now skipped silently; a menu that rejects `getType()` is logged at DEBUG and treated as no match instead of propagating the exception
+
 ## [MariesLib 0.1.1-beta.4] — 2026-07-24
 
 Scanner signal stages extracted into the `ResolutionStageHandler` cascade shape, `ComponentClassifier` wired into recipe-inheritance fallback, `DeathNutritionBehavior` renamed for domain-agnosticism, a marie-core/marie-ui/marie-commands audit for leftover food/nutrition-specific naming, tooltip message/color customization, excluded-item tooltip handling, a bundled-resource lookup fix, an excluded-items registry, and recipe-inheritance score merging for tagged items.

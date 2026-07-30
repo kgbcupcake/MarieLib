@@ -1,5 +1,6 @@
 package dev.marie.framework.ui.component;
 
+import dev.marie.framework.api.ApiStatus;
 import dev.marie.framework.ui.RenderContext;
 import dev.marie.framework.ui.VisibilityRule;
 import dev.marie.framework.ui.geometry.Bounds;
@@ -9,6 +10,7 @@ import dev.marie.framework.ui.geometry.Bounds;
  * A {@link Container} is just a MarieComponent that owns children — there is no special case here
  * for windows; a future Window is a Container like any other.
  */
+@ApiStatus.Experimental
 public interface MarieComponent {
 
     /** Stable identity used for persistence lookups and diffing; not necessarily unique across an entire screen tree. */

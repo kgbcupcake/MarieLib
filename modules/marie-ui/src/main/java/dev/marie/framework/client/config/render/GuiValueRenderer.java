@@ -1,11 +1,13 @@
 package dev.marie.framework.client.config.render;
 
+import dev.marie.framework.api.ApiStatus;
 import dev.marie.framework.api.value.ValueRenderer;
 import net.minecraft.client.gui.GuiGraphics;
 
 /**
  * Client-side {@link ValueRenderer} with a {@link GuiGraphics} draw contract.
  */
+@ApiStatus.Experimental
 public interface GuiValueRenderer extends ValueRenderer {
 
     /**
