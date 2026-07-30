@@ -4,6 +4,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import dev.marie.framework.api.registry.BlockHoverProviderRegistry;
+import dev.marie.framework.api.registry.GenericStateSyncHandlerRegistry;
 
 import dev.marie.framework.color.ColorRegistry;
 import dev.marie.framework.compat.AutoCompatDiscovery;
@@ -182,6 +183,8 @@ public final class MarieBootstrap {
         frameworkServicesAttached = true;
         modEventBus.addListener((FMLCommonSetupEvent event) ->
                 event.enqueueWork(BlockHoverProviderRegistry::freezeInternal));
+        modEventBus.addListener((FMLCommonSetupEvent event) ->
+                event.enqueueWork(GenericStateSyncHandlerRegistry::freezeInternal));
     }
 
     private static boolean registriesRegistered;

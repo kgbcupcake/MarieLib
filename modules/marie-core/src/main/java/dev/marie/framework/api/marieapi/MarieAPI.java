@@ -20,8 +20,11 @@ import dev.marie.framework.api.source.SourceTriggerDefinition;
 import dev.marie.framework.api.source.SourceTriggerListener;
 import dev.marie.framework.api.value.ValueDefinition;
 import dev.marie.framework.api.value.ValueSourceTrigger;
+import dev.marie.framework.network.GenericStateSyncPayload;
 
 import javax.annotation.Nullable;
+
+import java.util.function.BiConsumer;
 
 import dev.marie.framework.command.CommandCapability;
 import dev.marie.framework.compat.CompatDefinition;
@@ -576,5 +579,26 @@ public final class MarieAPI {
     @ApiStatus.Stable
     public static void fireSourceTrigger(ServerPlayer player, ValueSourceTrigger trigger, @Nullable ItemStack stack) {
         SourceTriggerFiringDelegate.fireSourceTrigger(player, trigger, stack);
+    }
+
+    // ───────────────────────────────────────────────────────────────
+    // Registration — Networking
+    // ───────────────────────────────────────────────────────────────
+
+    /**
+     * Registers a server-side handler invoked whenever a client sends a
+     * {@link GenericStateSyncPayload}. MarieLib does not interpret the payload's tag — the
+     * handler defines what the synced state means and how to apply it.
+     *
+     * <p>Must be called during mod initialization (before the server starts).</p>
+     *
+     * @param handler called on the server network thread's work queue with the sending player
+     *                 and the received payload
+     * @throws IllegalStateException    if called after initialization is complete
+     * @throws IllegalArgumentException if {@code handler} is null
+     */
+    @ApiStatus.Experimental
+    public static void registerGenericStateSyncHandler(BiConsumer<ServerPlayer, GenericStateSyncPayload> handler) {
+        NetworkRegistrationDelegate.registerGenericStateSyncHandler(handler);
     }
 }

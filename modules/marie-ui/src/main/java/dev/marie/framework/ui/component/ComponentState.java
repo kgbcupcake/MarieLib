@@ -1,5 +1,7 @@
 package dev.marie.framework.ui.component;
 
+import dev.marie.framework.api.ApiStatus;
+
 /**
  * Persisted position, size, and state for a component, stored externally by component id.
  *
@@ -12,6 +14,7 @@ package dev.marie.framework.ui.component;
  * box bounds (above) — e.g. a zoomable inner element. Defaults to {@code 1.0} (no scaling) for any
  * component that doesn't use this.
  */
+@ApiStatus.Experimental
 public record ComponentState(
         int x,
         int y,
