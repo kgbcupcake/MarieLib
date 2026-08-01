@@ -57,11 +57,18 @@ public final class InstanceTagRegistry implements InstanceTagSource {
     @Override
     public boolean contains(String modId, String tagSuffix, ResourceLocation itemId) {
         Map<String, Set<ResourceLocation>> byTag = data.get(modId);
+        // TEMP DEBUG - remove after diagnosis
+        MarieCore.LOGGER.info("[TEMPDEBUG][InstanceTagRegistry] contains() modId={} tagSuffix={} itemId={} knownModIds={} byTagForModIdIsNull={}",
+                modId, tagSuffix, itemId, data.keySet(), byTag == null);
         if (byTag == null) {
             return false;
         }
         Set<ResourceLocation> items = byTag.get(tagSuffix);
-        return items != null && items.contains(itemId);
+        boolean result = items != null && items.contains(itemId);
+        // TEMP DEBUG - remove after diagnosis
+        MarieCore.LOGGER.info("[TEMPDEBUG][InstanceTagRegistry] tagSuffix={} knownSuffixesForModId={} result={}",
+                tagSuffix, byTag.keySet(), result);
+        return result;
     }
 
     /**

@@ -18,6 +18,7 @@ import dev.marie.framework.scan.RuntimeCascadeStage;
 import dev.marie.framework.scan.RuntimeResolutionMerge;
 import dev.marie.framework.scan.StageContext;
 import dev.marie.framework.scan.StageMath;
+import dev.marie.framework.scanner.RecipeInheritanceResolver;
 import dev.marie.framework.scanner.ScannerSpecRegistry;
 import dev.marie.framework.util.MarieRegistryUtils;
 import net.minecraft.core.Holder;
@@ -54,14 +55,19 @@ public final class RuntimeResolver {
     }
 
     private final BoundedLRU<ResourceLocation, ResolutionResult> resolvedCache = new BoundedLRU<>();
-    private final BoundedLRU<ResourceLocation, List<ResourceLocation>> recipeCache = new BoundedLRU<>();
+    private final RecipeInheritanceResolver recipeInheritanceResolver = new RecipeInheritanceResolver(null);
     private final ConcurrentHashMap<String, RunningAverage> namespacePeers = new ConcurrentHashMap<>();
     private final RuntimeResolverStats stats = new RuntimeResolverStats();
 
     private RuntimeResolver() {}
 
-    public BoundedLRU<ResourceLocation, List<ResourceLocation>> recipeCache() {
-        return recipeCache;
+    public RecipeInheritanceResolver recipeInheritanceResolver() {
+        return recipeInheritanceResolver;
+    }
+
+    public void buildRecipeIndex(RecipeManager recipeManager) {
+        recipeInheritanceResolver.clearCache();
+        recipeInheritanceResolver.buildIndex(recipeManager);
     }
 
     public Map<String, Float> resolve(ItemStack stack, @Nullable RecipeManager recipeManager) {
@@ -524,7 +530,7 @@ public final class RuntimeResolver {
     public void invalidateCache() {
         int size = resolvedCache.size();
         resolvedCache.clear();
-        recipeCache.clear();
+        recipeInheritanceResolver.clearCache();
         namespacePeers.clear();
         stats.reset();
         LOGGER.info("[RuntimeResolver] Cache invalidated. Was: {} entries", size);

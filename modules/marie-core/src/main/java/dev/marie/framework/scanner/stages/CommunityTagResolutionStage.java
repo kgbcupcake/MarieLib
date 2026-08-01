@@ -2,6 +2,7 @@ package dev.marie.framework.scanner.stages;
 
 import dev.marie.framework.api.ApiStatus;
 import dev.marie.framework.core.MarieContext;
+import dev.marie.framework.core.MarieCore;
 import dev.marie.framework.scan.ResolutionResult;
 import dev.marie.framework.scan.ResolutionStageHandler;
 import dev.marie.framework.scan.RuntimeCascadeStage;
@@ -50,6 +51,9 @@ public final class CommunityTagResolutionStage implements ResolutionStageHandler
             String tagSuffix = entry.getKey();
             TagKey<Item> tagKey = TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath("c", C_COMMUNITY_TAG_PREFIX + tagSuffix));
             boolean inInstanceTags = modId != null && InstanceTagSourceRegistry.contains(modId, tagSuffix, itemId);
+            // TEMP DEBUG - remove after diagnosis
+            MarieCore.LOGGER.info("[TEMPDEBUG][CommunityTagResolutionStage] modId={} tagSuffix={} itemId={} inInstanceTags={}",
+                    modId, tagSuffix, itemId, inInstanceTags);
             if (ctx.holder().is(tagKey) || inInstanceTags) {
                 for (Entry<String, Float> contrib : entry.getValue().entrySet()) {
                     contributions.merge(contrib.getKey(), contrib.getValue(), Float::sum);

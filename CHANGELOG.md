@@ -7,6 +7,7 @@
 ### Changed
 
 - `ModuleRegistry` / `ComponentState` / `MarieComponent` (`dev.marie.framework.ui.component`, marie-ui) now carry `@ApiStatus.Experimental`, matching the tier already used on `DraggableResizable` / `ForeignScreenDetector` in the same module — these three were previously unannotated despite being load-bearing extension points with real external consumers. Documentation/API-surface clarity only, no behavior change.
+- `RuntimeResolver` (`dev.marie.framework.runtime`, marie-core) now owns the shared `RecipeInheritanceResolver` instance directly instead of a dead, never-populated `recipeCache` field — `invalidateCache()` now actually clears the real recipe-inheritance index instead of a no-op field. Consumers (e.g. Nourished's `RuntimeFoodResolver`) now source the shared instance from `RuntimeResolver.getInstance()` instead of owning their own copy, so there is exactly one instance and one owner.
 
 ## [MariesLib 0.1.1-beta.5] — 2026-07-26
 
