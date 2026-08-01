@@ -65,6 +65,9 @@ public final class SourceApplicationPipeline {
 
         var ctx = MarieContext.get();
 
+        DiminishingReturnsConfigOrNull config = resolveMemoryConfig();
+        tracking.setMemoryConfig(config.config());
+
         MarieEvents.SourceTriggerEvent triggerEvent =
                 new MarieEvents.SourceTriggerEvent(player, trigger);
         NeoForge.EVENT_BUS.post(triggerEvent);
@@ -80,8 +83,6 @@ public final class SourceApplicationPipeline {
                 && ctx.isLightSourceBlocked(player, trigger)) {
             return;
         }
-        DiminishingReturnsConfigOrNull config = resolveMemoryConfig();
-        tracking.setMemoryConfig(config.config());
         boolean debugApplyLog = FeatureFlagCache.enableDebugLogging();
         Map<String, Float> valuesBefore = debugApplyLog ? snapshotValues(tracking) : Map.of();
 

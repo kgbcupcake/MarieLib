@@ -6,6 +6,11 @@
 
 ### Added
 
+- Generic server→client config/registry sync mechanism (`dev.marie.framework.resources`, marie-resources), replacing the need for consuming mods to hand-roll their own full-state sync payload/channel/login-handler per registry (this is what Nourished's `SyncNourishedConfigSnapshot`/`NourishedSyncHandler` did before):
+  - `GenericConfigSyncPayload` (`dev.marie.framework.resources.network`) — `CustomPacketPayload` carrying a registry id plus an opaque `CompoundTag`, sent server→client via `registrar.playToClient(...)`
+  - `MarieResourcesAPI` (`dev.marie.framework.resources.api`) — the module's public facade: `registerConfigSyncSupplier`/`registerConfigSyncClientHandler` register the server-side snapshot builder and client-side apply function for a registry id; `broadcastConfigSyncReload` rebuilds and resends one registry's snapshot to all connected players; `getConfigSyncState` (client-side) reports `SyncState.UNINITIALIZED`/`PENDING`/`ACTIVE` per registry id
+  - On player login, every registered registry's snapshot is built and sent automatically; unknown/unregistered incoming registry ids on the client are logged and ignored, not thrown
+  - Self-registers its `RegisterPayloadHandlersEvent` listener and `PlayerEvent.PlayerLoggedInEvent` hook via `@EventBusSubscriber(modid = MarieCore.MOD_ID)`, so marie-core never references marie-resources directly, per the locked one-directional module graph
 - `GameplayTriggerListener` (`dev.marie.framework.handler`, marie-core) wires real detection into the previously-dormant `ValueSourceTrigger.TriggerType.BLOCK_BROKEN` and `ENTITY_KILLED` cases — `BlockEvent.BreakEvent` and player-caused `LivingDeathEvent`s now fire `MarieAPI.fireSourceTrigger` directly. Detection only; MarieLib still has no opinion on what these triggers mean.
 - `ValueEffectsListener.onPlayerTick` (marie-core) now also fires `ValueSourceTrigger.TriggerType.TICK` (via `ValueSourceTrigger.tick("sprint")` / `tick("swim")`) whenever a player is sprinting or swimming, reusing the existing `APPLY_INTERVAL_TICKS` gating rather than adding a new listener.
 
@@ -16,6 +21,7 @@
 
 ### Fixed
 
+- `SourceApplicationPipeline.process` (marie-core) now injects the player's `DiminishingReturnsConfig` into `TrackingData` (`tracking.setMemoryConfig(...)`) before posting `MarieEvents.SourceTriggerEvent`, not after. Consumer-mod listeners subscribed to `SourceTriggerEvent` that synchronously read tracking data (e.g. `toDeltaPayload()`, `getMostFatiguedFamilies()`, `config()`) previously ran against a `TrackingData` with a null `memoryConfig` and crashed with `IllegalStateException("[MarieLib] DiminishingReturnsConfig not injected...")`. Root cause was event/injection ordering, not a missing injection call — no other injection sites were touched.
 - `GameplayTriggerListener` / `ValueEffectsListener.fireStateTicks` (marie-core) now pass `ItemStack.EMPTY` instead of `null` when firing `BLOCK_BROKEN` / `ENTITY_KILLED` / `TICK` triggers — the two-arg `MarieAPI.fireSourceTrigger` overload resolves to a `null` stack internally, which crashed downstream item-agnostic consumers (e.g. Nourished's `registerSlim` callback) with an NPE on `.getItem()` on every sprint/swim tick. `ItemStack.EMPTY` is the documented "no item" sentinel for non-item triggers per `ValueSourceTrigger`'s own convention.
 - Removed leftover `TEMPDEBUG` diagnostic logging from `InstanceTagSourceRegistry.contains()` (marie-core) and `InstanceTagRegistry.contains()` (marie-resources) — both fired an ungated `LOGGER.info` on every call and had become log noise now that `CommunityTagResolutionStage` calls into this path far more frequently.
 
