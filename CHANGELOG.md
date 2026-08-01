@@ -4,10 +4,20 @@
 
 ## [Unreleased]
 
+### Added
+
+- `GameplayTriggerListener` (`dev.marie.framework.handler`, marie-core) wires real detection into the previously-dormant `ValueSourceTrigger.TriggerType.BLOCK_BROKEN` and `ENTITY_KILLED` cases — `BlockEvent.BreakEvent` and player-caused `LivingDeathEvent`s now fire `MarieAPI.fireSourceTrigger` directly. Detection only; MarieLib still has no opinion on what these triggers mean.
+- `ValueEffectsListener.onPlayerTick` (marie-core) now also fires `ValueSourceTrigger.TriggerType.TICK` (via `ValueSourceTrigger.tick("sprint")` / `tick("swim")`) whenever a player is sprinting or swimming, reusing the existing `APPLY_INTERVAL_TICKS` gating rather than adding a new listener.
+
 ### Changed
 
 - `ModuleRegistry` / `ComponentState` / `MarieComponent` (`dev.marie.framework.ui.component`, marie-ui) now carry `@ApiStatus.Experimental`, matching the tier already used on `DraggableResizable` / `ForeignScreenDetector` in the same module — these three were previously unannotated despite being load-bearing extension points with real external consumers. Documentation/API-surface clarity only, no behavior change.
 - `RuntimeResolver` (`dev.marie.framework.runtime`, marie-core) now owns the shared `RecipeInheritanceResolver` instance directly instead of a dead, never-populated `recipeCache` field — `invalidateCache()` now actually clears the real recipe-inheritance index instead of a no-op field. Consumers (e.g. Nourished's `RuntimeFoodResolver`) now source the shared instance from `RuntimeResolver.getInstance()` instead of owning their own copy, so there is exactly one instance and one owner.
+
+### Fixed
+
+- `GameplayTriggerListener` / `ValueEffectsListener.fireStateTicks` (marie-core) now pass `ItemStack.EMPTY` instead of `null` when firing `BLOCK_BROKEN` / `ENTITY_KILLED` / `TICK` triggers — the two-arg `MarieAPI.fireSourceTrigger` overload resolves to a `null` stack internally, which crashed downstream item-agnostic consumers (e.g. Nourished's `registerSlim` callback) with an NPE on `.getItem()` on every sprint/swim tick. `ItemStack.EMPTY` is the documented "no item" sentinel for non-item triggers per `ValueSourceTrigger`'s own convention.
+- Removed leftover `TEMPDEBUG` diagnostic logging from `InstanceTagSourceRegistry.contains()` (marie-core) and `InstanceTagRegistry.contains()` (marie-resources) — both fired an ungated `LOGGER.info` on every call and had become log noise now that `CommunityTagResolutionStage` calls into this path far more frequently.
 
 ## [MariesLib 0.1.1-beta.5] — 2026-07-26
 

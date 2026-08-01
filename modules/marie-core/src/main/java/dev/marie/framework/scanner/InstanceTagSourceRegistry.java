@@ -1,7 +1,6 @@
 package dev.marie.framework.scanner;
 
 import dev.marie.framework.api.ApiStatus;
-import dev.marie.framework.core.MarieCore;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.List;
@@ -28,9 +27,6 @@ public final class InstanceTagSourceRegistry {
      * typically be exactly one, but this doesn't assume that.
      */
     public static boolean contains(String modId, String tagSuffix, ResourceLocation itemId) {
-        // TEMP DEBUG - remove after diagnosis
-        MarieCore.LOGGER.info("[TEMPDEBUG][InstanceTagSourceRegistry] contains() called with modId={} tagSuffix={} itemId={} registeredSources={}",
-                modId, tagSuffix, itemId, SOURCES.size());
         for (InstanceTagSource source : SOURCES) {
             if (source.contains(modId, tagSuffix, itemId)) {
                 return true;
