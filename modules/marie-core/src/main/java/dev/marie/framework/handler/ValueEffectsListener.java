@@ -61,7 +61,7 @@ public class ValueEffectsListener {
             }
             MarieAPI.fireSourceTrigger(player, ValueSourceTrigger.tick("sprint"), ItemStack.EMPTY);
         }
-        if (player.isSwimming()) {
+        if (player.isSwimming() && player.isInWater()) {
             if (FeatureFlagCache.enableDebugLogging()) {
                 MarieCore.LOGGER.debug("[ValueEffectsListener] TICK fired: swim player={}",
                         player.getName().getString());
