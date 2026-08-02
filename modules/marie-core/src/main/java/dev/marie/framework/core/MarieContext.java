@@ -136,6 +136,11 @@ public final class MarieContext implements MarieLibSettings, IMarieConfig {
     private final Runnable cacheInvalidatedHook;
     private final Consumer<MinecraftServer> reloadBroadcastHook;
     private final BiFunction<ValueModifierContext, Float, Float> postValueModifierHook;
+    private final Supplier<Boolean> trackerSystemEnabled;
+    private final Supplier<Integer> trackerMaxRetention;
+    private final Supplier<Integer> trackerWeeklyPeriodDays;
+    private final Supplier<Integer> trackerMonthlyPeriodDays;
+    private final BiConsumer<ServerPlayer, dev.marie.framework.tracking.tracker.definition.TrackerHistoryEntry> onTrackerPeriodCompletedHook;
 
     private MarieContext(Builder builder) {
         this.modId = builder.modId;
@@ -199,6 +204,11 @@ public final class MarieContext implements MarieLibSettings, IMarieConfig {
         this.cacheInvalidatedHook = builder.cacheInvalidatedHook;
         this.reloadBroadcastHook = builder.reloadBroadcastHook;
         this.postValueModifierHook = builder.postValueModifierHook;
+        this.trackerSystemEnabled = builder.trackerSystemEnabled;
+        this.trackerMaxRetention = builder.trackerMaxRetention;
+        this.trackerWeeklyPeriodDays = builder.trackerWeeklyPeriodDays;
+        this.trackerMonthlyPeriodDays = builder.trackerMonthlyPeriodDays;
+        this.onTrackerPeriodCompletedHook = builder.onTrackerPeriodCompletedHook;
     }
 
     @ApiStatus.Stable
@@ -577,6 +587,35 @@ public final class MarieContext implements MarieLibSettings, IMarieConfig {
         return postValueModifierHook.apply(ctx, amount);
     }
 
+    @Override
+    @ApiStatus.Internal
+    public boolean trackerSystemEnabled() {
+        return trackerSystemEnabled.get();
+    }
+
+    @Override
+    @ApiStatus.Internal
+    public int trackerMaxRetention() {
+        return trackerMaxRetention.get();
+    }
+
+    @Override
+    @ApiStatus.Internal
+    public int trackerWeeklyPeriodDays() {
+        return trackerWeeklyPeriodDays.get();
+    }
+
+    @Override
+    @ApiStatus.Internal
+    public int trackerMonthlyPeriodDays() {
+        return trackerMonthlyPeriodDays.get();
+    }
+
+    @ApiStatus.Experimental
+    public BiConsumer<ServerPlayer, dev.marie.framework.tracking.tracker.definition.TrackerHistoryEntry> onTrackerPeriodCompletedHook() {
+        return onTrackerPeriodCompletedHook;
+    }
+
     @Nullable
     @ApiStatus.Internal
     public MarieDataProvider dataProvider() {
@@ -747,6 +786,11 @@ public final class MarieContext implements MarieLibSettings, IMarieConfig {
         private Runnable cacheInvalidatedHook = () -> {};
         private Consumer<MinecraftServer> reloadBroadcastHook = server -> {};
         private BiFunction<ValueModifierContext, Float, Float> postValueModifierHook = (ctx, amount) -> amount;
+        private Supplier<Boolean> trackerSystemEnabled = () -> true;
+        private Supplier<Integer> trackerMaxRetention = () -> 90;
+        private Supplier<Integer> trackerWeeklyPeriodDays = () -> 7;
+        private Supplier<Integer> trackerMonthlyPeriodDays = () -> 30;
+        private BiConsumer<ServerPlayer, dev.marie.framework.tracking.tracker.definition.TrackerHistoryEntry> onTrackerPeriodCompletedHook = (p, e) -> {};
 
         private Builder(String modId) {
             this.modId = modId;
@@ -872,6 +916,20 @@ public final class MarieContext implements MarieLibSettings, IMarieConfig {
         @ApiStatus.Experimental
         public Builder postValueModifierHook(BiFunction<ValueModifierContext, Float, Float> hook) {
             this.postValueModifierHook = hook != null ? hook : (ctx, amount) -> amount;
+            return this;
+        }
+        @ApiStatus.Experimental
+        public Builder trackerSystemEnabled(Supplier<Boolean> s) { this.trackerSystemEnabled = s; return this; }
+        @ApiStatus.Experimental
+        public Builder trackerMaxRetention(Supplier<Integer> s) { this.trackerMaxRetention = s; return this; }
+        @ApiStatus.Experimental
+        public Builder trackerWeeklyPeriodDays(Supplier<Integer> s) { this.trackerWeeklyPeriodDays = s; return this; }
+        @ApiStatus.Experimental
+        public Builder trackerMonthlyPeriodDays(Supplier<Integer> s) { this.trackerMonthlyPeriodDays = s; return this; }
+        @ApiStatus.Experimental
+        public Builder onTrackerPeriodCompleted(
+                BiConsumer<ServerPlayer, dev.marie.framework.tracking.tracker.definition.TrackerHistoryEntry> hook) {
+            this.onTrackerPeriodCompletedHook = hook != null ? hook : (p, e) -> {};
             return this;
         }
         @ApiStatus.Stable

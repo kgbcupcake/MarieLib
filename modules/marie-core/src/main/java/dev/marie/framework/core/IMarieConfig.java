@@ -63,4 +63,12 @@ public interface IMarieConfig extends MarieLibSettings {
     PresetRegistry.PresetValues currentConfigPresetValues();
 
     void applyPresetValues(PresetRegistry.PresetValues values);
+
+    boolean trackerSystemEnabled();
+
+    int trackerMaxRetention();
+
+    int trackerWeeklyPeriodDays();
+
+    int trackerMonthlyPeriodDays();
 }

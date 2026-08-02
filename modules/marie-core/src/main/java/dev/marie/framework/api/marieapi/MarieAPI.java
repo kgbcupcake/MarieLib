@@ -24,6 +24,7 @@ import dev.marie.framework.network.GenericStateSyncPayload;
 
 import javax.annotation.Nullable;
 
+import java.util.List;
 import java.util.function.BiConsumer;
 
 import dev.marie.framework.command.CommandCapability;
@@ -600,5 +601,66 @@ public final class MarieAPI {
     @ApiStatus.Experimental
     public static void registerGenericStateSyncHandler(BiConsumer<ServerPlayer, GenericStateSyncPayload> handler) {
         NetworkRegistrationDelegate.registerGenericStateSyncHandler(handler);
+    }
+
+    // ───────────────────────────────────────────────────────────────
+    // Registration — Trackers
+    // ───────────────────────────────────────────────────────────────
+
+    /**
+     * Registers a tracker definition with the generic tracker/period-history framework.
+     * MarieLib manages accumulation, period boundaries, and bounded history — it has no
+     * domain knowledge of what the tracker measures.
+     *
+     * <p>Must be called during mod initialization or datapack reload.</p>
+     *
+     * @param definition the tracker definition to register
+     * @throws IllegalStateException    if called outside the registration window
+     * @throws IllegalArgumentException if {@code definition} is null, retention is less than 1,
+     *                                   or retention exceeds the configured maximum
+     */
+    @ApiStatus.Stable
+    public static void registerTracker(dev.marie.framework.tracking.tracker.definition.TrackerDefinition definition) {
+        TrackerRegistrationDelegate.registerTracker(definition);
+    }
+
+    /**
+     * Adds {@code amount} to a player's current-period accumulator for the given tracker.
+     * No-ops if the tracker system is disabled via configuration.
+     *
+     * @param player    the server-side player to update
+     * @param trackerId the registered tracker's id
+     * @param amount    the amount to add to the current period's accumulator
+     * @throws IllegalArgumentException if no tracker is registered with {@code trackerId}
+     */
+    @ApiStatus.Stable
+    public static void incrementTracker(ServerPlayer player, ResourceLocation trackerId, float amount) {
+        TrackerRegistrationDelegate.incrementTracker(player, trackerId, amount);
+    }
+
+    /**
+     * Returns the current-period accumulated value for a tracker.
+     *
+     * @param player    the player to query
+     * @param trackerId the registered tracker's id
+     * @return the current accumulator value, or {@code 0f} if unset
+     */
+    @ApiStatus.Stable
+    public static float getCurrentTrackerValue(Player player, ResourceLocation trackerId) {
+        return TrackerRegistrationDelegate.getCurrentTrackerValue(player, trackerId);
+    }
+
+    /**
+     * Returns a player's completed-period history for a tracker, most recent first, bounded by
+     * the tracker's configured retention.
+     *
+     * @param player    the player to query
+     * @param trackerId the registered tracker's id
+     * @return an unmodifiable list of history entries, most recent first
+     */
+    @ApiStatus.Stable
+    public static List<dev.marie.framework.tracking.tracker.definition.TrackerHistoryEntry> getTrackerHistory(
+            Player player, ResourceLocation trackerId) {
+        return TrackerRegistrationDelegate.getTrackerHistory(player, trackerId);
     }
 }

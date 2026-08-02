@@ -14,8 +14,12 @@ import dev.marie.framework.api.ApiStatus;
 import dev.marie.framework.core.IMarieConfig;
 import dev.marie.framework.core.MarieCore;
 import dev.marie.framework.core.MarieContext;
+import dev.marie.framework.tracking.tracker.definition.TrackerHistoryEntry;
+import dev.marie.framework.tracking.tracker.definition.TrackingPeriodState;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.HashMap;
@@ -56,7 +60,10 @@ public class TrackingData {
             "source_memory",
             "category_memory",
             "family_memory",
-            "last_tick_time"
+            "last_tick_time",
+            "tracker_accumulators",
+            "tracker_history",
+            "tracker_period_states"
     );
 
     /** Display / bar order — delegates to the registry so it stays in sync. */
@@ -129,6 +136,12 @@ public class TrackingData {
         map.add("family_memory", Codec.unboundedMap(Codec.STRING, SourceMemoryEntry.CODEC)
                 .encodeStart(ops, data.familyMemory));
         map.add("last_tick_time", Codec.LONG.encodeStart(ops, data.lastTickTime));
+        map.add("tracker_accumulators", Codec.unboundedMap(ResourceLocation.CODEC, Codec.FLOAT)
+                .encodeStart(ops, data.trackingAccumulators));
+        map.add("tracker_history", Codec.unboundedMap(ResourceLocation.CODEC, Codec.list(TrackerHistoryEntry.CODEC))
+                .encodeStart(ops, data.trackingHistory));
+        map.add("tracker_period_states", Codec.unboundedMap(ResourceLocation.CODEC, TrackingPeriodState.CODEC)
+                .encodeStart(ops, data.trackerPeriodStates));
         return map.build(prefix);
     }
 
@@ -190,6 +203,30 @@ public class TrackingData {
         }
 
         data.lastTickTime = decodeLong(ops, map, "last_tick_time", 0L);
+
+        T trackerAccumulatorsVal = map.get("tracker_accumulators");
+        if (trackerAccumulatorsVal != null) {
+            Codec.unboundedMap(ResourceLocation.CODEC, Codec.FLOAT)
+                    .parse(ops, trackerAccumulatorsVal)
+                    .result()
+                    .ifPresent(m -> data.trackingAccumulators.putAll(m));
+        }
+
+        T trackerHistoryVal = map.get("tracker_history");
+        if (trackerHistoryVal != null) {
+            Codec.unboundedMap(ResourceLocation.CODEC, Codec.list(TrackerHistoryEntry.CODEC))
+                    .parse(ops, trackerHistoryVal)
+                    .result()
+                    .ifPresent(m -> data.trackingHistory.putAll(m));
+        }
+
+        T trackerPeriodStatesVal = map.get("tracker_period_states");
+        if (trackerPeriodStatesVal != null) {
+            Codec.unboundedMap(ResourceLocation.CODEC, TrackingPeriodState.CODEC)
+                    .parse(ops, trackerPeriodStatesVal)
+                    .result()
+                    .ifPresent(m -> data.trackerPeriodStates.putAll(m));
+        }
 
         return DataResult.success(data);
     }
@@ -274,6 +311,15 @@ public class TrackingData {
     @ApiStatus.Experimental
     public long lastTickTime = 0L;
 
+    // Tracker system state — separate from values/total (nutrient bars), which stay untouched.
+    // MarieLib has no domain knowledge of what a tracker measures.
+    @ApiStatus.Experimental
+    public final Map<ResourceLocation, Float> trackingAccumulators = new LinkedHashMap<>();
+    @ApiStatus.Experimental
+    public final Map<ResourceLocation, List<TrackerHistoryEntry>> trackingHistory = new LinkedHashMap<>();
+    @ApiStatus.Experimental
+    public final Map<ResourceLocation, TrackingPeriodState> trackerPeriodStates = new LinkedHashMap<>();
+
     @ApiStatus.Experimental
     public TrackingData() {
         float start = startValueFill();
@@ -302,6 +348,14 @@ public class TrackingData {
         d.familyMemory.clear();
         d.familyMemory.putAll(src.familyMemory);
         d.lastTickTime = src.lastTickTime;
+        d.trackingAccumulators.clear();
+        d.trackingAccumulators.putAll(src.trackingAccumulators);
+        d.trackingHistory.clear();
+        for (Map.Entry<ResourceLocation, List<TrackerHistoryEntry>> entry : src.trackingHistory.entrySet()) {
+            d.trackingHistory.put(entry.getKey(), new ArrayList<>(entry.getValue()));
+        }
+        d.trackerPeriodStates.clear();
+        d.trackerPeriodStates.putAll(src.trackerPeriodStates);
         if (src.memoryConfig != null) {
             d.memoryConfig = src.memoryConfig;
         }
@@ -338,6 +392,19 @@ public class TrackingData {
     @ApiStatus.Experimental
     public void tickTime(long gameTimeMs) {
         this.lastTickTime = gameTimeMs;
+    }
+
+    /**
+     * Prepends {@code entry} to the tracker's history (most recent first) and trims the list to
+     * {@code retention} entries. Capped on append so the history map never grows unbounded.
+     */
+    @ApiStatus.Experimental
+    public void appendTrackerHistory(ResourceLocation trackerId, TrackerHistoryEntry entry, int retention) {
+        List<TrackerHistoryEntry> list = trackingHistory.computeIfAbsent(trackerId, k -> new ArrayList<>());
+        list.add(0, entry);
+        while (list.size() > retention) {
+            list.remove(list.size() - 1);
+        }
     }
 
     @ApiStatus.Experimental

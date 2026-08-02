@@ -49,4 +49,8 @@ enum FallbackConfig implements IMarieConfig {
     @Override public void configImporter(JsonObject json) { MariesLibConfigBridge.applyImport(json); }
     @Override public PresetRegistry.PresetValues currentConfigPresetValues() { return PresetRegistry.PresetValues.empty(); }
     @Override public void applyPresetValues(PresetRegistry.PresetValues values) {}
+    @Override public boolean trackerSystemEnabled() { return true; }
+    @Override public int trackerMaxRetention() { return 90; }
+    @Override public int trackerWeeklyPeriodDays() { return 7; }
+    @Override public int trackerMonthlyPeriodDays() { return 30; }
 }
