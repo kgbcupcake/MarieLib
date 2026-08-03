@@ -143,6 +143,16 @@ public final class SourceApplicationPipeline {
             valueDeltas.merge(entry.valueKey(), entry.amount(), Float::sum);
         }
 
+        boolean hasRegisteredSource = override != null || totalAdded != 0f || !valueDeltas.isEmpty();
+        if (!hasRegisteredSource) {
+            if (FeatureFlagCache.enableDebugLogging()) {
+                MarieCore.LOGGER.debug(
+                        "[MarieLib] No registered source for '{}' — skipping pipeline, recent-source memory left untouched",
+                        sourceKey);
+            }
+            return;
+        }
+
         String dominantCategory = matchedBars.isEmpty()
                 ? null
                 : matchedBars.entrySet().stream()

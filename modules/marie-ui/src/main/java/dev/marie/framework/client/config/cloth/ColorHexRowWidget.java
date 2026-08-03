@@ -111,6 +111,7 @@ public final class ColorHexRowWidget extends TooltipListEntry<Integer> {
      */
     @ApiStatus.Stable
     public void syncFromEffectiveColor() {
+        ColorPreviewOverrides.setOverride(key, null);
         syncHexFromEffectiveColor();
         pushLivePreview();
     }

@@ -10,7 +10,9 @@ import dev.marie.framework.api.registry.SeasonHookRegistry;
 import dev.marie.framework.api.registry.SleepBonusEvaluatorRegistry;
 import dev.marie.framework.api.registry.SourcePropertySignalRegistry;
 import dev.marie.framework.api.registry.SynergyRegistry;
+import dev.marie.framework.color.ColorDefinitionRegistry;
 import dev.marie.framework.runtime.TriggerHandlerRegistry;
+import dev.marie.framework.tracking.tracker.registry.TrackerRegistry;
 
 /**
  * Coordinates freeze/reset for API definition registries around bootstrap and datapack reload.
@@ -48,6 +50,8 @@ public final class MarieApiRegistries {
             ProfileRegistry.resetInternal();
             MilestoneRegistry.resetInternal();
             SynergyRegistry.resetInternal();
+            TrackerRegistry.resetInternal();
+            ColorDefinitionRegistry.resetInternal();
         }
     }
 
@@ -58,6 +62,8 @@ public final class MarieApiRegistries {
         ProfileRegistry.freezeInternal();
         MilestoneRegistry.freezeInternal();
         SynergyRegistry.freezeInternal();
+        TrackerRegistry.freezeInternal();
+        ColorDefinitionRegistry.freezeInternal();
         datapackApplyCompletedOnce = true;
     }
 }

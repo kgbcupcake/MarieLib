@@ -44,4 +44,5 @@ public final class FeatureFlagCache {
     public static boolean enableSeasonHooks() { return current.enableSeasonHooks(); }
     public static boolean enableAbsorptionModifiers() { return current.enableAbsorptionModifiers(); }
     public static boolean enableDebugLogging() { return current.enableDebugLogging(); }
+    public static boolean enableCalorieHistory() { return current.enableCalorieHistory(); }
 }

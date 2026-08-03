@@ -42,17 +42,6 @@
 - `SourceApplicationPipeline.process` (marie-core) now injects the player's `DiminishingReturnsConfig` into `TrackingData` (`tracking.setMemoryConfig(...)`) before posting `MarieEvents.SourceTriggerEvent`, not after. Consumer-mod listeners subscribed to `SourceTriggerEvent` that synchronously read tracking data (e.g. `toDeltaPayload()`, `getMostFatiguedFamilies()`, `config()`) previously ran against a `TrackingData` with a null `memoryConfig` and crashed with `IllegalStateException("[MarieLib] DiminishingReturnsConfig not injected...")`. Root cause was event/injection ordering, not a missing injection call — no other injection sites were touched.
 - `GameplayTriggerListener` / `ValueEffectsListener.fireStateTicks` (marie-core) now pass `ItemStack.EMPTY` instead of `null` when firing `BLOCK_BROKEN` / `ENTITY_KILLED` / `TICK` triggers — the two-arg `MarieAPI.fireSourceTrigger` overload resolves to a `null` stack internally, which crashed downstream item-agnostic consumers (e.g. Nourished's `registerSlim` callback) with an NPE on `.getItem()` on every sprint/swim tick. `ItemStack.EMPTY` is the documented "no item" sentinel for non-item triggers per `ValueSourceTrigger`'s own convention.
 - Removed leftover `TEMPDEBUG` diagnostic logging from `InstanceTagSourceRegistry.contains()` (marie-core) and `InstanceTagRegistry.contains()` (marie-resources) — both fired an ungated `LOGGER.info` on every call and had become log noise now that `CommunityTagResolutionStage` calls into this path far more frequently.
-- `TrackingData`'s codec decoding now wraps each loaded `tracker_history` list in a new `ArrayList` instead of storing the decoded (immutable) list directly — `appendTrackerHistory` mutates these lists in place, which previously crashed with `UnsupportedOperationException` the first time a period closed for a player with pre-existing saved tracker history.
-- `ColorHexRowWidget.save()` now compares the typed value against `ColorDefinitionRegistry.get(key)`'s registered default instead of `MarieColors.resolveColor(key)` — `resolveColor` already returns any existing override, so the old comparison was against the override itself, meaning opening and saving the config screen with no changes deleted every customized color.
-- `GameplayTriggerListener.onBlockBreak` / `onLivingDeath` (marie-core) now check `event.isCanceled()` before firing `MarieAPI.fireSourceTrigger` — both `BlockEvent.BreakEvent` and `LivingDeathEvent` are cancellable, so a block break blocked by another mod's protection, or a cancelled death, was previously still counted.
-- `MarieColors.resolveColor` now checks `ColorPreviewOverrides` before `ColorRegistry`/`ColorDefinitionRegistry` — the live-preview mechanism `ColorHexRowWidget` writes to on every keystroke previously had no reader anywhere in the resolve path, so nothing outside the row's own local swatch (e.g. HUD panels) reflected an in-progress edit.
-- `SourceApplicationPipeline.process` (marie-core) now only derives `sourceResourceId` from the `ItemStack` when it's non-empty, falling back to parsing `trigger.sourceId()` otherwise (the same path already used for a `null` stack). Previously `stack.isEmpty()` still went through `MarieRegistryUtils.itemKey(stack)`, which resolves `ItemStack.EMPTY` to the real registry key `minecraft:air` — so item-agnostic triggers (block-break, kill, sprint, swim, all of which intentionally pass `ItemStack.EMPTY` per the earlier null-stack NPE fix) were keying family-grouping and source-pair synergy lookups off `minecraft:air` instead of "no item".
-- `ColorHexRowWidget.onReset()` now also clears the key's `ColorPreviewOverrides` entry, not just `ColorRegistry` — previously a stale preview from an earlier keystroke kept winning in `MarieColors.resolveColor` (which checks `ColorPreviewOverrides` first), so pressing Reset visually did nothing.
-- `MariesLibClothConfig` now clears all `ColorPreviewOverrides` whenever any Cloth Config screen (`AbstractConfigScreen`) closes, via a `NeoForge.EVENT_BUS` `ScreenEvent.Closing` listener registered once on first screen creation. Cloth Config has no cancel-specific callback — Cancel, Esc, and Save & Quit all just replace the screen — so a preview from a hex field the user typed into and then navigated away from without saving previously never got cleared and kept applying for the rest of the client session.
-- `MarieNetworking.handleServer` (marie-core) now rejects an inbound `GenericStateSyncPayload` — silently, logged at DEBUG, before dispatching to any registered handler — if its `BlockPos` is in an unloaded chunk (`ServerLevel.isLoaded`) or outside the sending player's block interaction reach (`ServerPlayer.canInteractWithBlock`, the same vanilla reach check used for block break/place). Previously every registered handler ran against any `BlockPos` a client chose to send with zero server-side validation; a real consumer (Thermal Systems' `EnderIOIntegration.onGenericStateSync`) validates block type at the position but has no reach/distance check of its own, so it would have silently acted on any loaded position in the world. The `CompoundTag`'s contents/size are still left to individual handlers — MarieLib has no opinion on what a consumer's tag should contain, and raw payload size is already bounded by NeoForge/Minecraft's packet size limits.
-### Changed
-
-- `ModuleRegistry` / `ComponentState` / `MarieComponent` (`dev.marie.framework.ui.component`, marie-ui) now carry `@ApiStatus.Experimental`, matching the tier already used on `DraggableResizable` / `ForeignScreenDetector` in the same module — these three were previously unannotated despite being load-bearing extension points with real external consumers. Documentation/API-surface clarity only, no behavior change.
 
 ## [MariesLib 0.1.1-beta.5] — 2026-07-26
 
@@ -70,15 +59,6 @@ Two new generic, consumer-agnostic primitives: client-side foreign-screen detect
 - `MarieAPI.registerGenericStateSyncHandler(BiConsumer<ServerPlayer, GenericStateSyncPayload>)`
     - Registers a server-side handler for inbound `GenericStateSyncPayload`s, gated by `MarieAPIState.assertRegistrationAllowed` like the rest of `MarieAPI`'s registration surface
     - `MarieNetworking` registers the payload type via `RegisterPayloadHandlersEvent` and dispatches received payloads to all registered handlers
-  - Lets a consuming mod register a `(ResourceLocation menuTypeId, Consumer<Screen> callback)` pair and get called back whenever a `ScreenEvent.Opening` screen's menu type matches, by registry name only
-  - Never references any foreign mod's screen/menu class — matches purely via `BuiltInRegistries.MENU.getKey(...)` read off the opened menu
-  - Lazily subscribes to `NeoForge.EVENT_BUS` on first `registerInterest` call
-- `GenericStateSyncPayload` (`dev.marie.framework.network`, marie-core)
-  - `CustomPacketPayload` carrying a `BlockPos` plus an opaque `CompoundTag`, for a consuming mod to sync small block-scoped state to the server without defining its own payload type or channel
-  - `sendToServer(BlockPos, CompoundTag)` for client-side callers
-- `MarieAPI.registerGenericStateSyncHandler(BiConsumer<ServerPlayer, GenericStateSyncPayload>)`
-  - Registers a server-side handler for inbound `GenericStateSyncPayload`s, gated by `MarieAPIState.assertRegistrationAllowed` like the rest of `MarieAPI`'s registration surface
-  - `MarieNetworking` registers the payload type via `RegisterPayloadHandlersEvent` and dispatches received payloads to all registered handlers
 
 ### Changed
 
@@ -88,7 +68,6 @@ Two new generic, consumer-agnostic primitives: client-side foreign-screen detect
 
 - `ForeignScreenDetector.onScreenOpening` no longer crashes when the opened screen's menu wasn't constructed through the standard type-registry path (e.g. `advancements_reloaded`'s custom advancements screen), which previously threw an uncaught `UnsupportedOperationException` from `AbstractContainerMenu.getType()`
     - A screen with no menu is now skipped silently; a menu that rejects `getType()` is logged at DEBUG and treated as no match instead of propagating the exception
-  - A screen with no menu is now skipped silently; a menu that rejects `getType()` is logged at DEBUG and treated as no match instead of propagating the exception
 
 ## [MariesLib 0.1.1-beta.4] — 2026-07-24
 
