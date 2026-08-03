@@ -4,12 +4,19 @@ import dev.marie.framework.api.ApiStatus;
 import dev.marie.framework.api.registry.GenericStateSyncHandlerRegistry;
 import dev.marie.framework.core.MarieCore;
 
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtIo;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 
 /**
@@ -21,6 +28,15 @@ import java.util.function.BiConsumer;
  */
 @ApiStatus.Internal
 public final class MarieNetworking {
+
+    /** Generous ceiling for this small control-surface payload — not bulk data transfer. */
+    private static final int MAX_PAYLOAD_BYTES = 4096;
+
+    private static final int MAX_PACKETS_PER_SECOND = 20;
+    private static final long RATE_LIMIT_WINDOW_MS = 1000L;
+
+    /** Per-player {windowStartMs, countInWindow}, touched only on the main server thread. */
+    private static final ConcurrentHashMap<UUID, long[]> RATE_LIMIT_STATE = new ConcurrentHashMap<>();
 
     private MarieNetworking() {}
 
@@ -51,11 +67,44 @@ public final class MarieNetworking {
                             serverPlayer.getGameProfile().getName(), payload.pos());
                     return;
                 }
+                if (exceedsMaxSize(payload.data())) {
+                    MarieCore.LOGGER.debug(
+                            "[MarieLib] Ignoring oversized GenericStateSyncPayload from {} (> {} bytes)",
+                            serverPlayer.getGameProfile().getName(), MAX_PAYLOAD_BYTES);
+                    return;
+                }
+                if (exceedsRateLimit(serverPlayer.getUUID())) {
+                    MarieCore.LOGGER.debug(
+                            "[MarieLib] Ignoring GenericStateSyncPayload from {} — rate limit exceeded",
+                            serverPlayer.getGameProfile().getName());
+                    return;
+                }
                 for (BiConsumer<ServerPlayer, GenericStateSyncPayload> handler
                         : GenericStateSyncHandlerRegistry.getAll()) {
                     handler.accept(serverPlayer, payload);
                 }
             }
         });
+    }
+
+    private static boolean exceedsMaxSize(CompoundTag data) {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream(256);
+        try (DataOutputStream out = new DataOutputStream(baos)) {
+            NbtIo.write(data, out);
+        } catch (IOException e) {
+            return true;
+        }
+        return baos.size() > MAX_PAYLOAD_BYTES;
+    }
+
+    private static boolean exceedsRateLimit(UUID playerId) {
+        long now = System.currentTimeMillis();
+        long[] state = RATE_LIMIT_STATE.computeIfAbsent(playerId, k -> new long[] {now, 0L});
+        if (now - state[0] >= RATE_LIMIT_WINDOW_MS) {
+            state[0] = now;
+            state[1] = 0L;
+        }
+        state[1]++;
+        return state[1] > MAX_PACKETS_PER_SECOND;
     }
 }

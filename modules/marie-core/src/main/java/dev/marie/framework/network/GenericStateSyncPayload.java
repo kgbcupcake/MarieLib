@@ -25,6 +25,14 @@ import net.neoforged.neoforge.network.PacketDistributor;
  * <p>For state that doesn't fit "a tag keyed by a block position" (e.g. entity-scoped state,
  * larger payloads), a consuming mod should still define its own {@link CustomPacketPayload} —
  * this type is intentionally narrow, not a universal envelope.</p>
+ *
+ * <p><b>Warning:</b> {@code data} is fully client-controlled, untrusted input. MarieLib validates
+ * the position (loaded chunk, in reach) and applies a size/rate ceiling before dispatching to
+ * handlers, but it does not and cannot validate the tag's contents or schema. Handler authors
+ * must independently verify ownership/permission and the tag's expected shape before acting on
+ * it — e.g. re-checking that the block at {@code pos} is still the expected type before trusting
+ * it, the way Thermal Systems' {@code EnderIOIntegration} re-validates block type before trusting
+ * a synced position.</p>
  */
 @ApiStatus.Experimental
 public record GenericStateSyncPayload(BlockPos pos, CompoundTag data) implements CustomPacketPayload {

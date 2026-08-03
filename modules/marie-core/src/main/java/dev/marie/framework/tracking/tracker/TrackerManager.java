@@ -115,8 +115,12 @@ public final class TrackerManager {
     private static void closePeriodAndOpenNext(ServerPlayer player, TrackingData tracking,
             TrackerDefinition definition, ResourceLocation id, TrackingPeriodState state, long nowGameTimeMs) {
         float value = tracking.trackingAccumulators.getOrDefault(id, 0f);
+        long periodEnd = switch (definition.getPeriod()) {
+            case SESSION, CUSTOM -> nowGameTimeMs;
+            case DAILY, WEEKLY, MONTHLY, REAL_TIME -> state.periodEnd();
+        };
         TrackerHistoryEntry entry = new TrackerHistoryEntry(
-                id, definition.getPeriod().configId(), state.periodStart(), state.periodEnd(), value);
+                id, definition.getPeriod().configId(), state.periodStart(), periodEnd, value);
         tracking.appendTrackerHistory(id, entry, definition.getRetention());
         tracking.trackingAccumulators.put(id, 0f);
         tracking.trackerPeriodStates.put(id, openPeriod(definition, nowGameTimeMs));
