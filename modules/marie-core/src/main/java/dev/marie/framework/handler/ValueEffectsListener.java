@@ -1,14 +1,18 @@
 package dev.marie.framework.handler;
 
 import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.api.marieapi.MarieAPI;
 import dev.marie.framework.api.registry.EffectRegistry;
+import dev.marie.framework.api.value.ValueSourceTrigger;
 import dev.marie.framework.config.FeatureFlagCache;
 import dev.marie.framework.core.MarieContext;
+import dev.marie.framework.core.MarieCore;
 import dev.marie.framework.tracking.TrackingAttachment;
 import dev.marie.framework.tracking.TrackingData;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 
@@ -24,6 +28,8 @@ public class ValueEffectsListener {
         if (ReloadGuardListener.isReloadInProgress()) return;
         if (!TrackingAttachment.isRegistered()) return;
         if (!MarieContext.isRegistered()) return;
+
+        fireStateTicks(player);
 
         if (FeatureFlagCache.enableEffects()) {
             TrackingData data = TrackingAttachment.getData(player);
@@ -44,6 +50,23 @@ public class ValueEffectsListener {
             }
         } else {
             MarieContext.get().effectClearer().accept(player);
+        }
+    }
+
+    private void fireStateTicks(ServerPlayer player) {
+        if (player.isSprinting()) {
+            if (FeatureFlagCache.enableDebugLogging()) {
+                MarieCore.LOGGER.debug("[ValueEffectsListener] TICK fired: sprint player={}",
+                        player.getName().getString());
+            }
+            MarieAPI.fireSourceTrigger(player, ValueSourceTrigger.tick("sprint"), ItemStack.EMPTY);
+        }
+        if (player.isSwimming() && player.isInWater()) {
+            if (FeatureFlagCache.enableDebugLogging()) {
+                MarieCore.LOGGER.debug("[ValueEffectsListener] TICK fired: swim player={}",
+                        player.getName().getString());
+            }
+            MarieAPI.fireSourceTrigger(player, ValueSourceTrigger.tick("swim"), ItemStack.EMPTY);
         }
     }
 }

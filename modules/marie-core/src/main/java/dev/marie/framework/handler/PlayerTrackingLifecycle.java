@@ -9,6 +9,7 @@ import dev.marie.framework.tracking.DiminishingReturnsConfig;
 import dev.marie.framework.tracking.TrackingAttachment;
 import dev.marie.framework.tracking.TrackingData;
 import dev.marie.framework.tracking.TrackingResetSupport;
+import dev.marie.framework.tracking.tracker.TrackerManager;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.server.ServerStoppedEvent;
@@ -24,6 +25,7 @@ public class PlayerTrackingLifecycle {
         tracking.tick();
         TrackingAttachment.setData(player, tracking);
         tracking.setMemoryConfig(DiminishingReturnsSupport.resolveMemoryConfig());
+        TrackerManager.openSessionTrackers(player, tracking);
         if (MarieContext.isRegistered()) {
             MarieContext.get().syncOnJoin().accept(player);
             KubeIntegration.firePlayerSynced(player);

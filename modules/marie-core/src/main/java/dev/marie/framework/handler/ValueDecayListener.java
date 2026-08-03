@@ -13,6 +13,7 @@ import dev.marie.framework.tracking.TrackingAttachment;
 import dev.marie.framework.tracking.TrackingData;
 import dev.marie.framework.core.KubeIntegration;
 import dev.marie.framework.registry.MarieAttributes;
+import dev.marie.framework.tracking.tracker.TrackerManager;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.common.NeoForge;
@@ -26,9 +27,12 @@ public class ValueDecayListener {
 
     @SubscribeEvent
     public void onPlayerTick(PlayerTickEvent.Post event) {
-        if (!FeatureFlagCache.enableDecay()) return;
         if (ReloadGuardListener.isReloadInProgress()) return;
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
+        if (TrackingAttachment.isRegistered()) {
+            TrackerManager.checkTrackers(player, TrackingAttachment.getData(player));
+        }
+        if (!FeatureFlagCache.enableDecay()) return;
         DiminishingReturnsConfigOrSkip configOrSkip = resolveConfigOrSkip();
         if (!TrackingAttachment.isRegistered()) return;
         TrackingData data = TrackingAttachment.getData(player);
