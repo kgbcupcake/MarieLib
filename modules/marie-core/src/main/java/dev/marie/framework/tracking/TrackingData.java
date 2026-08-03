@@ -217,7 +217,7 @@ public class TrackingData {
             Codec.unboundedMap(ResourceLocation.CODEC, Codec.list(TrackerHistoryEntry.CODEC))
                     .parse(ops, trackerHistoryVal)
                     .result()
-                    .ifPresent(m -> data.trackingHistory.putAll(m));
+                    .ifPresent(m -> m.forEach((id, list) -> data.trackingHistory.put(id, new ArrayList<>(list))));
         }
 
         T trackerPeriodStatesVal = map.get("tracker_period_states");

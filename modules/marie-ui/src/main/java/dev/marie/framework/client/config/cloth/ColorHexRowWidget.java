@@ -1,6 +1,8 @@
 package dev.marie.framework.client.config.cloth;
 
 import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.color.ColorDefinition;
+import dev.marie.framework.color.ColorDefinitionRegistry;
 import dev.marie.framework.color.ColorKey;
 import dev.marie.framework.color.ColorPreviewOverrides;
 import dev.marie.framework.color.ColorRegistry;
@@ -184,7 +186,8 @@ public final class ColorHexRowWidget extends TooltipListEntry<Integer> {
             return;
         }
         int now = parsed.get();
-        int def = MarieColors.resolveColor(key);
+        ColorDefinition definition = ColorDefinitionRegistry.get(key);
+        int def = definition != null ? definition.getDefaultArgb() : 0xFFFF00FF;
         int nowRgb = now & 0x00_FF_FF_FF;
         int defRgb = def & 0x00_FF_FF_FF;
         if (nowRgb == defRgb) {

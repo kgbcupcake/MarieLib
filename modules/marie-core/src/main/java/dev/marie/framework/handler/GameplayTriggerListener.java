@@ -25,6 +25,8 @@ public final class GameplayTriggerListener {
 
     @SubscribeEvent
     public void onBlockBreak(BlockEvent.BreakEvent event) {
+        if (event.isCanceled()) return;
+
         Player player = event.getPlayer();
         if (!(player instanceof ServerPlayer serverPlayer)) return;
 
@@ -38,6 +40,7 @@ public final class GameplayTriggerListener {
 
     @SubscribeEvent
     public void onLivingDeath(LivingDeathEvent event) {
+        if (event.isCanceled()) return;
         if (!(event.getSource().getEntity() instanceof ServerPlayer killer)) return;
 
         LivingEntity killed = event.getEntity();

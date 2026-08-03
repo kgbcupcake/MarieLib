@@ -80,6 +80,10 @@ public final class MarieColors {
         if (key == null) {
             throw new IllegalArgumentException("resolveColor: key must not be null");
         }
+        Integer preview = ColorPreviewOverrides.getOverride(key);
+        if (preview != null) {
+            return preview;
+        }
         return ColorRegistry.getArgb(colorRegistryKey(key)).orElseGet(() -> {
             ColorDefinition definition = ColorDefinitionRegistry.get(key);
             if (definition != null) {
