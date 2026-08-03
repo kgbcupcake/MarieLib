@@ -6,8 +6,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
-import dev.marie.framework.api.value.ValueDefinition;
-import dev.marie.framework.api.registry.ValueRegistry;
 import dev.marie.framework.core.IMarieConfig;
 import dev.marie.framework.core.MarieCore;
 import dev.marie.framework.data.DatapackSchema;
@@ -23,7 +21,6 @@ import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -136,15 +133,13 @@ public final class ColorRegistry {
         try {
             Files.createDirectories(configDir);
             JsonArray arr = new JsonArray();
-            List<String> keys = ValueRegistry.getAll().stream().map(ValueDefinition::getId).toList();
-            for (String key : keys) {
-                Integer argb = INSTANCE.get(key);
-                if (argb == null) {
-                    continue;
-                }
+            // Persist every key currently held, not just ones matching a registered value id —
+            // ColorKey-based overrides (nutrient/activity/panel/etc., keyed by full ResourceLocation
+            // string) are never value ids, so filtering to ValueRegistry would silently drop them.
+            for (Map.Entry<String, Integer> e : INSTANCE.entries().entrySet()) {
                 JsonObject obj = new JsonObject();
-                obj.addProperty("key", key);
-                obj.addProperty("argb", String.format("0x%08X", argb));
+                obj.addProperty("key", e.getKey());
+                obj.addProperty("argb", String.format("0x%08X", e.getValue()));
                 arr.add(obj);
             }
             try (Writer w = Files.newBufferedWriter(file)) {
