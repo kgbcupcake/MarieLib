@@ -6,6 +6,7 @@ import com.mojang.logging.LogUtils;
 
 import dev.marie.framework.config.MariesLibConfigIO;
 import dev.marie.framework.network.MarieNetworking;
+import dev.marie.framework.tracking.tracker.network.TrackerNetworking;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
@@ -19,6 +20,7 @@ public final class MarieCore {
     public MarieCore(IEventBus modEventBus, ModContainer modContainer) {
         MariesLibConfigIO.load();
         MarieNetworking.register(modEventBus);
+        TrackerNetworking.register(modEventBus);
         LOGGER.info("MarieCore initialized");
     }
 }

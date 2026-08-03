@@ -31,6 +31,7 @@ public class ValueDecayListener {
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
         if (TrackingAttachment.isRegistered()) {
             TrackerManager.checkTrackers(player, TrackingAttachment.getData(player));
+            TrackerManager.sweepDirtySync(player);
         }
         if (!FeatureFlagCache.enableDecay()) return;
         DiminishingReturnsConfigOrSkip configOrSkip = resolveConfigOrSkip();

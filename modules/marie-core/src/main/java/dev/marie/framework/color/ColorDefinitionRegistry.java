@@ -33,17 +33,29 @@ public final class ColorDefinitionRegistry {
     }
 
     /**
-     * Registers a color definition.
+     * Temporarily reopens the registry for re-registration during
+     * {@code MarieContext.reloadBroadcastHook()}. Must be paired with a subsequent
+     * {@link #freezeInternal()} in a {@code finally} block.
+     */
+    @ApiStatus.Internal
+    public static void unfreezeInternal() {
+        INSTANCE.unfreeze();
+    }
+
+    /**
+     * Registers a color definition. Re-registering an already-registered key replaces the
+     * existing definition rather than throwing — colors are expected to be re-registered on
+     * every reload (see {@code MarieContext.reloadBroadcastHook()}).
      *
      * @param definition the color to register
-     * @throws IllegalStateException    if the registry is frozen or a color with the same key already exists
+     * @throws IllegalStateException    if the registry is frozen
      * @throws IllegalArgumentException if {@code definition} is null
      */
     public static void register(ColorDefinition definition) {
         if (definition == null) {
             throw new IllegalArgumentException("definition cannot be null");
         }
-        INSTANCE.register(definition.getKey(), definition);
+        INSTANCE.upsert(definition.getKey(), definition);
     }
 
     /**

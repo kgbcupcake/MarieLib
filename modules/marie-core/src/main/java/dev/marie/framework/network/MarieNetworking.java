@@ -87,6 +87,12 @@ public final class MarieNetworking {
         });
     }
 
+    /**
+     * Re-serializes the already-decoded tag to measure its size. Vanilla/NeoForge expose no
+     * cheaper NBT size-estimation utility, so this runs a full write pass on every incoming
+     * packet post-decode; vanilla's own packet size limits still bound the worst case. Accepted
+     * trade-off — restructuring to check size pre-decode is a larger architectural change.
+     */
     private static boolean exceedsMaxSize(CompoundTag data) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream(256);
         try (DataOutputStream out = new DataOutputStream(baos)) {
@@ -106,5 +112,11 @@ public final class MarieNetworking {
         }
         state[1]++;
         return state[1] > MAX_PACKETS_PER_SECOND;
+    }
+
+    /** Called on player logout to prevent {@link #RATE_LIMIT_STATE} from growing unboundedly. */
+    @ApiStatus.Internal
+    public static void clearRateLimitState(UUID playerId) {
+        RATE_LIMIT_STATE.remove(playerId);
     }
 }

@@ -24,12 +24,17 @@ public final class MarieColors {
      * Registers a color definition, providing its default ARGB value for {@link #resolveColor(ColorKey)}
      * to fall back on when no user/datapack override is present.
      *
-     * <p>Must be called during mod initialization or datapack reload.</p>
+     * <p>Must be called during mod initialization or datapack reload. Re-registering an
+     * already-registered key is safe and replaces the existing definition rather than throwing —
+     * every {@code /reload} wipes {@link ColorDefinitionRegistry}, so consumers that want their
+     * colors to survive a reload should call this again from
+     * {@code MarieContext.reloadBroadcastHook()} (see
+     * {@link dev.marie.framework.handler.ReloadGuardListener#reloadAndBroadcast}); nothing else
+     * re-invokes registration code automatically.</p>
      *
      * @param definition the color definition to register
      * @throws IllegalStateException    if called outside the registration window
-     * @throws IllegalArgumentException if {@code definition} is null or a color with the same
-     *                                   key already exists
+     * @throws IllegalArgumentException if {@code definition} is null
      */
     @ApiStatus.Stable
     public static void registerColor(ColorDefinition definition) {

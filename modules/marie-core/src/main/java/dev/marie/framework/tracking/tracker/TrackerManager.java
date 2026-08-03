@@ -3,14 +3,19 @@ package dev.marie.framework.tracking.tracker;
 import dev.marie.framework.api.ApiStatus;
 import dev.marie.framework.core.IMarieConfig;
 import dev.marie.framework.core.MarieContext;
+import dev.marie.framework.tracking.TrackingAttachment;
 import dev.marie.framework.tracking.TrackingData;
 import dev.marie.framework.tracking.tracker.definition.TrackerDefinition;
 import dev.marie.framework.tracking.tracker.definition.TrackerHistoryEntry;
 import dev.marie.framework.tracking.tracker.definition.TrackerPeriod;
 import dev.marie.framework.tracking.tracker.definition.TrackingPeriodState;
+import dev.marie.framework.tracking.tracker.network.TrackerNetworking;
 import dev.marie.framework.tracking.tracker.registry.TrackerRegistry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+
+import java.util.Set;
+import java.util.UUID;
 
 /**
  * Drives tracker period boundaries and history for the generic tracker/period-history framework.
@@ -89,6 +94,42 @@ public final class TrackerManager {
         closePeriodAndOpenNext(player, tracking, definition, trackerId, state, nowGameTimeMs);
     }
 
+    /** Clears dirty-sync bookkeeping for a player, e.g. on logout. */
+    @ApiStatus.Internal
+    public static void clearDirtySyncState(UUID playerId) {
+        TrackerDirtyState.clearPlayer(playerId);
+    }
+
+    /**
+     * Throttled dirty-value push: if {@code player} has trackers marked dirty by
+     * {@link MarieTracking#incrementTracker} and at least {@code IMarieConfig#trackerSyncIntervalTicks()}
+     * have passed since their last sync, sends just those trackers' current values and clears
+     * the dirty set. Called once per player tick, piggybacked on the same loop as
+     * {@link #checkTrackers}.
+     */
+    @ApiStatus.Internal
+    public static void sweepDirtySync(ServerPlayer player) {
+        if (!IMarieConfig.get().trackerSystemEnabled()) {
+            return;
+        }
+        UUID playerId = player.getUUID();
+        if (!TrackerDirtyState.hasDirty(playerId)) {
+            return;
+        }
+        long nowGameTime = player.level().getGameTime();
+        int interval = Math.max(1, IMarieConfig.get().trackerSyncIntervalTicks());
+        if (nowGameTime - TrackerDirtyState.lastSyncTick(playerId) < interval) {
+            return;
+        }
+        Set<ResourceLocation> dirty = TrackerDirtyState.drainDirty(playerId);
+        if (dirty.isEmpty()) {
+            return;
+        }
+        TrackingData tracking = TrackingAttachment.getData(player);
+        TrackerNetworking.sendLiveValues(player, dirty, tracking);
+        TrackerDirtyState.setLastSyncTick(playerId, nowGameTime);
+    }
+
     private static void processDefinition(ServerPlayer player, TrackingData tracking,
             TrackerDefinition definition, long nowGameTimeMs) {
         ResourceLocation id = definition.getId();
@@ -124,6 +165,7 @@ public final class TrackerManager {
         tracking.appendTrackerHistory(id, entry, definition.getRetention());
         tracking.trackingAccumulators.put(id, 0f);
         tracking.trackerPeriodStates.put(id, openPeriod(definition, nowGameTimeMs));
+        TrackerNetworking.sendPeriodResync(player, id, tracking);
         if (MarieContext.isRegistered()) {
             MarieContext.get().onTrackerPeriodCompletedHook().accept(player, entry);
         }
