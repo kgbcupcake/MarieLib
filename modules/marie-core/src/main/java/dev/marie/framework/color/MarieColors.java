@@ -3,6 +3,7 @@ package dev.marie.framework.color;
 import dev.marie.framework.api.ApiStatus;
 import dev.marie.framework.api.marieapi.MarieAPIState;
 import dev.marie.framework.core.MarieCore;
+import net.minecraft.resources.ResourceLocation;
 
 /**
  * Public facade for the MarieLib color subsystem: registering default color definitions and
@@ -37,6 +38,31 @@ public final class MarieColors {
             throw new IllegalArgumentException("registerColor: definition must not be null");
         }
         ColorDefinitionRegistry.register(definition);
+    }
+
+    /**
+     * Registers a linked background/text {@link ColorKey} pair under {@code modId}, so panels
+     * needing both no longer hand-register two separate {@link ColorDefinition}s. Builds
+     * {@code panel.<id>} and {@code text.<id>} keys and registers each with its own default ARGB.
+     *
+     * <p>Must be called during mod initialization or datapack reload, same as {@link #registerColor}.</p>
+     *
+     * @param modId               the mod namespace for both keys
+     * @param id                  the shared id suffix for both keys
+     * @param backgroundDefaultArgb default ARGB for the background key
+     * @param textDefaultArgb       default ARGB for the text key
+     * @return the registered {@link ColorKeyPair}
+     * @throws IllegalStateException    if called outside the registration window
+     * @throws IllegalArgumentException if either resulting color key already exists
+     */
+    @ApiStatus.Stable
+    public static ColorKeyPair registerColorPair(String modId, String id, int backgroundDefaultArgb, int textDefaultArgb) {
+        MarieAPIState.assertRegistrationAllowed("registerColorPair");
+        ColorKey backgroundKey = ColorKey.of(ResourceLocation.fromNamespaceAndPath(modId, "panel." + id));
+        ColorKey textKey = ColorKey.of(ResourceLocation.fromNamespaceAndPath(modId, "text." + id));
+        ColorDefinitionRegistry.register(ColorDefinition.of(backgroundKey, backgroundDefaultArgb));
+        ColorDefinitionRegistry.register(ColorDefinition.of(textKey, textDefaultArgb));
+        return new ColorKeyPair(backgroundKey, textKey);
     }
 
     /**
