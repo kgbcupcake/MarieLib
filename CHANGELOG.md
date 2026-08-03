@@ -50,6 +50,9 @@
 - `ColorHexRowWidget.onReset()` now also clears the key's `ColorPreviewOverrides` entry, not just `ColorRegistry` — previously a stale preview from an earlier keystroke kept winning in `MarieColors.resolveColor` (which checks `ColorPreviewOverrides` first), so pressing Reset visually did nothing.
 - `MariesLibClothConfig` now clears all `ColorPreviewOverrides` whenever any Cloth Config screen (`AbstractConfigScreen`) closes, via a `NeoForge.EVENT_BUS` `ScreenEvent.Closing` listener registered once on first screen creation. Cloth Config has no cancel-specific callback — Cancel, Esc, and Save & Quit all just replace the screen — so a preview from a hex field the user typed into and then navigated away from without saving previously never got cleared and kept applying for the rest of the client session.
 - `MarieNetworking.handleServer` (marie-core) now rejects an inbound `GenericStateSyncPayload` — silently, logged at DEBUG, before dispatching to any registered handler — if its `BlockPos` is in an unloaded chunk (`ServerLevel.isLoaded`) or outside the sending player's block interaction reach (`ServerPlayer.canInteractWithBlock`, the same vanilla reach check used for block break/place). Previously every registered handler ran against any `BlockPos` a client chose to send with zero server-side validation; a real consumer (Thermal Systems' `EnderIOIntegration.onGenericStateSync`) validates block type at the position but has no reach/distance check of its own, so it would have silently acted on any loaded position in the world. The `CompoundTag`'s contents/size are still left to individual handlers — MarieLib has no opinion on what a consumer's tag should contain, and raw payload size is already bounded by NeoForge/Minecraft's packet size limits.
+### Changed
+
+- `ModuleRegistry` / `ComponentState` / `MarieComponent` (`dev.marie.framework.ui.component`, marie-ui) now carry `@ApiStatus.Experimental`, matching the tier already used on `DraggableResizable` / `ForeignScreenDetector` in the same module — these three were previously unannotated despite being load-bearing extension points with real external consumers. Documentation/API-surface clarity only, no behavior change.
 
 ## [MariesLib 0.1.1-beta.5] — 2026-07-26
 
@@ -67,6 +70,15 @@ Two new generic, consumer-agnostic primitives: client-side foreign-screen detect
 - `MarieAPI.registerGenericStateSyncHandler(BiConsumer<ServerPlayer, GenericStateSyncPayload>)`
     - Registers a server-side handler for inbound `GenericStateSyncPayload`s, gated by `MarieAPIState.assertRegistrationAllowed` like the rest of `MarieAPI`'s registration surface
     - `MarieNetworking` registers the payload type via `RegisterPayloadHandlersEvent` and dispatches received payloads to all registered handlers
+  - Lets a consuming mod register a `(ResourceLocation menuTypeId, Consumer<Screen> callback)` pair and get called back whenever a `ScreenEvent.Opening` screen's menu type matches, by registry name only
+  - Never references any foreign mod's screen/menu class — matches purely via `BuiltInRegistries.MENU.getKey(...)` read off the opened menu
+  - Lazily subscribes to `NeoForge.EVENT_BUS` on first `registerInterest` call
+- `GenericStateSyncPayload` (`dev.marie.framework.network`, marie-core)
+  - `CustomPacketPayload` carrying a `BlockPos` plus an opaque `CompoundTag`, for a consuming mod to sync small block-scoped state to the server without defining its own payload type or channel
+  - `sendToServer(BlockPos, CompoundTag)` for client-side callers
+- `MarieAPI.registerGenericStateSyncHandler(BiConsumer<ServerPlayer, GenericStateSyncPayload>)`
+  - Registers a server-side handler for inbound `GenericStateSyncPayload`s, gated by `MarieAPIState.assertRegistrationAllowed` like the rest of `MarieAPI`'s registration surface
+  - `MarieNetworking` registers the payload type via `RegisterPayloadHandlersEvent` and dispatches received payloads to all registered handlers
 
 ### Changed
 
@@ -76,6 +88,7 @@ Two new generic, consumer-agnostic primitives: client-side foreign-screen detect
 
 - `ForeignScreenDetector.onScreenOpening` no longer crashes when the opened screen's menu wasn't constructed through the standard type-registry path (e.g. `advancements_reloaded`'s custom advancements screen), which previously threw an uncaught `UnsupportedOperationException` from `AbstractContainerMenu.getType()`
     - A screen with no menu is now skipped silently; a menu that rejects `getType()` is logged at DEBUG and treated as no match instead of propagating the exception
+  - A screen with no menu is now skipped silently; a menu that rejects `getType()` is logged at DEBUG and treated as no match instead of propagating the exception
 
 ## [MariesLib 0.1.1-beta.4] — 2026-07-24
 
