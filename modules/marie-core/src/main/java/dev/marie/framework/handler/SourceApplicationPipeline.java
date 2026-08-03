@@ -94,7 +94,7 @@ public final class SourceApplicationPipeline {
         Map<String, Float> valueDeltas;
         Map<String, Float> matchedBars;
         ResourceLocation sourceResourceId;
-        if (stack != null) {
+        if (stack != null && !stack.isEmpty()) {
             sourceResourceId = MarieRegistryUtils.itemKey(stack);
         } else {
             try {

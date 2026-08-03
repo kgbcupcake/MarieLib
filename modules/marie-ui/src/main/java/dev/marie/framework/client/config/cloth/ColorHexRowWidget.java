@@ -97,6 +97,7 @@ public final class ColorHexRowWidget extends TooltipListEntry<Integer> {
 
     private void onReset() {
         ColorRegistry.remove(registryKey(key));
+        ColorPreviewOverrides.setOverride(key, null);
         syncHexFromEffectiveColor();
         pushLivePreview();
         requestReferenceRebuilding();

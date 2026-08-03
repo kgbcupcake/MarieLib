@@ -39,6 +39,18 @@ public final class MarieNetworking {
     private static void handleServer(GenericStateSyncPayload payload, IPayloadContext context) {
         context.enqueueWork(() -> {
             if (context.player() instanceof ServerPlayer serverPlayer) {
+                if (!serverPlayer.level().isLoaded(payload.pos())) {
+                    MarieCore.LOGGER.debug(
+                            "[MarieLib] Ignoring GenericStateSyncPayload from {} for unloaded chunk at {}",
+                            serverPlayer.getGameProfile().getName(), payload.pos());
+                    return;
+                }
+                if (!serverPlayer.canInteractWithBlock(payload.pos(), 0.0)) {
+                    MarieCore.LOGGER.debug(
+                            "[MarieLib] Ignoring GenericStateSyncPayload from {} for out-of-reach position {}",
+                            serverPlayer.getGameProfile().getName(), payload.pos());
+                    return;
+                }
                 for (BiConsumer<ServerPlayer, GenericStateSyncPayload> handler
                         : GenericStateSyncHandlerRegistry.getAll()) {
                     handler.accept(serverPlayer, payload);
