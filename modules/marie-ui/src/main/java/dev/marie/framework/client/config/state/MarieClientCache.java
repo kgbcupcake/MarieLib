@@ -36,14 +36,9 @@ public class MarieClientCache {
         static Snapshot fromFullTracking(TrackingData data) {
             TrackingData snapshot = TrackingData.copySnapshot(data);
             snapshot.setMemoryConfig(injectClientMemoryConfig());
-            List<String> recent = snapshot.sourceMemory.entrySet().stream()
-                    .sorted((a, b) -> Long.compare(b.getValue().lastAppliedTick(), a.getValue().lastAppliedTick()))
-                    .limit(3)
-                    .map(Map.Entry::getKey)
-                    .toList();
             return new Snapshot(
                     snapshot,
-                    recent,
+                    snapshot.recentIds,
                     snapshot.getMostNeglectedCategories(2),
                     snapshot.getMostFatiguedFamilies(2, snapshot.lastTickTime)
             );
