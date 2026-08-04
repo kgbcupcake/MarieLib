@@ -1,6 +1,7 @@
 package dev.marie.framework.handler;
 
 import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.api.marieapi.MarieAPIState;
 import dev.marie.framework.color.ColorDefinitionRegistry;
 import dev.marie.framework.core.MarieContext;
 import dev.marie.framework.core.MarieCore;
@@ -22,6 +23,18 @@ public class ReloadGuardListener {
         return reloadInProgress || RegistryLifecycleManager.isReloadInProgress();
     }
 
+    /**
+     * Also invokes {@link #reloadAndBroadcast}: {@code AddReloadListenerEvent} resets
+     * {@code TrackerRegistry}/{@code ColorDefinitionRegistry} on every world/server boot (see
+     * {@link dev.marie.framework.registry.MarieApiRegistries#onDatapackApplyBegin}), but that
+     * boot-time reload pass runs before any {@link MinecraftServer} instance exists (it happens
+     * inside {@code WorldLoader.load}, called from {@code Main.main} ahead of server construction)
+     * — so the reregistration hook cannot fire from there. {@code ServerStartingEvent} is the first
+     * point after boot with both a valid server reference and a guarantee that the initial reload
+     * pass has already completed, making it the correct place to close that gap. Explicit
+     * {@code /reload} is covered separately by {@link #onDatapackSync}; the two together cover
+     * every reset cycle {@code MarieApiRegistries} performs, with no overlap.
+     */
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event) {
         reloadInProgress = true;
@@ -30,25 +43,31 @@ public class ReloadGuardListener {
         } finally {
             reloadInProgress = false;
         }
+        reloadAndBroadcast(event.getServer());
     }
 
     /**
      * Invokes {@link MarieContext#reloadBroadcastHook()}, the "reload happened, please
      * re-register your trackers/colors" hook. Called automatically after every resource reload
-     * (vanilla {@code /reload} or a mod's own reload command) via {@link #onDatapackSync}; exposed
-     * here for callers that trigger a reload through a path this listener cannot observe.
+     * (vanilla {@code /reload} or a mod's own reload command) via {@link #onDatapackSync}, and
+     * after every world/server boot via {@link #onServerStarting}; exposed here for callers that
+     * trigger a reload through a path this listener cannot observe.
      *
      * <p>{@code TrackerRegistry}/{@code ColorDefinitionRegistry} are frozen by the time this runs
      * (see {@link dev.marie.framework.registry.MarieApiRegistries#onDatapackApplyEnd}), so both are
      * briefly unfrozen for the duration of the hook call to allow {@code registerTracker}/
-     * {@code registerColor} re-registration, then refrozen in a {@code finally} block regardless of
-     * whether the hook throws.</p>
+     * {@code registerColor} re-registration. {@link MarieAPIState}'s registration window is closed
+     * again by the same point (its {@code DatapackReloadScope} closes at the end of the datapack
+     * apply pass that triggered this), so it is explicitly reopened here too rather than assumed —
+     * callers of this hook (e.g. {@code MarieAPI.registerTracker}) assert the window is open and
+     * would otherwise throw "Registration closed". Both the registries and the phase are restored
+     * to their prior state in a {@code finally} block regardless of whether the hook throws.</p>
      */
     public static void reloadAndBroadcast(MinecraftServer server) {
         if (MarieContext.isRegistered()) {
             TrackerRegistry.unfreezeInternal();
             ColorDefinitionRegistry.unfreezeInternal();
-            try {
+            try (MarieAPIState.DatapackReloadScope scope = MarieAPIState.openForDatapackReload()) {
                 MarieContext.get().reloadBroadcastHook().accept(server);
             } finally {
                 TrackerRegistry.freezeInternal();
