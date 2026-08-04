@@ -4,17 +4,12 @@ import dev.marie.framework.api.ApiStatus;
 import dev.marie.framework.api.registry.GenericStateSyncHandlerRegistry;
 import dev.marie.framework.core.MarieCore;
 
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.NbtIo;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
@@ -31,6 +26,11 @@ public final class MarieNetworking {
 
     /** Generous ceiling for this small control-surface payload — not bulk data transfer. */
     private static final int MAX_PAYLOAD_BYTES = 4096;
+
+    /** Package-private accessor so {@link GenericStateSyncPayload}'s decoder can enforce the same ceiling. */
+    static int maxPayloadBytes() {
+        return MAX_PAYLOAD_BYTES;
+    }
 
     private static final int MAX_PACKETS_PER_SECOND = 20;
     private static final long RATE_LIMIT_WINDOW_MS = 1000L;
@@ -55,6 +55,12 @@ public final class MarieNetworking {
     private static void handleServer(GenericStateSyncPayload payload, IPayloadContext context) {
         context.enqueueWork(() -> {
             if (context.player() instanceof ServerPlayer serverPlayer) {
+                if (payload.oversized()) {
+                    MarieCore.LOGGER.debug(
+                            "[MarieLib] Ignoring oversized GenericStateSyncPayload from {} (> {} bytes)",
+                            serverPlayer.getGameProfile().getName(), MAX_PAYLOAD_BYTES);
+                    return;
+                }
                 if (!serverPlayer.level().isLoaded(payload.pos())) {
                     MarieCore.LOGGER.debug(
                             "[MarieLib] Ignoring GenericStateSyncPayload from {} for unloaded chunk at {}",
@@ -65,12 +71,6 @@ public final class MarieNetworking {
                     MarieCore.LOGGER.debug(
                             "[MarieLib] Ignoring GenericStateSyncPayload from {} for out-of-reach position {}",
                             serverPlayer.getGameProfile().getName(), payload.pos());
-                    return;
-                }
-                if (exceedsMaxSize(payload.data())) {
-                    MarieCore.LOGGER.debug(
-                            "[MarieLib] Ignoring oversized GenericStateSyncPayload from {} (> {} bytes)",
-                            serverPlayer.getGameProfile().getName(), MAX_PAYLOAD_BYTES);
                     return;
                 }
                 if (exceedsRateLimit(serverPlayer.getUUID())) {
@@ -85,22 +85,6 @@ public final class MarieNetworking {
                 }
             }
         });
-    }
-
-    /**
-     * Re-serializes the already-decoded tag to measure its size. Vanilla/NeoForge expose no
-     * cheaper NBT size-estimation utility, so this runs a full write pass on every incoming
-     * packet post-decode; vanilla's own packet size limits still bound the worst case. Accepted
-     * trade-off — restructuring to check size pre-decode is a larger architectural change.
-     */
-    private static boolean exceedsMaxSize(CompoundTag data) {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream(256);
-        try (DataOutputStream out = new DataOutputStream(baos)) {
-            NbtIo.write(data, out);
-        } catch (IOException e) {
-            return true;
-        }
-        return baos.size() > MAX_PAYLOAD_BYTES;
     }
 
     private static boolean exceedsRateLimit(UUID playerId) {
