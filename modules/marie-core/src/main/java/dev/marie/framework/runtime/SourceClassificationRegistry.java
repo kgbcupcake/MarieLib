@@ -23,10 +23,12 @@ import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Loads per-source manual value assignments from config/&lt;modid&gt;/source_classifications.json.
@@ -49,6 +51,9 @@ public class SourceClassificationRegistry {
     }
 
     private static final Core INSTANCE = new Core();
+
+    // sourceIds pushed into SourceRegistry by the last pushToSourceRegistry() call, so the next call can drop stale ones first.
+    private static Set<ResourceLocation> bridgedSourceIds = Set.of();
 
     public static Optional<SourceClassification> getOverride(String sourceId) {
         SourceClassification entry = INSTANCE.get(sourceId);
@@ -122,12 +127,14 @@ public class SourceClassificationRegistry {
             LOGGER.error("[SourceClassificationRegistry] Failed to load source_classifications.json", e);
             INSTANCE.reset();
             INSTANCE.freeze();
+            pushToSourceRegistry();
         } catch (RuntimeException e) {
             // Per-entry parse failures are isolated in parseEntry()/parseFromReader(); this only
             // catches whole-file corruption (invalid JSON syntax, or top-level value isn't an array).
             LOGGER.error("[SourceClassificationRegistry] source_classifications.json is not valid JSON, ignoring file", e);
             INSTANCE.reset();
             INSTANCE.freeze();
+            pushToSourceRegistry();
         }
 
         try {
@@ -172,6 +179,33 @@ public class SourceClassificationRegistry {
             }
         }
         INSTANCE.freeze();
+        pushToSourceRegistry();
+    }
+
+    // Bridges enabled INSTANCE entries into SourceRegistry so getScore()/getExternalClassification() see them.
+    private static void pushToSourceRegistry() {
+        for (ResourceLocation staleId : bridgedSourceIds) {
+            SourceRegistry.unregisterClassification(staleId);
+        }
+        Set<ResourceLocation> pushed = new HashSet<>();
+        for (SourceClassification entry : INSTANCE.entries().values()) {
+            if (!entry.enabled() || entry.values().isEmpty()) {
+                continue;
+            }
+            ResourceLocation loc = ResourceLocation.tryParse(entry.sourceId());
+            if (loc == null) {
+                LOGGER.warn("[SourceClassificationRegistry] Skipping entry with malformed source_id: {}", entry.sourceId());
+                continue;
+            }
+            // Isolated like parseEntry(): one bad entry must not abort the whole reload pass and skip every registry queued after this one.
+            try {
+                SourceRegistry.applyAuthoritativeOverride(loc, entry.values());
+                pushed.add(loc);
+            } catch (RuntimeException e) {
+                LOGGER.warn("[SourceClassificationRegistry] Failed to push override for {}: {}", entry.sourceId(), e.getMessage());
+            }
+        }
+        bridgedSourceIds = pushed;
     }
 
     private static void parse(Path file) throws IOException {
@@ -251,6 +285,7 @@ public class SourceClassificationRegistry {
             parseEntry(el.getAsJsonObject(), i);
         }
         INSTANCE.freeze();
+        pushToSourceRegistry();
         LOGGER.info("[SourceClassificationRegistry] Migration complete — {} entries written to source_classifications.json", INSTANCE.size());
     }
 
@@ -308,6 +343,7 @@ public class SourceClassificationRegistry {
             INSTANCE.register(e.getKey(), e.getValue());
         }
         INSTANCE.freeze();
+        pushToSourceRegistry();
     }
 
     public static void removeOverride(String sourceId) {
@@ -319,6 +355,7 @@ public class SourceClassificationRegistry {
             INSTANCE.register(e.getKey(), e.getValue());
         }
         INSTANCE.freeze();
+        pushToSourceRegistry();
     }
 
     private static void writeRegistry(Path file) throws IOException {

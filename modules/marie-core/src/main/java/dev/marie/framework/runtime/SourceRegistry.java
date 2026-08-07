@@ -41,9 +41,17 @@ public class SourceRegistry {
     /** @GuardedBy("itself — ConcurrentHashMap") */
     private static final Map<ResourceLocation, Map<String, Float>> SCANNER_CLASSIFICATIONS = new ConcurrentHashMap<>();
 
+    // sourceIds exclusively owned by an enabled SourceClassificationRegistry override; non-override registerClassification calls for these are ignored.
+    private static final Set<ResourceLocation> OVERRIDE_LOCKED_SOURCES = ConcurrentHashMap.newKeySet();
+
     private SourceRegistry() {}
 
     public static void registerClassification(ResourceLocation sourceId, String valueKey, float amount) {
+        if (OVERRIDE_LOCKED_SOURCES.contains(sourceId)) {
+            LOGGER.debug("[SourceRegistry] Ignoring {} -> {}: source has an authoritative classification override",
+                    sourceId, valueKey);
+            return;
+        }
         if (EXTERNAL_CLASSIFICATIONS.size() >= EXTERNAL_CLASSIFICATION_CAP && !EXTERNAL_CLASSIFICATIONS.containsKey(sourceId)) {
             if (WARNED_CAP_ITEMS.add(sourceId.toString())) {
                 LOGGER.warn("[SourceRegistry] External classification cap ({}) reached — ignoring: {} -> {}",
@@ -54,6 +62,26 @@ public class SourceRegistry {
         EXTERNAL_CLASSIFICATIONS.computeIfAbsent(sourceId, k -> new ConcurrentHashMap<>()).put(valueKey, amount);
         API_REGISTERED_CLASSIFICATIONS.computeIfAbsent(sourceId, k -> new ConcurrentHashMap<>()).put(valueKey, amount);
         LOGGER.debug("[SourceRegistry] Registered external classification: {} -> {} ({})", sourceId, valueKey, amount);
+    }
+
+    // Replaces sourceId's classification exclusively with an authoritative override's values and locks out future non-override registerClassification calls for it.
+    static void applyAuthoritativeOverride(ResourceLocation sourceId, Map<String, Float> values) {
+        Map<String, Float> sanitized = new ConcurrentHashMap<>();
+        for (Map.Entry<String, Float> e : values.entrySet()) {
+            if (e.getKey() != null && e.getValue() != null) {
+                sanitized.put(e.getKey(), e.getValue());
+            }
+        }
+        EXTERNAL_CLASSIFICATIONS.put(sourceId, sanitized);
+        API_REGISTERED_CLASSIFICATIONS.put(sourceId, new ConcurrentHashMap<>(sanitized));
+        OVERRIDE_LOCKED_SOURCES.add(sourceId);
+    }
+
+    // Removes one sourceId's entries from both maps and its override lock; used by SourceClassificationRegistry to drop stale entries before re-pushing a reload.
+    static void unregisterClassification(ResourceLocation sourceId) {
+        EXTERNAL_CLASSIFICATIONS.remove(sourceId);
+        API_REGISTERED_CLASSIFICATIONS.remove(sourceId);
+        OVERRIDE_LOCKED_SOURCES.remove(sourceId);
     }
 
     public static void clearExternalClassifications() {

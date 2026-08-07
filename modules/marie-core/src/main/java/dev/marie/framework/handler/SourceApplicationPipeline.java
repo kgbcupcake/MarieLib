@@ -126,7 +126,15 @@ public final class SourceApplicationPipeline {
             for (Map.Entry<String, Float> e : resolverMatchedBars.entrySet()) {
                 matchedBars.putIfAbsent(e.getKey(), e.getValue());
             }
-            totalAdded = override.total() != 0f ? override.total() : resolverDelta.total();
+            // Prefer the actual sum of applied per-value deltas over the JSON "total" field so the
+            // tracked total stat never diverges from what was really applied to individual values.
+            float mergedValueSum = 0f;
+            for (float v : valueDeltas.values()) {
+                mergedValueSum += v;
+            }
+            totalAdded = !valueDeltas.isEmpty()
+                    ? mergedValueSum
+                    : (override.total() != 0f ? override.total() : resolverDelta.total());
             MarieCore.LOGGER.debug("[MarieLib] using override for {} (total={}, values={})",
                     sourceKey, totalAdded, valueDeltas);
         } else {

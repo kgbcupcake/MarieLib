@@ -13,7 +13,7 @@ public final class MariesLibConfigHolder {
 
     // Scanner context
     public float scannerConfidenceSpreadThreshold = 0f;
-    public float compositeRatioThreshold = 0f;
+    public float compositeRatioThreshold = 0.5f;
     public boolean scannerEnableRecipeInheritance = false;
     public double multiValueInheritanceThreshold = 0.20;
 
