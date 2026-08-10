@@ -31,7 +31,7 @@ public class ValueEffectsListener {
 
         fireStateTicks(player);
 
-        if (FeatureFlagCache.enableEffects()) {
+        if (FeatureFlagCache.enableEffects() && !player.isCreative() && !player.isSpectator()) {
             TrackingData data = TrackingAttachment.getData(player);
             MarieContext.get().effectApplier().accept(player, data);
             for (String oldId : EffectRegistry.legacyCleanupEffectIds()) {
