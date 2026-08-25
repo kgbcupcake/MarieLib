@@ -33,6 +33,7 @@ import dev.marie.framework.api.ApiStatus;
 import dev.marie.framework.data.MarieDataManager;
 import dev.marie.framework.data.MarieDatapackCallbacks;
 import dev.marie.framework.tracking.MilestoneProgressAttachment;
+import dev.marie.framework.tracking.TrackerMilestoneProgressAttachment;
 import dev.marie.framework.tracking.SynergyAbsorptionModifier;
 import dev.marie.framework.tracking.TrackingAttachment;
 import dev.marie.framework.api.marieapi.MarieAPI;
@@ -103,6 +104,7 @@ public final class MarieBootstrap {
         MarieAttributes.register(modEventBus);
         TrackingAttachment.register(modEventBus);
         MilestoneProgressAttachment.register(modEventBus);
+        TrackerMilestoneProgressAttachment.register(modEventBus);
 
         attachedModEventBus = modEventBus;
         modEventBus.addListener(MarieBootstrap::onCommonSetup);
@@ -160,6 +162,7 @@ public final class MarieBootstrap {
         MarieAttributes.register(modEventBus);
         TrackingAttachment.register(modEventBus);
         MilestoneProgressAttachment.register(modEventBus);
+        TrackerMilestoneProgressAttachment.register(modEventBus);
         registerRegistries();
         registerHandlers(modEventBus);
         RegistryLifecycleManager.loadAll();

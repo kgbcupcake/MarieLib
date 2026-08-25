@@ -1,10 +1,19 @@
 package dev.marie.framework.notification;
 
+import dev.marie.framework.api.ApiStatus;
+
 import java.util.ArrayList;
 import java.util.List;
 
-/** Owns the active notification stack: merge-or-push on trigger, eviction, and expiry. */
-final class NotificationManager {
+/**
+ * Owns the active notification stack: merge-or-push on trigger, eviction, and expiry.
+ *
+ * <p>{@code show}/{@code clear} are {@code public} only so {@code MarieNotifications} (in {@code
+ * dev.marie.framework.ui.api}) can delegate to them across packages — not a general-purpose API;
+ * consumer mods should go through the facade.
+ */
+@ApiStatus.Internal
+public final class NotificationManager {
 
     private static final int MAX_VISIBLE = 4;
 
@@ -12,7 +21,7 @@ final class NotificationManager {
 
     private NotificationManager() {}
 
-    static synchronized void show(NotificationRequest request) {
+    public static synchronized void show(NotificationRequest request) {
         long now = System.currentTimeMillis();
         if (request.mergeKey() != null) {
             for (NotificationSlot slot : slots) {
@@ -36,7 +45,7 @@ final class NotificationManager {
         return List.copyOf(slots);
     }
 
-    static synchronized void clear() {
+    public static synchronized void clear() {
         slots.clear();
     }
 }

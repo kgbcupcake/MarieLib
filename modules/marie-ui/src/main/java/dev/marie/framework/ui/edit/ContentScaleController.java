@@ -14,15 +14,13 @@ import java.util.Map;
  * hand-rolled for its Diet Screen sub-boxes (double-click to enter/exit a scroll-adjustable mode,
  * one box at a time) into a reusable marie-ui primitive that also covers padding.
  *
- * <p>This does not replace or decouple content size from box size. Every component already
- * computes its own proportional scale as {@code Math.min(widthScale, heightScale)} against its
- * resolved {@link Bounds} — that box-driven number is still the foundation. The value this
- * controller persists and lets the user scroll-adjust is a <em>multiplier</em> on top of that
- * scale, applied via {@link #resolveContentScale}:
- *
- * <pre>
- * box resize -&gt; existing proportional scale -&gt; user adjustment -&gt; final content scale
- * </pre>
+ * <p>Content size is driven by the user's persisted adjustment alone, full stop — never by box
+ * size. Every component still computes its own proportional scale as {@code Math.min(widthScale,
+ * heightScale)} against its resolved {@link Bounds}, and that box-driven number is still the
+ * foundation for the component's own box sizing and coordinate mapping, but it plays no part in
+ * content/text scale: {@link #resolveContentScale} just passes the user's chosen scale through
+ * (sanity-clamped). If the box is too small to fit that scale, the content overflows the box's
+ * natural extent and gets cut off by the component's own clip region instead of shrinking.
  *
  * <p>Double-left-clicking inside a component toggles {@link Mode#TEXT_SCALE} for it; while active,
  * scrolling adjusts that component's persisted {@link ComponentState#contentScale}. Double-right-
@@ -46,23 +44,9 @@ public final class ContentScaleController {
     /** contentScale/paddingScale change applied per scroll notch. */
     private static final double SCROLL_STEP = 0.05d;
 
-    /** Storage range for the persisted multipliers — wider than the effective on-screen range enforced by {@link #resolveContentScale}/{@link #resolvePadding}. */
-    private static final double SCALE_STORAGE_MIN = 0.1d;
-    private static final double SCALE_STORAGE_MAX = 5.0d;
-
-    /**
-     * Live per-render clamp on {@link #resolveContentScale}'s result, as a multiplier of that
-     * call's own {@code proportionalScale} — not derived from width/height scale at all, so every
-     * component gets a real, resize-independent adjustment range regardless of its aspect ratio.
-     * Shrinking below the proportional scale is always safe (never clips content); growing above it
-     * can, so both bounds exist to keep the box-driven scale as the dominant factor.
-     */
-    private static final double TEXT_SCALE_FLOOR_MULTIPLIER = 0.5d;
-    private static final double TEXT_SCALE_CEILING_MULTIPLIER = 3.0d;
-
-    /** Analogous live clamp for {@link #resolvePadding}, as a multiplier of that call's own {@code basePadding}. */
-    private static final double PADDING_FLOOR_MULTIPLIER = 0.25d;
-    private static final double PADDING_CEILING_MULTIPLIER = 3.0d;
+    /** Valid range for the persisted contentScale/paddingScale multipliers themselves — the correct bound for anything editing those fields directly (e.g. a slider), as opposed to {@link #resolvePadding}'s sanity clamp, which is in different (already-resolved, caller-specific pixel) units. */
+    public static final double SCALE_STORAGE_MIN = 0.1d;
+    public static final double SCALE_STORAGE_MAX = 5.0d;
 
     private final PersistenceProvider persistence;
     private final Map<String, DoubleClickRecognizer> recognizers = new HashMap<>();
@@ -183,32 +167,35 @@ public final class ContentScaleController {
         return persistence.load(componentId).map(ComponentState::paddingScale).orElse(ComponentState.DEFAULT_PADDING_SCALE);
     }
 
+    /** Sanity clamp for {@link #resolveContentScale} — a multiplier, so degenerate values are caught close to zero/five. */
+    private static final double CONTENT_SCALE_SANITY_MIN = 0.1d;
+    private static final double CONTENT_SCALE_SANITY_MAX = 5.0d;
+
+    /** Sanity clamp for {@link #resolvePadding} — already-resolved local-pixel units (caller's reference padding times its multiplier), so the range is wide rather than a multiplier-shaped [0.1, 5.0]. */
+    private static final double PADDING_SANITY_MIN = 0.0d;
+    private static final double PADDING_SANITY_MAX = 1000.0d;
+
     /**
-     * Combines a component's existing box-driven {@code proportionalScale} (its own {@code
-     * Math.min(widthScale, heightScale)}) with its persisted user adjustment for text/content draw
-     * calls only — never for the component's own box sizing, which must stay driven by {@code
-     * proportionalScale} alone so this adjustment can't grow the box itself. Clamped every call to
-     * {@code [proportionalScale * TEXT_SCALE_FLOOR_MULTIPLIER, proportionalScale *
-     * TEXT_SCALE_CEILING_MULTIPLIER]} — a fixed range around the component's own current
-     * proportional scale, not an independent absolute scale.
+     * Pass-through for the user's persisted content-scale adjustment: box size plays no part in this
+     * — {@code userScaleAdjustment} is returned as-is, only sanity-clamped to {@code
+     * [CONTENT_SCALE_SANITY_MIN, CONTENT_SCALE_SANITY_MAX]} to stop degenerate (e.g. corrupted-save)
+     * values, not to constrain it to whatever the box can currently fit. If the box is too small for
+     * the resulting content, the caller's own clip region is what cuts it off, not this method.
      */
-    public static float resolveContentScale(double proportionalScale, double userScaleAdjustment) {
-        double min = proportionalScale * TEXT_SCALE_FLOOR_MULTIPLIER;
-        double max = proportionalScale * TEXT_SCALE_CEILING_MULTIPLIER;
-        double adjusted = proportionalScale * userScaleAdjustment;
-        return (float) Math.min(max, Math.max(min, adjusted));
+    public static float resolveContentScale(double userScaleAdjustment) {
+        return (float) clamp(userScaleAdjustment, CONTENT_SCALE_SANITY_MIN, CONTENT_SCALE_SANITY_MAX);
     }
 
     /**
-     * Analogous to {@link #resolveContentScale}, for a component's padding: combines a base padding
-     * value (already scaled to the component's own box, in whatever unit the caller renders with)
-     * with the persisted paddingScale multiplier, clamped to {@code [basePadding *
-     * PADDING_FLOOR_MULTIPLIER, basePadding * PADDING_CEILING_MULTIPLIER]}.
+     * Analogous to {@link #resolveContentScale}, for a component's padding: {@code userPaddingAmount}
+     * (the persisted paddingScale multiplier already applied to the component's reference padding) is
+     * returned as-is, only sanity-clamped to {@code [PADDING_SANITY_MIN, PADDING_SANITY_MAX]}.
      */
-    public static float resolvePadding(double basePadding, double paddingScaleAdjustment) {
-        double min = basePadding * PADDING_FLOOR_MULTIPLIER;
-        double max = basePadding * PADDING_CEILING_MULTIPLIER;
-        double adjusted = basePadding * paddingScaleAdjustment;
-        return (float) Math.min(max, Math.max(min, adjusted));
+    public static float resolvePadding(double userPaddingAmount) {
+        return (float) clamp(userPaddingAmount, PADDING_SANITY_MIN, PADDING_SANITY_MAX);
+    }
+
+    private static double clamp(double value, double min, double max) {
+        return Math.min(max, Math.max(min, value));
     }
 }

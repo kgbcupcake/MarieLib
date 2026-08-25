@@ -5,6 +5,7 @@ import dev.marie.framework.config.validation.ConfigValidatorRegistry;
 import dev.marie.framework.api.registry.AbsorptionModifierRegistry;
 import dev.marie.framework.api.registry.ProfileRegistry;
 import dev.marie.framework.api.registry.MilestoneRegistry;
+import dev.marie.framework.api.registry.TrackerMilestoneRegistry;
 import dev.marie.framework.api.registry.ReportProviderRegistry;
 import dev.marie.framework.api.registry.SeasonHookRegistry;
 import dev.marie.framework.api.registry.SleepBonusEvaluatorRegistry;
@@ -64,6 +65,7 @@ public final class MarieApiRegistries {
         if (datapackApplyCompletedOnce) {
             ProfileRegistry.resetInternal();
             MilestoneRegistry.resetInternal();
+            TrackerMilestoneRegistry.resetInternal();
             SynergyRegistry.resetInternal();
             TrackerRegistry.resetInternal();
             ColorDefinitionRegistry.resetInternal();
@@ -76,6 +78,7 @@ public final class MarieApiRegistries {
     public static void onDatapackApplyEnd() {
         ProfileRegistry.freezeInternal();
         MilestoneRegistry.freezeInternal();
+        TrackerMilestoneRegistry.freezeInternal();
         SynergyRegistry.freezeInternal();
         TrackerRegistry.freezeInternal();
         ColorDefinitionRegistry.freezeInternal();

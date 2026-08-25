@@ -68,6 +68,9 @@ public interface RenderContext {
 
     void drawText(String text, int x, int y, int argbColor, float scale);
 
+    /** Rendered pixel width of {@code text} at {@code scale}, for centering — no font access otherwise leaks into this contract. */
+    int textWidth(String text, float scale);
+
     void drawBar(int x, int y, int width, int height, float fillPct, int backgroundColor, int fillColor);
 
     void drawVerticalBar(int x, int y, int width, int height, float fillPct, int backgroundColor, int fillColor);
@@ -145,5 +148,24 @@ public interface RenderContext {
             int iy = Math.max(y, Math.min(my - indicatorH / 2, y + height - indicatorH));
             fillRect(x, iy, width, indicatorH, handleColor);
         }
+    }
+
+    /** Title baseline y, local to the box top — ported from Nourished's {@code DietPanelContainer} title row. */
+    int WINDOW_CHROME_TITLE_TEXT_Y = 9;
+
+    /** Divider y, local to the box top, i.e. the title row's height — ported from {@code DietPanelContainer}'s {@code dividerTop} local y. */
+    int WINDOW_CHROME_TITLE_ROW_HEIGHT = 26;
+
+    /** Divider line color — ported from {@code DietPanelContainer.COL_DIVIDER}. */
+    int WINDOW_CHROME_DIVIDER_COLOR = 0xFF2E2E2E;
+
+    /** Draws a {@code DietPanelContainer}-style window frame — filled/bordered rounded rect, centered title, divider beneath it — and returns the content {@link Bounds} below the divider. */
+    default Bounds drawWindowChrome(int x, int y, int width, int height, String title, int titleColor) {
+        drawRoundedRect(x, y, width, height, 1, theme().color(ThemeKey.PANEL_BACKGROUND), theme().color(ThemeKey.BORDER));
+        int titleX = x + (width - textWidth(title, 1f)) / 2;
+        drawText(title, titleX, y + WINDOW_CHROME_TITLE_TEXT_Y, titleColor, 1f);
+        int dividerY = y + WINDOW_CHROME_TITLE_ROW_HEIGHT;
+        fillRect(x + 1, dividerY, Math.max(0, width - 2), 1, WINDOW_CHROME_DIVIDER_COLOR);
+        return new Bounds(x, dividerY + 1, width, Math.max(0, height - WINDOW_CHROME_TITLE_ROW_HEIGHT - 1));
     }
 }

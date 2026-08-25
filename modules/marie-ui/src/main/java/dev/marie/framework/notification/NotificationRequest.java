@@ -1,5 +1,7 @@
 package dev.marie.framework.notification;
 
+import dev.marie.framework.ui.api.MarieNotifications;
+
 import java.util.List;
 import java.util.function.BiFunction;
 

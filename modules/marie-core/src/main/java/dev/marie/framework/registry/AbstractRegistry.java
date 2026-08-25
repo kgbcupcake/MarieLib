@@ -67,6 +67,35 @@ public abstract class AbstractRegistry<K, V> {
         }
     }
 
+    /**
+     * Removes a single key-value pair, if present. Not valid after {@link #freeze()}. Unlike
+     * {@link #reset()}, this does not clear the registry — it removes exactly one entry and
+     * leaves everything else in place.
+     *
+     * <pre>{@code
+     * boolean removed = registry.unregister("hundred_blocks_mined");
+     * }</pre>
+     *
+     * @param key the key to remove
+     * @return {@code true} if an entry for {@code key} was present and removed, {@code false} if
+     *         {@code key} was null or not present
+     * @throws IllegalStateException if the registry is frozen
+     */
+    public final boolean unregister(K key) {
+        lock.writeLock().lock();
+        try {
+            if (frozen) {
+                throw new IllegalStateException(name + ": cannot unregister while frozen");
+            }
+            if (key == null) {
+                return false;
+            }
+            return mutable.remove(key) != null;
+        } finally {
+            lock.writeLock().unlock();
+        }
+    }
+
     public final V get(K key) {
         if (key == null) {
             return null;

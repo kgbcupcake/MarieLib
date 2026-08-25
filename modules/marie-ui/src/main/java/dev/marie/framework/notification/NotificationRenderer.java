@@ -1,6 +1,7 @@
 package dev.marie.framework.notification;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import dev.marie.framework.api.ApiStatus;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -9,8 +10,15 @@ import net.neoforged.neoforge.client.event.RenderGuiEvent;
 
 import java.util.List;
 
-/** Draws the active notification stack anchored above vanilla's XP bar. */
-final class NotificationRenderer {
+/**
+ * Draws the active notification stack anchored above vanilla's XP bar.
+ *
+ * <p>{@code onRenderGuiPost} is {@code public} only so {@code MarieNotifications} (in {@code
+ * dev.marie.framework.ui.api}) can wire it into the event bus across packages — not a
+ * general-purpose API; consumer mods should call {@code MarieNotifications.registerClientListeners()}.
+ */
+@ApiStatus.Internal
+public final class NotificationRenderer {
 
     /** Time constant (seconds) for the per-frame Y-position ease; frame-rate independent. */
     private static final double Y_EASE_TIME_CONSTANT = 0.12;
@@ -19,7 +27,7 @@ final class NotificationRenderer {
 
     private NotificationRenderer() {}
 
-    static void onRenderGuiPost(RenderGuiEvent.Post event) {
+    public static void onRenderGuiPost(RenderGuiEvent.Post event) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.options.hideGui || mc.player == null) {
             return;
@@ -77,10 +85,22 @@ final class NotificationRenderer {
     }
 
     /** Mirrors vanilla's own XP bar top-Y calculation (Gui#renderExperienceBar), which shifts by
-     * whether the bar is currently visible (mounted on a jumpable vehicle hides it). */
+     * whether the bar is currently visible (mounted on a jumpable vehicle hides it). Also reserves
+     * clearance for vanilla's selected-item-name text (Gui#maybeRenderSelectedItemName /
+     * renderSelectedItemName), using the same yShift vanilla computes from its own live
+     * leftHeight/rightHeight rows. toolHighlightTimer is private with no accessor, so we can't
+     * check whether that text happens to be visible right now - the clearance is reserved
+     * unconditionally. */
     private static int xpBarTopY(Minecraft mc, GuiGraphics graphics) {
         boolean barVisible = mc.player.jumpableVehicle() == null && mc.gameMode != null && mc.gameMode.hasExperience();
-        return barVisible ? graphics.guiHeight() - 32 + 3 : graphics.guiHeight() - 32;
+        int anchorY = barVisible ? graphics.guiHeight() - 32 + 3 : graphics.guiHeight() - 32;
+
+        anchorY -= Math.max(mc.gui.leftHeight, Math.max(mc.gui.rightHeight, 59));
+        if (mc.gameMode != null && !mc.gameMode.canHurtPlayer()) {
+            anchorY += 14;
+        }
+
+        return anchorY;
     }
 
     private static float alphaFor(NotificationSlot slot, long now, NotificationConfig cfg) {

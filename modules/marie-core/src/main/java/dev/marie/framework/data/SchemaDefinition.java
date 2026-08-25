@@ -99,6 +99,19 @@ public final class SchemaDefinition {
         ));
     }
 
+    public static SchemaDefinition forTrackerMilestone() {
+        return new SchemaDefinition(DatapackSchema.TRACKER_MILESTONES_DIR, VERSION, List.of(
+                SchemaField.optional(DatapackSchema.KEY_SCHEMA_VERSION, SchemaType.INT, VERSION),
+                SchemaField.required(DatapackSchema.KEY_TRACKER_ID, SchemaType.RESOURCE_LOCATION),
+                SchemaField.required(DatapackSchema.KEY_GOAL, SchemaType.FLOAT),
+                SchemaField.required(DatapackSchema.KEY_SCOPE, SchemaType.STRING),
+                SchemaField.optional(DatapackSchema.KEY_REWARD_EFFECT_ID, SchemaType.RESOURCE_LOCATION, null),
+                SchemaField.optional(DatapackSchema.KEY_AMPLIFIER, SchemaType.INT, 0),
+                SchemaField.optional(DatapackSchema.KEY_REWARD_DURATION, SchemaType.INT, 200),
+                SchemaField.optional(DatapackSchema.KEY_ADVANCEMENT_ID, SchemaType.RESOURCE_LOCATION, null)
+        ));
+    }
+
     public static SchemaDefinition forTrackingProfile() {
         return new SchemaDefinition(DatapackSchema.TRACKING_PROFILES_DIR, VERSION, List.of(
                 SchemaField.optional(DatapackSchema.KEY_SCHEMA_VERSION, SchemaType.INT, VERSION),

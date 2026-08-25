@@ -14,7 +14,7 @@ public final class DarkTheme implements Theme {
     private static final Map<ThemeKey, Integer> COLORS = new EnumMap<>(ThemeKey.class);
 
     static {
-        COLORS.put(ThemeKey.PANEL_BACKGROUND, 0x00101010);
+        COLORS.put(ThemeKey.PANEL_BACKGROUND, 0xF0101010);
         COLORS.put(ThemeKey.BORDER, 0xFF3A3A3A);
         COLORS.put(ThemeKey.BORDER_HOVER, 0xFFFFFFAA);
         COLORS.put(ThemeKey.TEXT_PRIMARY, 0xFFE0E0E0);

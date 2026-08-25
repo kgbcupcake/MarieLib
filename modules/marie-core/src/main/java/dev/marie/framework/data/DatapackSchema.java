@@ -105,6 +105,15 @@ public final class DatapackSchema {
     /** Optional advancement id key. */
     public static final String KEY_ADVANCEMENT_ID = "advancement_id";
 
+    /** Path: {@code data/<namespace>/<modid>/tracker_milestones/<id>.json}. */
+    public static final String TRACKER_MILESTONES_DIR = "tracker_milestones";
+    /** Required tracker id key. */
+    public static final String KEY_TRACKER_ID = "tracker_id";
+    /** Required numeric goal value key. */
+    public static final String KEY_GOAL = "goal";
+    /** Required scope key (LIFETIME/CURRENT_PERIOD). */
+    public static final String KEY_SCOPE = "scope";
+
     /** Path: {@code data/<namespace>/<modid>/tracking_profiles/<id>.json}. */
     public static final String TRACKING_PROFILES_DIR = "tracking_profiles";
     /** Optional profile description key. */
