@@ -39,6 +39,13 @@ neoForge {
             sourceSet sourceSets.main
         }
     }
+
+    // Put Minecraft + NeoForge on the test classpath and wire up the loader test bootstrap so
+    // plain JUnit tests can exercise framework classes that reference game types (ResourceLocation, ...).
+    unitTest {
+        enable()
+        testedMod = mods."${mod_id}"
+    }
 }
 
 // After `clean`, Gradle may still treat createMinecraftArtifacts as up-to-date from

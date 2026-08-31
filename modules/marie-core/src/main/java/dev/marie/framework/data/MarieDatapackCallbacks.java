@@ -3,6 +3,8 @@ package dev.marie.framework.data;
 import dev.marie.framework.api.marieapi.MarieAPI;
 import dev.marie.framework.api.progression.MilestoneDefinition;
 import dev.marie.framework.api.progression.ProfileDefinition;
+import dev.marie.framework.api.progression.TrackerMilestoneDefinition;
+import dev.marie.framework.api.registry.TrackerMilestoneRegistry;
 import dev.marie.framework.api.source.SourcePairSynergy;
 import dev.marie.framework.api.effects.SynergyDefinition;
 import dev.marie.framework.api.effects.ThresholdEffect;
@@ -56,6 +58,14 @@ public final class MarieDatapackCallbacks implements MarieDataLoader.Callbacks {
     @Override
     public void registerMilestone(MilestoneDefinition def) {
         MarieAPI.registerMilestone(def);
+    }
+
+    @Override
+    public void registerTrackerMilestone(TrackerMilestoneDefinition def) {
+        // Safe in the datapack apply window: MarieApiRegistries.onDatapackApplyBegin() has reset
+        // (unfrozen) TrackerMilestoneRegistry, and onDatapackApplyEnd() freezes it afterwards —
+        // the same reset/refreeze cycle MilestoneRegistry goes through for registerMilestone().
+        TrackerMilestoneRegistry.register(def);
     }
 
     @Override
