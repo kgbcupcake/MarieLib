@@ -28,27 +28,27 @@ import java.util.Map.Entry;
 @ApiStatus.Internal
 public final class CommunityTagResolutionStage implements ResolutionStageHandler {
 
-    /** NeoForge community source-capable tag directory under namespace {@code c}. */
-    private static final String C_COMMUNITY_TAG_PREFIX = "fo" + "ods/";
-
     /**
      * The {@code c} namespace tag directory this stage scans (e.g. for building display/trace
      * labels). Exposed so callers never need to hardcode a duplicate copy of this value.
+     * Sourced from {@link ScannerSpecRegistry.ScannerSpec#communityTagDirectory()}, which each
+     * consumer mod may override in its own {@code scanner_spec.json}.
      */
     public static String tagDirectory() {
-        return C_COMMUNITY_TAG_PREFIX;
+        return ScannerSpecRegistry.get().communityTagDirectory();
     }
 
     @Override
     @Nullable
     public ResolutionResult resolve(ResourceLocation itemId, StageContext ctx) {
         Map<String, Map<String, Float>> communityTagWeights = ScannerSpecRegistry.get().communityTagWeights();
+        String tagDirectory = ScannerSpecRegistry.get().communityTagDirectory();
         Map<String, Float> contributions = new HashMap<>();
         String modId = MarieContext.isRegistered() ? MarieContext.get().modId() : null;
 
         for (Entry<String, Map<String, Float>> entry : communityTagWeights.entrySet()) {
             String tagSuffix = entry.getKey();
-            TagKey<Item> tagKey = TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath("c", C_COMMUNITY_TAG_PREFIX + tagSuffix));
+            TagKey<Item> tagKey = TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath("c", tagDirectory + tagSuffix));
             boolean inInstanceTags = modId != null && InstanceTagSourceRegistry.contains(modId, tagSuffix, itemId);
             if (ctx.holder().is(tagKey) || inInstanceTags) {
                 for (Entry<String, Float> contrib : entry.getValue().entrySet()) {

@@ -2,6 +2,7 @@ package dev.marie.framework.runtime;
 
 import com.mojang.logging.LogUtils;
 import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.api.marieapi.MarieAPIState;
 import dev.marie.framework.scanner.ItemScanner;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
@@ -35,7 +36,11 @@ public class SourceRegistry {
     /** @GuardedBy("itself — ConcurrentHashMap") */
     private static final Map<ResourceLocation, Map<String, Float>> EXTERNAL_CLASSIFICATIONS = new ConcurrentHashMap<>();
 
-    /** @GuardedBy("itself — ConcurrentHashMap") API/KubeJS registrations that must survive reload clears. */
+    /**
+     * @GuardedBy("itself — ConcurrentHashMap") Registrations made outside a datapack reload
+     * (mod init, KubeJS startup scripts, runtime API calls) that must survive {@link #clearExternalClassifications()}.
+     * Datapack-reload-scoped registrations are deliberately kept out of this map — see {@link #registerClassification}.
+     */
     private static final Map<ResourceLocation, Map<String, Float>> API_REGISTERED_CLASSIFICATIONS = new ConcurrentHashMap<>();
 
     /** @GuardedBy("itself — ConcurrentHashMap") */
@@ -60,7 +65,14 @@ public class SourceRegistry {
             return;
         }
         EXTERNAL_CLASSIFICATIONS.computeIfAbsent(sourceId, k -> new ConcurrentHashMap<>()).put(valueKey, amount);
-        API_REGISTERED_CLASSIFICATIONS.computeIfAbsent(sourceId, k -> new ConcurrentHashMap<>()).put(valueKey, amount);
+        // Only registrations made outside a datapack reload (mod init / KubeJS startup / runtime API) are
+        // mirrored so they can survive clearExternalClassifications(). Datapack-reload-scoped callers —
+        // nutrient-tag bridging and the datapack source_classifications/*.json directory — rebuild their
+        // entries in full on every reload, so mirroring them here would resurrect entries that were later
+        // removed from the source files (stale EXTERNAL_CLASSIFICATION), which is exactly what this guards against.
+        if (MarieAPIState.getPhase() != MarieAPIState.Phase.DATAPACK_RELOAD) {
+            API_REGISTERED_CLASSIFICATIONS.computeIfAbsent(sourceId, k -> new ConcurrentHashMap<>()).put(valueKey, amount);
+        }
         LOGGER.debug("[SourceRegistry] Registered external classification: {} -> {} ({})", sourceId, valueKey, amount);
     }
 

@@ -47,6 +47,15 @@ public final class DatapackSchema {
     /** Optional item tag mapping key. */
     public static final String KEY_TAG = "tag";
 
+    /** Path: {@code data/<namespace>/<modid>/food_overrides/<id>.json}. Directory form of the legacy flat {@code config/food_overrides.json}. */
+    public static final String FOOD_OVERRIDES_DIR = "food_overrides";
+    /** Optional object key mapping nutrient key -> delta value for a food override. */
+    public static final String KEY_NUTRIENTS = "nutrients";
+    /** Optional integer key for a food override's calorie value. Default 0. */
+    public static final String KEY_CALORIES = "calories";
+    /** Optional boolean key toggling a food override on/off. Default true. */
+    public static final String KEY_ENABLED = "enabled";
+
     /** Path: {@code data/<namespace>/<modid>/effects/<id>.json}. */
     public static final String EFFECTS_DIR = "effects";
     /** Required numeric key for trigger threshold. */

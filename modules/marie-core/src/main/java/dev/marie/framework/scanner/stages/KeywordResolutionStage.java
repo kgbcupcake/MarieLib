@@ -5,6 +5,7 @@ import dev.marie.framework.scan.ResolutionResult;
 import dev.marie.framework.scan.ResolutionStageHandler;
 import dev.marie.framework.scan.RuntimeCascadeStage;
 import dev.marie.framework.scan.StageContext;
+import dev.marie.framework.scan.StageMath;
 import dev.marie.framework.scanner.ScannerSpecRegistry;
 import dev.marie.framework.scanner.TokenStemmer;
 import net.minecraft.resources.ResourceLocation;
@@ -47,9 +48,16 @@ public final class KeywordResolutionStage implements ResolutionStageHandler {
             return null;
         }
 
+        // Honest confidence over the raw contributions (spread of the top two categories
+        // relative to the top weight), not a hardcoded 0f — so downstream never has to treat
+        // a genuinely contested keyword match as maximally confident. rawScores == values here
+        // because this stage does no collapse; RuntimeResolutionMerge relies on rawScores
+        // still carrying the full pre-collapse distribution.
+        float confidence = StageMath.confidenceRatio(contributions);
+
         return new ResolutionResult(
                 contributions, contributions, matchedTokens, Map.of(), Map.of(),
-                false, 0f, RuntimeCascadeStage.KEYWORD_SUFFIX, "keyword_match"
+                false, confidence, RuntimeCascadeStage.KEYWORD_SUFFIX, "keyword_match"
         );
     }
 }

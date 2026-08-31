@@ -50,6 +50,16 @@ public final class SchemaDefinition {
         ));
     }
 
+    public static SchemaDefinition forFoodOverride() {
+        return new SchemaDefinition(DatapackSchema.FOOD_OVERRIDES_DIR, VERSION, List.of(
+                SchemaField.optional(DatapackSchema.KEY_SCHEMA_VERSION, SchemaType.INT, VERSION),
+                SchemaField.required(DatapackSchema.KEY_ITEM, SchemaType.RESOURCE_LOCATION),
+                SchemaField.optional(DatapackSchema.KEY_NUTRIENTS, SchemaType.OBJECT, null),
+                SchemaField.optional(DatapackSchema.KEY_CALORIES, SchemaType.INT, 0),
+                SchemaField.optional(DatapackSchema.KEY_ENABLED, SchemaType.BOOLEAN, true)
+        ));
+    }
+
     public static SchemaDefinition forEffect() {
         return new SchemaDefinition(DatapackSchema.EFFECTS_DIR, VERSION, List.of(
                 SchemaField.optional(DatapackSchema.KEY_SCHEMA_VERSION, SchemaType.INT, VERSION),

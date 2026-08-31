@@ -61,6 +61,16 @@ public final class RecipeInheritanceResolver {
         }
     }
 
+    /**
+     * One classified node encountered while walking the recipe-ingredient graph.
+     *
+     * @param nodeId ingredient item id that was classified
+     * @param depth  walk depth at which this node was discovered (0 = direct ingredient of the root item)
+     * @param value  non-null classifier result for this node
+     * @param <T>    caller-defined classification type
+     */
+    public record NodeContribution<T>(ResourceLocation nodeId, int depth, T value) {}
+
     private static final int MAX_DEPTH = 2;
     private static final int MAX_INGREDIENTS = 8;
     private static final float DECAY_PER_LEVEL = 0.5f;
@@ -289,6 +299,91 @@ public final class RecipeInheritanceResolver {
         }
 
         return contributions;
+    }
+
+    /**
+     * Walks the recipe-ingredient graph rooted at {@code rootItemId} to {@link #MAX_DEPTH} and invokes
+     * {@code nodeClassifier} once per distinct node in range, collecting every non-null result.
+     *
+     * <p>Unlike {@link #resolve(Item, Function)} — which delegates to {@code resolveRecursive} and stops
+     * descending a branch as soon as a node classifies confidently (a non-null, non-uncertain result) —
+     * this method never short-circuits. It always visits every node within {@code MAX_DEPTH}. That
+     * short-circuit is the confirmed root cause of the "calzone" class of bug: a weak keyword-fallback
+     * match on an intermediate node (e.g. a generic dough / bread ingredient) classified "confidently
+     * enough" to end the branch, so a stronger tag-based match one hop further down (the real filling)
+     * was never visited and never contributed. Callers that need the full picture — and want to choose
+     * the strongest signal themselves — use this method instead of {@code resolve}.</p>
+     *
+     * <p>The root item is not classified: only the graph <em>below</em> {@code rootItemId} is walked,
+     * matching {@code resolveRecursive}'s convention where the root is the caller's own responsibility.</p>
+     *
+     * <p>A single global visited guard — the same {@code Map<ResourceLocation, Boolean>} pattern as the
+     * {@code resolveRecursive} cycle guard — is checked before {@code nodeClassifier} runs and marked
+     * immediately after. One mechanism covers both a node that appears multiple times in one ingredient
+     * list and a node reachable through more than one branch: each distinct node is classified exactly
+     * once, at the shallowest depth it is reached. When {@code nodeClassifier} returns {@code null} for a
+     * node, that node is still walked through — its own ingredients are visited, subject to depth and the
+     * visited guard — but nothing is recorded for it.</p>
+     *
+     * <p>Entries are returned in walk order (depth 0 before depth 1; ingredient-list order within a
+     * node). The list is empty when no recipe index is available.</p>
+     *
+     * <pre>{@code
+     * List<NodeContribution<ClassificationResult>> hits =
+     *         resolver.collectContributions(calzoneId, classifier::classify);
+     * // every confident match in range is present - pick the strongest yourself instead of
+     * // taking whichever one happened to appear first
+     * for (NodeContribution<ClassificationResult> hit : hits) {
+     *     if (!hit.value().uncertain()) {
+     *         merge(hit.value().scores(), hit.depth());
+     *     }
+     * }
+     * }</pre>
+     *
+     * @param rootItemId     item whose ingredient graph is walked; not classified itself
+     * @param nodeClassifier caller-supplied per-node classifier; may return {@code null} to skip recording
+     * @param <T>            caller-defined classification type
+     * @return non-null classifier results in walk order, one per distinct classified node; never {@code null}
+     */
+    public <T> List<NodeContribution<T>> collectContributions(
+            ResourceLocation rootItemId,
+            Function<ResourceLocation, T> nodeClassifier
+    ) {
+        List<NodeContribution<T>> out = new ArrayList<>();
+        if (rootItemId == null) {
+            return out;
+        }
+        // root is the caller's responsibility: seed it as visited so it is never classified or revisited
+        Map<ResourceLocation, Boolean> visited = new HashMap<>();
+        visited.put(rootItemId, true);
+        collectRecursive(rootItemId, nodeClassifier, 0, visited, out);
+        return out;
+    }
+
+    private <T> void collectRecursive(
+            ResourceLocation itemId,
+            Function<ResourceLocation, T> nodeClassifier,
+            int depth,
+            Map<ResourceLocation, Boolean> visited,
+            List<NodeContribution<T>> out
+    ) {
+        // same depth gate as resolveRecursive: depth 0 sees the root's direct ingredients, depth 1 theirs
+        if (depth >= MAX_DEPTH) {
+            return;
+        }
+        for (ResourceLocation ingredientId : getIngredients(itemId)) {
+            // global visited guard: covers duplicate ingredients and cross-branch repeats in one check
+            if (visited.containsKey(ingredientId)) {
+                continue;
+            }
+            visited.put(ingredientId, true);
+            T value = nodeClassifier.apply(ingredientId);
+            if (value != null) {
+                out.add(new NodeContribution<>(ingredientId, depth, value));
+            }
+            // walk through even on a null result so a strong match further down is still visited
+            collectRecursive(ingredientId, nodeClassifier, depth + 1, visited, out);
+        }
     }
 
     public List<ResourceLocation> getIngredients(ResourceLocation itemId) {

@@ -740,7 +740,7 @@ public final class MarieContext implements MarieLibSettings, IMarieConfig {
 
     public static final class Builder {
         private final String modId;
-        private Supplier<Float> scannerConfidenceSpreadThreshold = () -> 0f;
+        private Supplier<Float> scannerConfidenceSpreadThreshold = () -> 0.15f;
         private Supplier<Float> compositeRatioThreshold = () -> 0.5f;
         private Supplier<Boolean> scannerEnableRecipeInheritance = () -> false;
         private Supplier<Boolean> enableDebugLogging = () -> false;

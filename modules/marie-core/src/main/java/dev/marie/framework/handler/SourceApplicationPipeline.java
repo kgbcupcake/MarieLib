@@ -126,15 +126,12 @@ public final class SourceApplicationPipeline {
             for (Map.Entry<String, Float> e : resolverMatchedBars.entrySet()) {
                 matchedBars.putIfAbsent(e.getKey(), e.getValue());
             }
-            // Prefer the actual sum of applied per-value deltas over the JSON "total" field so the
-            // tracked total stat never diverges from what was really applied to individual values.
-            float mergedValueSum = 0f;
-            for (float v : valueDeltas.values()) {
-                mergedValueSum += v;
-            }
-            totalAdded = !valueDeltas.isEmpty()
-                    ? mergedValueSum
-                    : (override.total() != 0f ? override.total() : resolverDelta.total());
+            // total and per-value deltas are different units; don't conflate them.
+            // Being source-classified must not zero an item's calories: prefer the item's
+            // existing/resolved calorie value (vanilla default, or a food_overrides.json entry the
+            // consumer routes through resolverDelta) and only fall back to the classification
+            // entry's own explicit calories/total when the resolver yields nothing.
+            totalAdded = resolverDelta.total() != 0f ? resolverDelta.total() : override.total();
             MarieCore.LOGGER.debug("[MarieLib] using override for {} (total={}, values={})",
                     sourceKey, totalAdded, valueDeltas);
         } else {
@@ -175,10 +172,12 @@ public final class SourceApplicationPipeline {
                 : null;
 
         if (FeatureFlagCache.enableTotalTracking()) {
-            MarieCore.LOGGER.debug("[MarieLib] total: adding {} * {} for {}",
-                    totalAdded, multiplier,
-                    stack != null ? stack.getItem().getDescriptionId() : trigger.sourceId());
-            tracking.addTotal(totalAdded * multiplier);
+            // total is added unscaled; multiplier only diminishes per-value gains, not the aggregate total
+            MarieCore.LOGGER.debug("[MarieLib] total: adding {} for {} (multiplier {} not applied to total)",
+                    totalAdded,
+                    stack != null ? stack.getItem().getDescriptionId() : trigger.sourceId(),
+                    multiplier);
+            tracking.addTotal(totalAdded);
         }
 
         Map<String, Float> afterMultiplierOnly = new HashMap<>();

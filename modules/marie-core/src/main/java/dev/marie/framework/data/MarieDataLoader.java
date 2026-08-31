@@ -47,6 +47,14 @@ public final class MarieDataLoader extends SimpleJsonResourceReloadListener {
         default void onApplyEnd() {}
         default void registerValue(ValueDefinition def) {}
         default void registerSourceClassification(ResourceLocation itemId, String valueKey, float amount) {}
+
+        /**
+         * Registers one per-item food override parsed from
+         * {@code data/<namespace>/<modid>/food_overrides/<id>.json}. Directory-scanned sibling of the
+         * legacy flat {@code config/food_overrides.json}. The consumer accumulates these between
+         * {@link #onApplyBegin()} and {@link #onApplyEnd()} and publishes them as one layer.
+         */
+        default void registerFoodOverride(ResourceLocation itemId, Map<String, Float> nutrients, int calories, boolean enabled) {}
         default void registerCustomEffect(ThresholdEffect def) {}
         default void registerValueSynergy(SynergyDefinition def) {}
         default void registerSourcePairSynergy(SourcePairSynergy def) {}
@@ -92,6 +100,7 @@ public final class MarieDataLoader extends SimpleJsonResourceReloadListener {
 
     private volatile Set<ResourceLocation> loadedValues = Set.of();
     private volatile Set<ResourceLocation> loadedSourceClassifications = Set.of();
+    private volatile Set<ResourceLocation> loadedFoodOverrides = Set.of();
     private volatile Set<ResourceLocation> loadedEffects = Set.of();
     private volatile Set<ResourceLocation> loadedSynergies = Set.of();
     private volatile Set<ResourceLocation> loadedSourcePairSynergies = Set.of();
@@ -119,6 +128,7 @@ public final class MarieDataLoader extends SimpleJsonResourceReloadListener {
 
             Set<ResourceLocation> nextValues = new LinkedHashSet<>();
             Set<ResourceLocation> nextSourceClassifications = new LinkedHashSet<>();
+            Set<ResourceLocation> nextFoodOverrides = new LinkedHashSet<>();
             Set<ResourceLocation> nextEffects = new LinkedHashSet<>();
             Set<ResourceLocation> nextSynergies = new LinkedHashSet<>();
             Set<ResourceLocation> nextSourcePairSynergies = new LinkedHashSet<>();
@@ -129,6 +139,7 @@ public final class MarieDataLoader extends SimpleJsonResourceReloadListener {
 
             Map<ResourceLocation, JsonObject> values = filterDirectory(allJson, DatapackSchema.VALUES_DIR);
             Map<ResourceLocation, JsonObject> sourceClassifications = filterDirectory(allJson, DatapackSchema.SOURCE_CLASSIFICATIONS_DIR);
+            Map<ResourceLocation, JsonObject> foodOverrides = filterDirectory(allJson, DatapackSchema.FOOD_OVERRIDES_DIR);
             Map<ResourceLocation, JsonObject> effects = filterDirectory(allJson, DatapackSchema.EFFECTS_DIR);
             Map<ResourceLocation, JsonObject> synergies = filterDirectory(allJson, DatapackSchema.SYNERGIES_DIR);
             Map<ResourceLocation, JsonObject> sourcePairSynergies = filterDirectory(allJson, DatapackSchema.SOURCE_SYNERGIES_DIR);
@@ -165,6 +176,21 @@ public final class MarieDataLoader extends SimpleJsonResourceReloadListener {
             try {
                 registerSourceClassification(fileId, json);
                 nextSourceClassifications.add(fileId);
+            } catch (Exception ex) {
+                warnMalformed(fileId, ex);
+            }
+        }
+
+        for (Map.Entry<ResourceLocation, JsonObject> entry : foodOverrides.entrySet()) {
+            ResourceLocation fileId = entry.getKey();
+            JsonObject json = entry.getValue();
+            String filePath = datapackFilePath(DatapackSchema.FOOD_OVERRIDES_DIR, fileId);
+            if (!isValidForRegistration(json, SchemaDefinition.forFoodOverride(), filePath, diagnostics)) {
+                continue;
+            }
+            try {
+                registerFoodOverride(fileId, json);
+                nextFoodOverrides.add(fileId);
             } catch (Exception ex) {
                 warnMalformed(fileId, ex);
             }
@@ -315,6 +341,7 @@ public final class MarieDataLoader extends SimpleJsonResourceReloadListener {
 
             loadedValues = Collections.unmodifiableSet(nextValues);
             loadedSourceClassifications = Collections.unmodifiableSet(nextSourceClassifications);
+            loadedFoodOverrides = Collections.unmodifiableSet(nextFoodOverrides);
             loadedEffects = Collections.unmodifiableSet(nextEffects);
             loadedSynergies = Collections.unmodifiableSet(nextSynergies);
             loadedSourcePairSynergies = Collections.unmodifiableSet(nextSourcePairSynergies);
@@ -347,6 +374,10 @@ public final class MarieDataLoader extends SimpleJsonResourceReloadListener {
 
     public Set<ResourceLocation> getLoadedSourceClassifications() {
         return loadedSourceClassifications;
+    }
+
+    public Set<ResourceLocation> getLoadedFoodOverrides() {
+        return loadedFoodOverrides;
     }
 
     public Set<ResourceLocation> getLoadedEffects() {
@@ -450,6 +481,19 @@ public final class MarieDataLoader extends SimpleJsonResourceReloadListener {
         }
 
         throw new IllegalArgumentException("Entry must include either 'item' or 'tag'");
+    }
+
+    private void registerFoodOverride(ResourceLocation fileId, JsonObject json) {
+        ResourceLocation itemId = ResourceLocation.parse(getRequiredString(json, DatapackSchema.KEY_ITEM));
+        int calories = getOptionalInt(json, DatapackSchema.KEY_CALORIES, 0);
+        boolean enabled = getOptionalBoolean(json, DatapackSchema.KEY_ENABLED, true);
+        Map<String, Float> nutrients = new LinkedHashMap<>();
+        if (json.has(DatapackSchema.KEY_NUTRIENTS) && json.get(DatapackSchema.KEY_NUTRIENTS).isJsonObject()) {
+            for (Map.Entry<String, JsonElement> e : json.getAsJsonObject(DatapackSchema.KEY_NUTRIENTS).entrySet()) {
+                nutrients.put(e.getKey(), e.getValue().getAsFloat());
+            }
+        }
+        callbacks.registerFoodOverride(itemId, nutrients, calories, enabled);
     }
 
     private static ThresholdEffect parseEffect(ResourceLocation fileId, JsonObject json) {
