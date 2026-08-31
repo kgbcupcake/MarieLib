@@ -3,6 +3,8 @@ package dev.marie.framework.ui.edit;
 import dev.marie.framework.ui.component.MarieComponent;
 import net.minecraft.client.Minecraft;
 
+import java.util.List;
+
 /**
  * Per-target edit-mode state and screen lifecycle. Generalizes Nourished's HUDEditMode/
  * DietScreenEditMode, which each tracked a single static boolean and could therefore only ever
@@ -60,6 +62,49 @@ public final class EditModeController {
             return;
         }
         screen = null;
+        onExit.run();
+    }
+
+    // Group-entry lifecycle below: a single shared screen spanning multiple targets, owned
+    // statically rather than by any one single-target instance — there is no natural per-instance
+    // owner for a screen that wraps a whole list of targets.
+    private static EditOverlayScreen groupScreen;
+    private static Runnable groupOnExit;
+
+    /** Opens one {@link EditOverlayScreen} wrapping every target in {@code targets}. No-op if a group session is already active. */
+    public static void enterGroup(List<MarieComponent> targets, String hintText, int exitKeyCode, Runnable onExit) {
+        if (isGroupActive()) {
+            return;
+        }
+        groupOnExit = onExit;
+        groupScreen = new EditOverlayScreen(targets, hintText, exitKeyCode, EditModeController::handleGroupExit);
+        Minecraft.getInstance().setScreen(groupScreen);
+    }
+
+    public static boolean isGroupActive() {
+        return groupScreen != null;
+    }
+
+    /** Closes the group screen if one is active, and runs its onExit unless it already ran via the screen's own exit path. */
+    public static void exitGroup() {
+        if (!isGroupActive()) {
+            return;
+        }
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.screen == groupScreen) {
+            mc.setScreen(null);
+        }
+        handleGroupExit();
+    }
+
+    /** Idempotent: the group screen may already have invoked this via its own exit path. */
+    private static void handleGroupExit() {
+        if (groupScreen == null) {
+            return;
+        }
+        groupScreen = null;
+        Runnable onExit = groupOnExit;
+        groupOnExit = null;
         onExit.run();
     }
 }

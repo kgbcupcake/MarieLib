@@ -61,13 +61,14 @@ public final class MarieKubeBindings {
     public static void registerSourceOverride(String itemId, Map<String, Object> overrides) {
         Map<String, Float> values = new HashMap<>();
         for (Map.Entry<String, Object> entry : overrides.entrySet()) {
-            if ("enabled".equals(entry.getKey())) {
+            if ("enabled".equals(entry.getKey()) || "calories".equals(entry.getKey())) {
                 continue;
             }
             values.put(entry.getKey(), asFloat(entry.getValue()));
         }
         boolean enabled = !overrides.containsKey("enabled") || asBoolean(overrides.get("enabled"));
-        SourceClassificationRegistry.setOverride(itemId, values, enabled);
+        int calories = overrides.containsKey("calories") ? asInt(overrides.get("calories")) : 0;
+        SourceClassificationRegistry.setOverride(itemId, values, calories, enabled);
     }
 
     public static void registerEffect(Map<String, Object> spec) {

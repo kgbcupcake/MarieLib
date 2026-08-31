@@ -7,6 +7,7 @@ import dev.marie.framework.api.marie.MarieEvents;
 import dev.marie.framework.kubejs.MarieKubeEvents;
 import dev.marie.framework.kubejs.events.MarieMilestoneTriggeredEvent;
 import dev.marie.framework.kubejs.events.MarieSourceConsumedEvent;
+import dev.marie.framework.kubejs.events.MarieTrackerMilestoneTriggeredEvent;
 import dev.marie.framework.kubejs.events.MarieValueChangedEvent;
 import dev.marie.framework.kubejs.events.MarieValueCriticalEvent;
 import dev.marie.framework.kubejs.events.MarieValueExcessEvent;
@@ -32,6 +33,7 @@ public final class KubeEventBridge {
         NeoForge.EVENT_BUS.addListener(KubeEventBridge::onValueExcess);
         NeoForge.EVENT_BUS.addListener(KubeEventBridge::onSourceConsumed);
         NeoForge.EVENT_BUS.addListener(KubeEventBridge::onMilestoneTriggered);
+        NeoForge.EVENT_BUS.addListener(KubeEventBridge::onTrackerMilestoneTriggered);
         NeoForge.EVENT_BUS.addListener(KubeEventBridge::onScriptReload);
     }
 
@@ -68,6 +70,13 @@ public final class KubeEventBridge {
             return;
         }
         MarieKubeEvents.MILESTONE_TRIGGERED.post(new MarieMilestoneTriggeredEvent(event));
+    }
+
+    private static void onTrackerMilestoneTriggered(MarieEvents.TrackerMilestoneTriggeredEvent event) {
+        if (!KubeGuard.hasListeners(MarieKubeEvents.TRACKER_MILESTONE_TRIGGERED_ID)) {
+            return;
+        }
+        MarieKubeEvents.TRACKER_MILESTONE_TRIGGERED.post(new MarieTrackerMilestoneTriggeredEvent(event));
     }
 
     private static void onScriptReload(ScriptsLoadedEvent event) {

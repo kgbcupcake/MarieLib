@@ -50,6 +50,16 @@ public final class SchemaDefinition {
         ));
     }
 
+    public static SchemaDefinition forFoodOverride() {
+        return new SchemaDefinition(DatapackSchema.FOOD_OVERRIDES_DIR, VERSION, List.of(
+                SchemaField.optional(DatapackSchema.KEY_SCHEMA_VERSION, SchemaType.INT, VERSION),
+                SchemaField.required(DatapackSchema.KEY_ITEM, SchemaType.RESOURCE_LOCATION),
+                SchemaField.optional(DatapackSchema.KEY_NUTRIENTS, SchemaType.OBJECT, null),
+                SchemaField.optional(DatapackSchema.KEY_CALORIES, SchemaType.INT, 0),
+                SchemaField.optional(DatapackSchema.KEY_ENABLED, SchemaType.BOOLEAN, true)
+        ));
+    }
+
     public static SchemaDefinition forEffect() {
         return new SchemaDefinition(DatapackSchema.EFFECTS_DIR, VERSION, List.of(
                 SchemaField.optional(DatapackSchema.KEY_SCHEMA_VERSION, SchemaType.INT, VERSION),
@@ -92,6 +102,19 @@ public final class SchemaDefinition {
                 SchemaField.optional(DatapackSchema.KEY_SCHEMA_VERSION, SchemaType.INT, VERSION),
                 SchemaField.required(DatapackSchema.KEY_VALUE_KEY, SchemaType.STRING),
                 SchemaField.required(DatapackSchema.KEY_CUMULATIVE_GOAL, SchemaType.FLOAT),
+                SchemaField.optional(DatapackSchema.KEY_REWARD_EFFECT_ID, SchemaType.RESOURCE_LOCATION, null),
+                SchemaField.optional(DatapackSchema.KEY_AMPLIFIER, SchemaType.INT, 0),
+                SchemaField.optional(DatapackSchema.KEY_REWARD_DURATION, SchemaType.INT, 200),
+                SchemaField.optional(DatapackSchema.KEY_ADVANCEMENT_ID, SchemaType.RESOURCE_LOCATION, null)
+        ));
+    }
+
+    public static SchemaDefinition forTrackerMilestone() {
+        return new SchemaDefinition(DatapackSchema.TRACKER_MILESTONES_DIR, VERSION, List.of(
+                SchemaField.optional(DatapackSchema.KEY_SCHEMA_VERSION, SchemaType.INT, VERSION),
+                SchemaField.required(DatapackSchema.KEY_TRACKER_ID, SchemaType.RESOURCE_LOCATION),
+                SchemaField.required(DatapackSchema.KEY_GOAL, SchemaType.FLOAT),
+                SchemaField.required(DatapackSchema.KEY_SCOPE, SchemaType.STRING),
                 SchemaField.optional(DatapackSchema.KEY_REWARD_EFFECT_ID, SchemaType.RESOURCE_LOCATION, null),
                 SchemaField.optional(DatapackSchema.KEY_AMPLIFIER, SchemaType.INT, 0),
                 SchemaField.optional(DatapackSchema.KEY_REWARD_DURATION, SchemaType.INT, 200),

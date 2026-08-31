@@ -7,7 +7,9 @@ import java.util.Objects;
 /**
  * Defines a registered color: its {@link ColorKey} identity and default ARGB value.
  *
- * <p>Register via {@link MarieColors#registerColor(ColorDefinition)}.
+ * <p>Register via {@link MarieColors#registerColor(ColorDefinition)}, idempotently — every
+ * {@code /reload} wipes the color definition registry, so re-register from
+ * {@code MarieContext.reloadBroadcastHook()} to survive it.
  * The default ARGB here is the fallback used by
  * {@link MarieColors#resolveColor(ColorKey)} when no user/datapack
  * override exists in {@link ColorRegistry}.</p>

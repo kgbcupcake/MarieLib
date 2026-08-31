@@ -47,6 +47,15 @@ public final class DatapackSchema {
     /** Optional item tag mapping key. */
     public static final String KEY_TAG = "tag";
 
+    /** Path: {@code data/<namespace>/<modid>/food_overrides/<id>.json}. Directory form of the legacy flat {@code config/food_overrides.json}. */
+    public static final String FOOD_OVERRIDES_DIR = "food_overrides";
+    /** Optional object key mapping nutrient key -> delta value for a food override. */
+    public static final String KEY_NUTRIENTS = "nutrients";
+    /** Optional integer key for a food override's calorie value. Default 0. */
+    public static final String KEY_CALORIES = "calories";
+    /** Optional boolean key toggling a food override on/off. Default true. */
+    public static final String KEY_ENABLED = "enabled";
+
     /** Path: {@code data/<namespace>/<modid>/effects/<id>.json}. */
     public static final String EFFECTS_DIR = "effects";
     /** Required numeric key for trigger threshold. */
@@ -104,6 +113,15 @@ public final class DatapackSchema {
     public static final String KEY_REWARD_DURATION = "reward_duration";
     /** Optional advancement id key. */
     public static final String KEY_ADVANCEMENT_ID = "advancement_id";
+
+    /** Path: {@code data/<namespace>/<modid>/tracker_milestones/<id>.json}. */
+    public static final String TRACKER_MILESTONES_DIR = "tracker_milestones";
+    /** Required tracker id key. */
+    public static final String KEY_TRACKER_ID = "tracker_id";
+    /** Required numeric goal value key. */
+    public static final String KEY_GOAL = "goal";
+    /** Required scope key (LIFETIME/CURRENT_PERIOD). */
+    public static final String KEY_SCOPE = "scope";
 
     /** Path: {@code data/<namespace>/<modid>/tracking_profiles/<id>.json}. */
     public static final String TRACKING_PROFILES_DIR = "tracking_profiles";

@@ -43,6 +43,10 @@ public final class MarieDataManager {
         return loader().getLoadedSourceClassifications();
     }
 
+    public static Set<ResourceLocation> getLoadedFoodOverrides() {
+        return loader().getLoadedFoodOverrides();
+    }
+
     public static Set<ResourceLocation> getLoadedEffects() {
         return loader().getLoadedEffects();
     }

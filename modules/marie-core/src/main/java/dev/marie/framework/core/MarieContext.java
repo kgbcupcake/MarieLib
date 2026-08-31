@@ -140,6 +140,7 @@ public final class MarieContext implements MarieLibSettings, IMarieConfig {
     private final Supplier<Integer> trackerMaxRetention;
     private final Supplier<Integer> trackerWeeklyPeriodDays;
     private final Supplier<Integer> trackerMonthlyPeriodDays;
+    private final Supplier<Integer> trackerSyncIntervalTicks;
     private final BiConsumer<ServerPlayer, dev.marie.framework.tracking.tracker.definition.TrackerHistoryEntry> onTrackerPeriodCompletedHook;
 
     private MarieContext(Builder builder) {
@@ -208,6 +209,7 @@ public final class MarieContext implements MarieLibSettings, IMarieConfig {
         this.trackerMaxRetention = builder.trackerMaxRetention;
         this.trackerWeeklyPeriodDays = builder.trackerWeeklyPeriodDays;
         this.trackerMonthlyPeriodDays = builder.trackerMonthlyPeriodDays;
+        this.trackerSyncIntervalTicks = builder.trackerSyncIntervalTicks;
         this.onTrackerPeriodCompletedHook = builder.onTrackerPeriodCompletedHook;
     }
 
@@ -577,6 +579,20 @@ public final class MarieContext implements MarieLibSettings, IMarieConfig {
         return cacheInvalidatedHook;
     }
 
+    /**
+     * The "reload happened, please re-register" hook. Fires after every resource reload
+     * completes — both vanilla {@code /reload} and a mod's own reload command — strictly after
+     * {@code MarieApiRegistries} has reset and re-frozen {@code TrackerRegistry} and
+     * {@code ColorDefinitionRegistry} for that reload pass. Registrations made purely via Java at
+     * mod init (e.g. {@link dev.marie.framework.tracking.tracker.MarieTracking#registerTracker},
+     * {@link dev.marie.framework.color.MarieColors#registerColor}) are wiped by that reset with
+     * nothing to restore them; consumers that want their trackers/colors to survive a
+     * {@code /reload} should re-register them from this hook. Re-registration is safe to call
+     * repeatedly — {@code TrackerRegistry}/{@code ColorDefinitionRegistry} upsert on duplicate keys
+     * rather than throwing.
+     *
+     * @see dev.marie.framework.handler.ReloadGuardListener#reloadAndBroadcast
+     */
     @ApiStatus.Experimental
     public Consumer<MinecraftServer> reloadBroadcastHook() {
         return reloadBroadcastHook;
@@ -609,6 +625,12 @@ public final class MarieContext implements MarieLibSettings, IMarieConfig {
     @ApiStatus.Internal
     public int trackerMonthlyPeriodDays() {
         return trackerMonthlyPeriodDays.get();
+    }
+
+    @Override
+    @ApiStatus.Internal
+    public int trackerSyncIntervalTicks() {
+        return trackerSyncIntervalTicks.get();
     }
 
     @ApiStatus.Experimental
@@ -718,8 +740,8 @@ public final class MarieContext implements MarieLibSettings, IMarieConfig {
 
     public static final class Builder {
         private final String modId;
-        private Supplier<Float> scannerConfidenceSpreadThreshold = () -> 0f;
-        private Supplier<Float> compositeRatioThreshold = () -> 0f;
+        private Supplier<Float> scannerConfidenceSpreadThreshold = () -> 0.15f;
+        private Supplier<Float> compositeRatioThreshold = () -> 0.5f;
         private Supplier<Boolean> scannerEnableRecipeInheritance = () -> false;
         private Supplier<Boolean> enableDebugLogging = () -> false;
         private Supplier<Predicate<ItemStack>> sourceItemFilter = () -> stack -> true;
@@ -790,6 +812,7 @@ public final class MarieContext implements MarieLibSettings, IMarieConfig {
         private Supplier<Integer> trackerMaxRetention = () -> 90;
         private Supplier<Integer> trackerWeeklyPeriodDays = () -> 7;
         private Supplier<Integer> trackerMonthlyPeriodDays = () -> 30;
+        private Supplier<Integer> trackerSyncIntervalTicks = () -> 20;
         private BiConsumer<ServerPlayer, dev.marie.framework.tracking.tracker.definition.TrackerHistoryEntry> onTrackerPeriodCompletedHook = (p, e) -> {};
 
         private Builder(String modId) {
@@ -908,6 +931,10 @@ public final class MarieContext implements MarieLibSettings, IMarieConfig {
             this.cacheInvalidatedHook = hook != null ? hook : () -> {};
             return this;
         }
+        /**
+         * Sets the "reload happened, please re-register" hook. See
+         * {@link MarieContext#reloadBroadcastHook()} for when this fires and what to do with it.
+         */
         @ApiStatus.Experimental
         public Builder onReloadBroadcast(Consumer<MinecraftServer> hook) {
             this.reloadBroadcastHook = hook != null ? hook : server -> {};
@@ -926,6 +953,8 @@ public final class MarieContext implements MarieLibSettings, IMarieConfig {
         public Builder trackerWeeklyPeriodDays(Supplier<Integer> s) { this.trackerWeeklyPeriodDays = s; return this; }
         @ApiStatus.Experimental
         public Builder trackerMonthlyPeriodDays(Supplier<Integer> s) { this.trackerMonthlyPeriodDays = s; return this; }
+        @ApiStatus.Experimental
+        public Builder trackerSyncIntervalTicks(Supplier<Integer> s) { this.trackerSyncIntervalTicks = s; return this; }
         @ApiStatus.Experimental
         public Builder onTrackerPeriodCompleted(
                 BiConsumer<ServerPlayer, dev.marie.framework.tracking.tracker.definition.TrackerHistoryEntry> hook) {

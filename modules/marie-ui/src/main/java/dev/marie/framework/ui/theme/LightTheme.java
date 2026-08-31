@@ -14,7 +14,7 @@ public final class LightTheme implements Theme {
     private static final Map<ThemeKey, Integer> COLORS = new EnumMap<>(ThemeKey.class);
 
     static {
-        COLORS.put(ThemeKey.PANEL_BACKGROUND, 0x00F0F0F0);
+        COLORS.put(ThemeKey.PANEL_BACKGROUND, 0xF0F0F0F0);
         COLORS.put(ThemeKey.BORDER, 0xFFB0B0B0);
         COLORS.put(ThemeKey.BORDER_HOVER, 0xFF3355FF);
         COLORS.put(ThemeKey.TEXT_PRIMARY, 0xFF202020);

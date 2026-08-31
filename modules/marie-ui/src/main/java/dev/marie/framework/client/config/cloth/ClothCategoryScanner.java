@@ -24,7 +24,7 @@ final class ClothCategoryScanner {
                 "scanner.confidenceSpreadThreshold", h.scannerConfidenceSpreadThreshold, 0f, 0f, 100f,
                 v -> h.scannerConfidenceSpreadThreshold = v));
         addIfPresent(classification, ClothConfigHelper.buildFloat(entryBuilder, MariesLibConfigKeys.COMPOSITE_RATIO_THRESHOLD,
-                "scanner.compositeRatioThreshold", h.compositeRatioThreshold, 0f, 0f, 1f,
+                "scanner.compositeRatioThreshold", h.compositeRatioThreshold, 0.5f, 0f, 1f,
                 v -> h.compositeRatioThreshold = v));
         addIfPresent(classification, ClothConfigHelper.buildBool(entryBuilder, MariesLibConfigKeys.SCANNER_ENABLE_RECIPE_INHERITANCE,
                 "scanner.enableRecipeInheritance", h.scannerEnableRecipeInheritance, false,

@@ -196,12 +196,14 @@ public final class ScannerSpecRegistry {
 
         Multipliers mult = parseMultipliers(getObj(root, "multipliers"));
         Map<String, Map<String, Float>> communityTags = parseStringFloatMap(getObj(root, "community_tags"));
+        String communityTagDirectory = MarieJsonUtils.getOptionalString(root, "community_tag_directory", "foods/");
         Map<String, Map<String, Float>> namespaces = parseStringFloatMap(getObj(root, "namespaces"));
         Map<String, Map<String, Float>> suffixes = parseStringFloatMap(getObj(root, "suffixes"));
         Map<String, Map<String, Float>> keywords = TokenStemmer.stemMapKeys(parseStringFloatMap(getObj(root, "keywords")));
         Map<String, Map<String, Float>> negatives = TokenStemmer.stemMapKeys(parseStringFloatMap(getObj(root, "negative_keywords")));
         List<ArchetypePattern> archetypes = parseArchetypes(getArr(root, "archetypes"));
         Set<String> excludedItems = parseStringSet(getArr(root, "excluded_items"));
+        Set<String> contestableValues = parseStringSet(getArr(root, "contestable_values"));
         String[] stemmerDictionary = parseStringArray(getArr(root, "stemmer_dictionary"));
         Map<String, String[]> stemmerCompoundSplits = parseCompoundSplits(getObj(root, "stemmer_compound_splits"));
         Map<String, String> stemmerIrregularForms = parseStringStringMap(getObj(root, "stemmer_irregular_forms"));
@@ -211,12 +213,14 @@ public final class ScannerSpecRegistry {
         return new ScannerSpec(
                 mult,
                 communityTags,
+                communityTagDirectory,
                 namespaces,
                 suffixes,
                 keywords,
                 negatives,
                 archetypes,
                 excludedItems,
+                contestableValues,
                 stemmerDictionary,
                 stemmerCompoundSplits,
                 stemmerIrregularForms,
@@ -315,6 +319,19 @@ public final class ScannerSpecRegistry {
         return MarieJsonUtils.getOptionalInt(obj, key, fallback);
     }
 
+    public static String communityTagDirectory() {
+        return get().communityTagDirectory();
+    }
+
+    /**
+     * Value categories the active spec has opted into recipe-inheritance contestability.
+     * Empty unless a consumer mod set {@code contestable_values} in its {@code scanner_spec.json}
+     * — see {@link ScannerSpec#contestableValues()}.
+     */
+    public static Set<String> contestableValues() {
+        return get().contestableValues();
+    }
+
     public static String[] stemmerDictionary() {
         return get().stemmerDictionary();
     }
@@ -391,12 +408,44 @@ public final class ScannerSpecRegistry {
     public record ScannerSpec(
             Multipliers multipliers,
             Map<String, Map<String, Float>> communityTagWeights,
+            /**
+             * The {@code c} namespace tag directory (e.g. {@code "foods/"}) that
+             * {@link dev.marie.framework.scanner.stages.CommunityTagResolutionStage} scans for community
+             * tag matches, and that scanner traces/labels are built from. Defaults to {@code "foods/"} to
+             * preserve Nourished's original behavior; a non-food consumer mod (e.g. one classifying tools
+             * or armor) can override this in its own {@code scanner_spec.json} to something like
+             * {@code "materials/"}.
+             */
+            String communityTagDirectory,
             Map<String, Map<String, Float>> namespaceWeights,
             Map<String, Map<String, Float>> suffixWeights,
             Map<String, Map<String, Float>> keywordWeights,
             Map<String, Map<String, Float>> negativeKeywords,
             List<ArchetypePattern> archetypes,
             Set<String> excludedItems,
+            /**
+             * Value categories the consuming mod has explicitly opted into <i>recipe-inheritance
+             * contestability</i> (JSON key {@code contestable_values}, an array of value-key strings).
+             *
+             * <p>When a category is in this set and the recipe-inheritance supplement's combined,
+             * decayed weight for that category exceeds the keyword/suffix-matched category's weight,
+             * {@link dev.marie.framework.scan.RuntimeResolutionMerge} makes the recipe-derived
+             * category the winning classification outright — a genuine override, not merely an
+             * appended secondary bar.</p>
+             *
+             * <p><b>Empty by default.</b> With no entries (the shipped default, and the value in
+             * {@link ScannerSpec#empty()}), every category keeps the historical append-only
+             * behaviour: a keyword/suffix match permanently locks the winning category and recipe
+             * data can only introduce brand-new categories, never displace an existing one. A
+             * category must be named here for recipe weight to be allowed to beat the name.</p>
+             *
+             * <p>Example — a food mod that trusts its crafting graph over item names for protein
+             * content would put in its {@code scanner_spec.json}:
+             * <pre>{@code "contestable_values": ["proteins", "vegetables"]}</pre>
+             * so that e.g. a "chicken_salad" whose recipe is overwhelmingly vegetables resolves to
+             * {@code vegetables} instead of being locked to {@code proteins} by the "chicken" token.</p>
+             */
+            Set<String> contestableValues,
             String[] stemmerDictionary,
             Map<String, String[]> stemmerCompoundSplits,
             Map<String, String> stemmerIrregularForms,
@@ -406,8 +455,11 @@ public final class ScannerSpecRegistry {
         public static ScannerSpec empty() {
             return new ScannerSpec(
                     Multipliers.defaults(),
-                    Map.of(), Map.of(), Map.of(), Map.of(), Map.of(),
+                    Map.of(),
+                    "foods/",
+                    Map.of(), Map.of(), Map.of(), Map.of(),
                     List.of(),
+                    Set.of(),
                     Set.of(),
                     new String[0],
                     Map.of(),

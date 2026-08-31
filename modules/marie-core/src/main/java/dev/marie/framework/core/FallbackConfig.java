@@ -53,4 +53,5 @@ enum FallbackConfig implements IMarieConfig {
     @Override public int trackerMaxRetention() { return 90; }
     @Override public int trackerWeeklyPeriodDays() { return 7; }
     @Override public int trackerMonthlyPeriodDays() { return 30; }
+    @Override public int trackerSyncIntervalTicks() { return 20; }
 }

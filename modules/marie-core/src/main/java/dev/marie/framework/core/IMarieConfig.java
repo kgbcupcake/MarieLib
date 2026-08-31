@@ -71,4 +71,6 @@ public interface IMarieConfig extends MarieLibSettings {
     int trackerWeeklyPeriodDays();
 
     int trackerMonthlyPeriodDays();
+
+    int trackerSyncIntervalTicks();
 }

@@ -8,6 +8,7 @@ import dev.marie.framework.core.MarieContext;
 import dev.marie.framework.scan.ResolutionResult;
 import dev.marie.framework.scan.ResolutionStageHandler;
 import dev.marie.framework.scan.StageContext;
+import dev.marie.framework.scan.StageMath;
 import dev.marie.framework.scanner.ScannerSpecRegistry.Multipliers;
 import dev.marie.framework.scanner.ScannerSpecRegistry.ScannerSpec;
 import dev.marie.framework.scanner.stages.CommunityTagResolutionStage;
@@ -290,9 +291,12 @@ public final class ItemClassifier {
       } else {
          String dominant = sorted.get(0).getKey();
          String secondary = sorted.size() > 1 ? sorted.get(1).getKey() : null;
-         float topScore = sorted.get(0).getValue();
-         float secondScore = sorted.size() > 1 ? sorted.get(1).getValue() : 0.0F;
-         float spread = topScore - secondScore;
+         // Confidence is the top-two spread relative to the top weight (StageMath.confidenceRatio),
+         // the same [0,1] scale RuntimeResolutionMerge now reports — one comparable measure across
+         // the runtime and scanner paths. Computed over the final combined score vector, so any
+         // contested recipe mass merged in by RecipeInheritanceStage moves it (previously the
+         // inline topScore - secondScore ran before, and independent of, that recipe merge).
+         float spread = StageMath.confidenceRatio(scores);
          boolean uncertain = spread < this.confidenceSpreadThreshold;
          if (traceOut.isPresent()) {
             Map<String, Object> winnerDetail = new LinkedHashMap<>();
@@ -315,8 +319,9 @@ public final class ItemClassifier {
             confidenceDetail.put("spread", (double)spread);
             confidenceDetail.put("threshold", (double)this.confidenceSpreadThreshold);
             confidenceDetail.put("uncertain", uncertain);
-            float confidenceScore = topScore > 0.0F ? spread / topScore : 0.0F;
-            confidenceDetail.put("confidenceScore", (double)Math.max(0.0F, Math.min(1.0F, confidenceScore)));
+            // spread is already StageMath.confidenceRatio: the top-two gap over the top weight,
+            // clamped to [0, 1], so it doubles as the confidence score directly.
+            confidenceDetail.put("confidenceScore", (double)spread);
             if (uncertain) {
                confidenceDetail.put("warningCode", "UNCERTAIN_SPREAD");
             }

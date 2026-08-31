@@ -1,6 +1,7 @@
 package dev.marie.framework.api.marie;
 
 import dev.marie.framework.api.progression.MilestoneDefinition;
+import dev.marie.framework.api.progression.TrackerMilestoneDefinition;
 import dev.marie.framework.api.value.ValueModifierEvent;
 import dev.marie.framework.api.value.ValueSourceTrigger;
 
@@ -350,6 +351,84 @@ public final class MarieEvents {
         @ApiStatus.Stable
         public float getCumulativeIntake() {
             return cumulativeIntake;
+        }
+    }
+
+    /**
+     * Fired when a player reaches a goal value on a tracker milestone for the first time.
+     *
+     * <p>Sibling to {@link MilestoneTriggeredEvent} for the generic MarieLib tracker system —
+     * fully decoupled from it, with no shared storage. Fired after completion is recorded and
+     * configured rewards are applied. Not cancellable.</p>
+     */
+    @ApiStatus.Stable
+    public static class TrackerMilestoneTriggeredEvent extends Event {
+
+        private final Player player;
+        private final TrackerMilestoneDefinition milestone;
+        private final ResourceLocation trackerId;
+        private final float currentValue;
+
+        /**
+         * Constructs a new tracker milestone triggered event.
+         *
+         * @param player       the player who completed the milestone
+         * @param milestone    the milestone definition that was completed
+         * @param trackerId    the tracker whose value triggered the milestone
+         * @param currentValue the value (per the milestone's {@link TrackerMilestoneDefinition.MilestoneScope})
+         *                     that met the goal
+         */
+        @ApiStatus.Stable
+        public TrackerMilestoneTriggeredEvent(
+                Player player,
+                TrackerMilestoneDefinition milestone,
+                ResourceLocation trackerId,
+                float currentValue
+        ) {
+            this.player = player;
+            this.milestone = milestone;
+            this.trackerId = trackerId;
+            this.currentValue = currentValue;
+        }
+
+        /**
+         * Returns the player who completed the milestone.
+         *
+         * @return the affected player
+         */
+        @ApiStatus.Stable
+        public Player getPlayer() {
+            return player;
+        }
+
+        /**
+         * Returns the milestone definition that was completed.
+         *
+         * @return the milestone
+         */
+        @ApiStatus.Stable
+        public TrackerMilestoneDefinition getMilestone() {
+            return milestone;
+        }
+
+        /**
+         * Returns the tracker whose value triggered the milestone.
+         *
+         * @return the tracker's {@link ResourceLocation}
+         */
+        @ApiStatus.Stable
+        public ResourceLocation getTrackerId() {
+            return trackerId;
+        }
+
+        /**
+         * Returns the value that met the milestone's goal.
+         *
+         * @return the triggering value
+         */
+        @ApiStatus.Stable
+        public float getCurrentValue() {
+            return currentValue;
         }
     }
 }

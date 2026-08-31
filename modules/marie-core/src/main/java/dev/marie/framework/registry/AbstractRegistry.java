@@ -67,6 +67,35 @@ public abstract class AbstractRegistry<K, V> {
         }
     }
 
+    /**
+     * Removes a single key-value pair, if present. Not valid after {@link #freeze()}. Unlike
+     * {@link #reset()}, this does not clear the registry — it removes exactly one entry and
+     * leaves everything else in place.
+     *
+     * <pre>{@code
+     * boolean removed = registry.unregister("hundred_blocks_mined");
+     * }</pre>
+     *
+     * @param key the key to remove
+     * @return {@code true} if an entry for {@code key} was present and removed, {@code false} if
+     *         {@code key} was null or not present
+     * @throws IllegalStateException if the registry is frozen
+     */
+    public final boolean unregister(K key) {
+        lock.writeLock().lock();
+        try {
+            if (frozen) {
+                throw new IllegalStateException(name + ": cannot unregister while frozen");
+            }
+            if (key == null) {
+                return false;
+            }
+            return mutable.remove(key) != null;
+        } finally {
+            lock.writeLock().unlock();
+        }
+    }
+
     public final V get(K key) {
         if (key == null) {
             return null;
@@ -153,6 +182,28 @@ public abstract class AbstractRegistry<K, V> {
     }
 
     /**
+     * Temporarily reopens a frozen registry for re-registration, restoring the frozen entries
+     * into the mutable map so {@link #upsert(Object, Object)}/{@link #register(Object, Object)}
+     * calls succeed instead of throwing. Callers must re-{@link #freeze()} immediately after the
+     * re-registration window closes (in a {@code finally} block) to restore the freeze guarantee.
+     * No-op if not currently frozen.
+     */
+    @ApiStatus.Internal
+    public final void unfreeze() {
+        lock.writeLock().lock();
+        try {
+            if (!frozen) {
+                return;
+            }
+            mutable.clear();
+            mutable.putAll(frozenEntries);
+            frozen = false;
+        } finally {
+            lock.writeLock().unlock();
+        }
+    }
+
+    /**
      * Clears all state, unlocks the registry, and invokes {@link #onReset()}.
      */
     public final void reset() {
@@ -198,6 +249,35 @@ public abstract class AbstractRegistry<K, V> {
             throw new IllegalStateException(name + ": duplicate key: " + key);
         }
         mutable.put(key, value);
+    }
+
+    /**
+     * Registers a key-value pair, replacing any existing entry for {@code key} instead of
+     * throwing. Not valid after {@link #freeze()}. Intended for registries where re-registration
+     * with the same key is a legitimate, expected event (e.g. a mod re-registering its definitions
+     * on every reload) rather than a programming error — {@link #register(Object, Object)} remains
+     * the default duplicate-throwing behavior for every other registry.
+     *
+     * @throws IllegalArgumentException if {@code key} or {@code value} is null
+     * @throws IllegalStateException    if the registry is frozen
+     */
+    public final void upsert(K key, V value) {
+        lock.writeLock().lock();
+        try {
+            if (frozen) {
+                throw new IllegalStateException(name + ": cannot register while frozen");
+            }
+            if (key == null) {
+                throw new IllegalArgumentException(name + ": key cannot be null");
+            }
+            if (value == null) {
+                throw new IllegalArgumentException(name + ": value cannot be null");
+            }
+            validateEntry(key, value);
+            mutable.put(key, value);
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 
     public final void resetUnlocked() {

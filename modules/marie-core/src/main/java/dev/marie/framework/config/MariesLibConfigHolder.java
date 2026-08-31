@@ -12,8 +12,13 @@ public final class MariesLibConfigHolder {
     public boolean enableDebugLogging = false;
 
     // Scanner context
-    public float scannerConfidenceSpreadThreshold = 0f;
-    public float compositeRatioThreshold = 0f;
+    // 0.15f: consumed post-merge as a spread/max ratio in [0,1] (see StageMath.confidenceRatio /
+    // RuntimeResolver.buildTraceFromResult). ~0.15 on that ratio scale corresponds to the 0.10
+    // absolute-spread ambiguity convention MultiValueAnalysisPipeline uses for a typical two-way
+    // category split, while staying conservative enough not to mass-flag items. A former 0f
+    // disabled the UNCERTAIN path entirely (buildTraceFromResult guards on threshold > 0f).
+    public float scannerConfidenceSpreadThreshold = 0.15f;
+    public float compositeRatioThreshold = 0.5f;
     public boolean scannerEnableRecipeInheritance = false;
     public double multiValueInheritanceThreshold = 0.20;
 

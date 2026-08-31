@@ -120,4 +120,29 @@ public final class StageMath {
     public static float scannerConfidenceSpreadThreshold() {
         return IMarieConfig.get().scannerConfidenceSpreadThreshold();
     }
+
+    /**
+     * Confidence of a score map: the spread between its top two values divided by the top
+     * value, clamped to {@code [0, 1]}. A single positive category yields {@code 1.0}
+     * (uncontested); a dead heat yields {@code 0.0}. Empty / all-non-positive maps yield
+     * {@code 0.0}.
+     *
+     * <p>This is the same ratio {@link dev.marie.framework.scanner.ClassificationResult#confidenceScore()}
+     * produces, lifted here so keyword-only results and merged keyword+recipe results
+     * ({@link RuntimeResolutionMerge}) report confidence on one comparable scale rather than
+     * one stage passing a collapsed {@code 1.0} through verbatim.</p>
+     */
+    public static float confidenceRatio(Map<String, Float> scores) {
+        float max = 0f;
+        for (float v : scores.values()) {
+            if (v > max) {
+                max = v;
+            }
+        }
+        if (max <= 0f) {
+            return 0f;
+        }
+        float ratio = computeSpread(scores) / max;
+        return ratio < 0f ? 0f : Math.min(ratio, 1f);
+    }
 }

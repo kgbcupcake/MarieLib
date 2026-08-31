@@ -5,6 +5,7 @@ import dev.marie.framework.client.config.importexport.MariesLibExportScreen;
 import dev.marie.framework.client.config.importexport.MariesLibImportScreen;
 import dev.marie.framework.core.MarieCore;
 import dev.marie.framework.core.MarieBootstrap;
+import dev.marie.framework.ui.api.MarieNotifications;
 import net.minecraft.client.gui.screens.Screen;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.fml.ModContainer;
@@ -23,5 +24,6 @@ public final class MariesLibClient {
         });
         MarieBootstrap.setExportScreenFactory(parent -> new MariesLibExportScreen((Screen) parent));
         MarieBootstrap.setImportScreenFactory(parent -> new MariesLibImportScreen((Screen) parent));
+        MarieNotifications.registerClientListeners();
     }
 }

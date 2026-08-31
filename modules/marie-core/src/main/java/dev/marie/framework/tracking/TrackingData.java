@@ -60,6 +60,7 @@ public class TrackingData {
             "source_memory",
             "category_memory",
             "family_memory",
+            "recent_ids",
             "last_tick_time",
             "tracker_accumulators",
             "tracker_history",
@@ -135,6 +136,7 @@ public class TrackingData {
                 .encodeStart(ops, data.categoryMemory));
         map.add("family_memory", Codec.unboundedMap(Codec.STRING, SourceMemoryEntry.CODEC)
                 .encodeStart(ops, data.familyMemory));
+        map.add("recent_ids", Codec.list(Codec.STRING).encodeStart(ops, data.recentIds));
         map.add("last_tick_time", Codec.LONG.encodeStart(ops, data.lastTickTime));
         map.add("tracker_accumulators", Codec.unboundedMap(ResourceLocation.CODEC, Codec.FLOAT)
                 .encodeStart(ops, data.trackingAccumulators));
@@ -200,6 +202,12 @@ public class TrackingData {
                         }
                         m.entrySet().stream().limit(256).forEach(e -> data.familyMemory.put(e.getKey(), e.getValue()));
                     });
+        }
+
+        T recentIdsVal = map.get("recent_ids");
+        if (recentIdsVal != null) {
+            Codec.list(Codec.STRING).parse(ops, recentIdsVal).result()
+                    .ifPresent(data.recentIds::addAll);
         }
 
         data.lastTickTime = decodeLong(ops, map, "last_tick_time", 0L);
@@ -299,6 +307,10 @@ public class TrackingData {
     @ApiStatus.Experimental
     public final LinkedHashMap<String, SourceMemoryEntry> sourceMemory = new LinkedHashMap<>();
 
+    /** Recent source ids as supplied by the consuming mod; relayed verbatim in full sync. */
+    @ApiStatus.Experimental
+    public final List<String> recentIds = new ArrayList<>();
+
     /** Server/client-injected config at runtime. Never serialized. */
     private DiminishingReturnsConfig memoryConfig = null;
 
@@ -343,6 +355,8 @@ public class TrackingData {
         d.lastValues.putAll(src.lastValues);
         d.sourceMemory.clear();
         d.sourceMemory.putAll(src.sourceMemory);
+        d.recentIds.clear();
+        d.recentIds.addAll(src.recentIds);
         d.categoryMemory.clear();
         d.categoryMemory.putAll(src.categoryMemory);
         d.familyMemory.clear();
@@ -922,6 +936,13 @@ public class TrackingData {
     @ApiStatus.Experimental
     public void setMemoryConfig(DiminishingReturnsConfig cfg) {
         this.memoryConfig = cfg;
+    }
+
+    /** Sets the recent source ids to relay in the next full sync. MarieLib has no knowledge of what an id means. */
+    @ApiStatus.Experimental
+    public void setRecentIds(List<String> ids) {
+        recentIds.clear();
+        recentIds.addAll(ids);
     }
 
     /** Returns injected memory config. Must be set at a sync boundary before use. */

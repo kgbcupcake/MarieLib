@@ -15,7 +15,6 @@ import dev.marie.framework.data.DatapackDiagnostic;
 import dev.marie.framework.data.DatapackDiagnostics;
 import dev.marie.framework.data.SchemaDefinition;
 import dev.marie.framework.datapack.SchemaTemplateGenerator;
-import dev.marie.framework.handler.ReloadGuardListener;
 import dev.marie.framework.handler.ReloadPipeline;
 import dev.marie.framework.util.MarieValidation;
 import net.minecraft.ChatFormatting;
@@ -47,7 +46,6 @@ final class MarieDatapackCommands {
         server.reloadResources(server.getPackRepository().getSelectedIds()).thenRun(() -> {
             server.execute(() -> {
                 ReloadPipeline.reloadAll();
-                ReloadGuardListener.reloadAndBroadcast(server);
                 source.sendSuccess(() -> Component.literal(modId + " data reload complete."), true);
             });
         });

@@ -2,6 +2,7 @@ package dev.marie.framework.runtime;
 
 import com.mojang.logging.LogUtils;
 import dev.marie.framework.api.ApiStatus;
+import dev.marie.framework.api.marieapi.MarieAPIState;
 import dev.marie.framework.scanner.ItemScanner;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
@@ -35,15 +36,27 @@ public class SourceRegistry {
     /** @GuardedBy("itself — ConcurrentHashMap") */
     private static final Map<ResourceLocation, Map<String, Float>> EXTERNAL_CLASSIFICATIONS = new ConcurrentHashMap<>();
 
-    /** @GuardedBy("itself — ConcurrentHashMap") API/KubeJS registrations that must survive reload clears. */
+    /**
+     * @GuardedBy("itself — ConcurrentHashMap") Registrations made outside a datapack reload
+     * (mod init, KubeJS startup scripts, runtime API calls) that must survive {@link #clearExternalClassifications()}.
+     * Datapack-reload-scoped registrations are deliberately kept out of this map — see {@link #registerClassification}.
+     */
     private static final Map<ResourceLocation, Map<String, Float>> API_REGISTERED_CLASSIFICATIONS = new ConcurrentHashMap<>();
 
     /** @GuardedBy("itself — ConcurrentHashMap") */
     private static final Map<ResourceLocation, Map<String, Float>> SCANNER_CLASSIFICATIONS = new ConcurrentHashMap<>();
 
+    // sourceIds exclusively owned by an enabled SourceClassificationRegistry override; non-override registerClassification calls for these are ignored.
+    private static final Set<ResourceLocation> OVERRIDE_LOCKED_SOURCES = ConcurrentHashMap.newKeySet();
+
     private SourceRegistry() {}
 
     public static void registerClassification(ResourceLocation sourceId, String valueKey, float amount) {
+        if (OVERRIDE_LOCKED_SOURCES.contains(sourceId)) {
+            LOGGER.debug("[SourceRegistry] Ignoring {} -> {}: source has an authoritative classification override",
+                    sourceId, valueKey);
+            return;
+        }
         if (EXTERNAL_CLASSIFICATIONS.size() >= EXTERNAL_CLASSIFICATION_CAP && !EXTERNAL_CLASSIFICATIONS.containsKey(sourceId)) {
             if (WARNED_CAP_ITEMS.add(sourceId.toString())) {
                 LOGGER.warn("[SourceRegistry] External classification cap ({}) reached — ignoring: {} -> {}",
@@ -52,8 +65,35 @@ public class SourceRegistry {
             return;
         }
         EXTERNAL_CLASSIFICATIONS.computeIfAbsent(sourceId, k -> new ConcurrentHashMap<>()).put(valueKey, amount);
-        API_REGISTERED_CLASSIFICATIONS.computeIfAbsent(sourceId, k -> new ConcurrentHashMap<>()).put(valueKey, amount);
+        // Only registrations made outside a datapack reload (mod init / KubeJS startup / runtime API) are
+        // mirrored so they can survive clearExternalClassifications(). Datapack-reload-scoped callers —
+        // nutrient-tag bridging and the datapack source_classifications/*.json directory — rebuild their
+        // entries in full on every reload, so mirroring them here would resurrect entries that were later
+        // removed from the source files (stale EXTERNAL_CLASSIFICATION), which is exactly what this guards against.
+        if (MarieAPIState.getPhase() != MarieAPIState.Phase.DATAPACK_RELOAD) {
+            API_REGISTERED_CLASSIFICATIONS.computeIfAbsent(sourceId, k -> new ConcurrentHashMap<>()).put(valueKey, amount);
+        }
         LOGGER.debug("[SourceRegistry] Registered external classification: {} -> {} ({})", sourceId, valueKey, amount);
+    }
+
+    // Replaces sourceId's classification exclusively with an authoritative override's values and locks out future non-override registerClassification calls for it.
+    static void applyAuthoritativeOverride(ResourceLocation sourceId, Map<String, Float> values) {
+        Map<String, Float> sanitized = new ConcurrentHashMap<>();
+        for (Map.Entry<String, Float> e : values.entrySet()) {
+            if (e.getKey() != null && e.getValue() != null) {
+                sanitized.put(e.getKey(), e.getValue());
+            }
+        }
+        EXTERNAL_CLASSIFICATIONS.put(sourceId, sanitized);
+        API_REGISTERED_CLASSIFICATIONS.put(sourceId, new ConcurrentHashMap<>(sanitized));
+        OVERRIDE_LOCKED_SOURCES.add(sourceId);
+    }
+
+    // Removes one sourceId's entries from both maps and its override lock; used by SourceClassificationRegistry to drop stale entries before re-pushing a reload.
+    static void unregisterClassification(ResourceLocation sourceId) {
+        EXTERNAL_CLASSIFICATIONS.remove(sourceId);
+        API_REGISTERED_CLASSIFICATIONS.remove(sourceId);
+        OVERRIDE_LOCKED_SOURCES.remove(sourceId);
     }
 
     public static void clearExternalClassifications() {

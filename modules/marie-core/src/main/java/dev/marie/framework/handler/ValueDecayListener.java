@@ -31,8 +31,10 @@ public class ValueDecayListener {
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
         if (TrackingAttachment.isRegistered()) {
             TrackerManager.checkTrackers(player, TrackingAttachment.getData(player));
+            TrackerManager.sweepDirtySync(player);
         }
         if (!FeatureFlagCache.enableDecay()) return;
+        if (player.isCreative() || player.isSpectator()) return; // vanilla hunger is inert in creative/spectator
         DiminishingReturnsConfigOrSkip configOrSkip = resolveConfigOrSkip();
         if (!TrackingAttachment.isRegistered()) return;
         TrackingData data = TrackingAttachment.getData(player);

@@ -88,5 +88,8 @@
   "config.marieslib.presets.saveDialog.nameHint": "My preset",
   "config.marieslib.presets.saveDialog.description": "Description",
   "config.marieslib.presets.saveDialog.descriptionHint": "Optional notes",
-  "config.marieslib.presets.saveDialog.save": "Save"
+  "config.marieslib.presets.saveDialog.save": "Save",
+  "config.marieslib.scaleconfig.textScale": "Text Scale",
+  "config.marieslib.scaleconfig.padding": "Padding",
+  "marieslib.commandcenter.title": "Command Center"
 }

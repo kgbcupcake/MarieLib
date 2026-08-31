@@ -7,6 +7,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import dev.marie.framework.api.ApiStatus;
 import dev.marie.framework.api.progression.MilestoneDefinition;
+import dev.marie.framework.api.progression.TrackerMilestoneDefinition;
 import dev.marie.framework.api.marieapi.MarieAPIState;
 import dev.marie.framework.api.progression.ProfileDefinition;
 import dev.marie.framework.api.source.SourcePairSynergy;
@@ -46,10 +47,45 @@ public final class MarieDataLoader extends SimpleJsonResourceReloadListener {
         default void onApplyEnd() {}
         default void registerValue(ValueDefinition def) {}
         default void registerSourceClassification(ResourceLocation itemId, String valueKey, float amount) {}
+
+        /**
+         * Registers one per-item food override parsed from
+         * {@code data/<namespace>/<modid>/food_overrides/<id>.json}. Directory-scanned sibling of the
+         * legacy flat {@code config/food_overrides.json}. The consumer accumulates these between
+         * {@link #onApplyBegin()} and {@link #onApplyEnd()} and publishes them as one layer.
+         */
+        default void registerFoodOverride(ResourceLocation itemId, Map<String, Float> nutrients, int calories, boolean enabled) {}
         default void registerCustomEffect(ThresholdEffect def) {}
         default void registerValueSynergy(SynergyDefinition def) {}
         default void registerSourcePairSynergy(SourcePairSynergy def) {}
         default void registerMilestone(MilestoneDefinition def) {}
+
+        /**
+         * Registers a tracker milestone parsed from a datapack file. Sibling to
+         * {@link #registerMilestone(MilestoneDefinition)} for the generic MarieLib tracker
+         * system — fully decoupled from it, with no shared storage or feature flag.
+         *
+         * <p><b>Java-side registration call</b> a consumer's callback implementation would make:</p>
+         * <pre>{@code
+         * @Override
+         * public void registerTrackerMilestone(TrackerMilestoneDefinition def) {
+         *     TrackerMilestoneRegistry.register(def);
+         * }
+         * }</pre>
+         *
+         * <p><b>Equivalent datapack file</b>
+         * ({@code data/mymod/<modid>/tracker_milestones/hundred_blocks_mined.json}):</p>
+         * <pre>{@code
+         * {
+         *   "tracker_id": "mymod:blocks_mined",
+         *   "goal": 100.0,
+         *   "scope": "lifetime"
+         * }
+         * }</pre>
+         *
+         * @param def the parsed tracker milestone definition
+         */
+        default void registerTrackerMilestone(TrackerMilestoneDefinition def) {}
         default void registerTrackingProfile(ProfileDefinition def) {}
         default void registerCompatEntry(CompatDefinition def) {}
         default void replaceSourceFamilies(Map<String, List<String>> families) {}
@@ -64,10 +100,12 @@ public final class MarieDataLoader extends SimpleJsonResourceReloadListener {
 
     private volatile Set<ResourceLocation> loadedValues = Set.of();
     private volatile Set<ResourceLocation> loadedSourceClassifications = Set.of();
+    private volatile Set<ResourceLocation> loadedFoodOverrides = Set.of();
     private volatile Set<ResourceLocation> loadedEffects = Set.of();
     private volatile Set<ResourceLocation> loadedSynergies = Set.of();
     private volatile Set<ResourceLocation> loadedSourcePairSynergies = Set.of();
     private volatile Set<ResourceLocation> loadedMilestones = Set.of();
+    private volatile Set<ResourceLocation> loadedTrackerMilestones = Set.of();
     private volatile Set<ResourceLocation> loadedProfiles = Set.of();
     private volatile Set<ResourceLocation> loadedCompatEntries = Set.of();
 
@@ -90,19 +128,23 @@ public final class MarieDataLoader extends SimpleJsonResourceReloadListener {
 
             Set<ResourceLocation> nextValues = new LinkedHashSet<>();
             Set<ResourceLocation> nextSourceClassifications = new LinkedHashSet<>();
+            Set<ResourceLocation> nextFoodOverrides = new LinkedHashSet<>();
             Set<ResourceLocation> nextEffects = new LinkedHashSet<>();
             Set<ResourceLocation> nextSynergies = new LinkedHashSet<>();
             Set<ResourceLocation> nextSourcePairSynergies = new LinkedHashSet<>();
             Set<ResourceLocation> nextMilestones = new LinkedHashSet<>();
+            Set<ResourceLocation> nextTrackerMilestones = new LinkedHashSet<>();
             Set<ResourceLocation> nextProfiles = new LinkedHashSet<>();
             Set<ResourceLocation> nextCompatEntries = new LinkedHashSet<>();
 
             Map<ResourceLocation, JsonObject> values = filterDirectory(allJson, DatapackSchema.VALUES_DIR);
             Map<ResourceLocation, JsonObject> sourceClassifications = filterDirectory(allJson, DatapackSchema.SOURCE_CLASSIFICATIONS_DIR);
+            Map<ResourceLocation, JsonObject> foodOverrides = filterDirectory(allJson, DatapackSchema.FOOD_OVERRIDES_DIR);
             Map<ResourceLocation, JsonObject> effects = filterDirectory(allJson, DatapackSchema.EFFECTS_DIR);
             Map<ResourceLocation, JsonObject> synergies = filterDirectory(allJson, DatapackSchema.SYNERGIES_DIR);
             Map<ResourceLocation, JsonObject> sourcePairSynergies = filterDirectory(allJson, DatapackSchema.SOURCE_SYNERGIES_DIR);
             Map<ResourceLocation, JsonObject> milestones = filterDirectory(allJson, DatapackSchema.MILESTONES_DIR);
+            Map<ResourceLocation, JsonObject> trackerMilestones = filterDirectory(allJson, DatapackSchema.TRACKER_MILESTONES_DIR);
             Map<ResourceLocation, JsonObject> profiles = filterDirectory(allJson, DatapackSchema.TRACKING_PROFILES_DIR);
             Map<ResourceLocation, JsonObject> compat = filterDirectory(allJson, DatapackSchema.COMPAT_DIR);
             Map<ResourceLocation, JsonObject> sourceFamilies = filterDirectory(allJson, DatapackSchema.SOURCE_FAMILIES_DIR);
@@ -134,6 +176,21 @@ public final class MarieDataLoader extends SimpleJsonResourceReloadListener {
             try {
                 registerSourceClassification(fileId, json);
                 nextSourceClassifications.add(fileId);
+            } catch (Exception ex) {
+                warnMalformed(fileId, ex);
+            }
+        }
+
+        for (Map.Entry<ResourceLocation, JsonObject> entry : foodOverrides.entrySet()) {
+            ResourceLocation fileId = entry.getKey();
+            JsonObject json = entry.getValue();
+            String filePath = datapackFilePath(DatapackSchema.FOOD_OVERRIDES_DIR, fileId);
+            if (!isValidForRegistration(json, SchemaDefinition.forFoodOverride(), filePath, diagnostics)) {
+                continue;
+            }
+            try {
+                registerFoodOverride(fileId, json);
+                nextFoodOverrides.add(fileId);
             } catch (Exception ex) {
                 warnMalformed(fileId, ex);
             }
@@ -198,6 +255,22 @@ public final class MarieDataLoader extends SimpleJsonResourceReloadListener {
                 MilestoneDefinition def = parseMilestone(fileId, json);
                 callbacks.registerMilestone(def);
                 nextMilestones.add(fileId);
+            } catch (Exception ex) {
+                warnMalformed(fileId, ex);
+            }
+        }
+
+        for (Map.Entry<ResourceLocation, JsonObject> entry : trackerMilestones.entrySet()) {
+            ResourceLocation fileId = entry.getKey();
+            JsonObject json = entry.getValue();
+            String filePath = datapackFilePath(DatapackSchema.TRACKER_MILESTONES_DIR, fileId);
+            if (!isValidForRegistration(json, SchemaDefinition.forTrackerMilestone(), filePath, diagnostics)) {
+                continue;
+            }
+            try {
+                TrackerMilestoneDefinition def = parseTrackerMilestone(fileId, json);
+                callbacks.registerTrackerMilestone(def);
+                nextTrackerMilestones.add(fileId);
             } catch (Exception ex) {
                 warnMalformed(fileId, ex);
             }
@@ -268,10 +341,12 @@ public final class MarieDataLoader extends SimpleJsonResourceReloadListener {
 
             loadedValues = Collections.unmodifiableSet(nextValues);
             loadedSourceClassifications = Collections.unmodifiableSet(nextSourceClassifications);
+            loadedFoodOverrides = Collections.unmodifiableSet(nextFoodOverrides);
             loadedEffects = Collections.unmodifiableSet(nextEffects);
             loadedSynergies = Collections.unmodifiableSet(nextSynergies);
             loadedSourcePairSynergies = Collections.unmodifiableSet(nextSourcePairSynergies);
             loadedMilestones = Collections.unmodifiableSet(nextMilestones);
+            loadedTrackerMilestones = Collections.unmodifiableSet(nextTrackerMilestones);
             loadedProfiles = Collections.unmodifiableSet(nextProfiles);
             loadedCompatEntries = Collections.unmodifiableSet(nextCompatEntries);
         }
@@ -301,6 +376,10 @@ public final class MarieDataLoader extends SimpleJsonResourceReloadListener {
         return loadedSourceClassifications;
     }
 
+    public Set<ResourceLocation> getLoadedFoodOverrides() {
+        return loadedFoodOverrides;
+    }
+
     public Set<ResourceLocation> getLoadedEffects() {
         return loadedEffects;
     }
@@ -315,6 +394,10 @@ public final class MarieDataLoader extends SimpleJsonResourceReloadListener {
 
     public Set<ResourceLocation> getLoadedMilestones() {
         return loadedMilestones;
+    }
+
+    public Set<ResourceLocation> getLoadedTrackerMilestones() {
+        return loadedTrackerMilestones;
     }
 
     public Set<ResourceLocation> getLoadedProfiles() {
@@ -400,6 +483,19 @@ public final class MarieDataLoader extends SimpleJsonResourceReloadListener {
         throw new IllegalArgumentException("Entry must include either 'item' or 'tag'");
     }
 
+    private void registerFoodOverride(ResourceLocation fileId, JsonObject json) {
+        ResourceLocation itemId = ResourceLocation.parse(getRequiredString(json, DatapackSchema.KEY_ITEM));
+        int calories = getOptionalInt(json, DatapackSchema.KEY_CALORIES, 0);
+        boolean enabled = getOptionalBoolean(json, DatapackSchema.KEY_ENABLED, true);
+        Map<String, Float> nutrients = new LinkedHashMap<>();
+        if (json.has(DatapackSchema.KEY_NUTRIENTS) && json.get(DatapackSchema.KEY_NUTRIENTS).isJsonObject()) {
+            for (Map.Entry<String, JsonElement> e : json.getAsJsonObject(DatapackSchema.KEY_NUTRIENTS).entrySet()) {
+                nutrients.put(e.getKey(), e.getValue().getAsFloat());
+            }
+        }
+        callbacks.registerFoodOverride(itemId, nutrients, calories, enabled);
+    }
+
     private static ThresholdEffect parseEffect(ResourceLocation fileId, JsonObject json) {
         return ThresholdEffect.builder()
                 .valueKey(getRequiredString(json, DatapackSchema.KEY_VALUE_KEY))
@@ -445,6 +541,29 @@ public final class MarieDataLoader extends SimpleJsonResourceReloadListener {
         MilestoneDefinition.Builder builder = MilestoneDefinition.builder(fileId.getPath());
         builder.valueKey(getRequiredString(json, DatapackSchema.KEY_VALUE_KEY));
         builder.cumulativeGoal(getRequiredFloat(json, DatapackSchema.KEY_CUMULATIVE_GOAL));
+        if (json.has(DatapackSchema.KEY_REWARD_EFFECT_ID)) {
+            builder.rewardEffect(ResourceLocation.parse(
+                    json.get(DatapackSchema.KEY_REWARD_EFFECT_ID).getAsString()));
+        }
+        if (json.has(DatapackSchema.KEY_AMPLIFIER)) {
+            builder.rewardAmplifier(json.get(DatapackSchema.KEY_AMPLIFIER).getAsInt());
+        }
+        if (json.has(DatapackSchema.KEY_REWARD_DURATION)) {
+            builder.rewardDuration(json.get(DatapackSchema.KEY_REWARD_DURATION).getAsInt());
+        }
+        if (json.has(DatapackSchema.KEY_ADVANCEMENT_ID)) {
+            builder.advancement(ResourceLocation.parse(
+                    json.get(DatapackSchema.KEY_ADVANCEMENT_ID).getAsString()));
+        }
+        return builder.build();
+    }
+
+    private static TrackerMilestoneDefinition parseTrackerMilestone(ResourceLocation fileId, JsonObject json) {
+        TrackerMilestoneDefinition.Builder builder = TrackerMilestoneDefinition.builder(fileId.getPath());
+        builder.trackerId(ResourceLocation.parse(getRequiredString(json, DatapackSchema.KEY_TRACKER_ID)));
+        builder.goal(getRequiredFloat(json, DatapackSchema.KEY_GOAL));
+        builder.scope(TrackerMilestoneDefinition.MilestoneScope.valueOf(
+                getRequiredString(json, DatapackSchema.KEY_SCOPE).toUpperCase(Locale.ROOT)));
         if (json.has(DatapackSchema.KEY_REWARD_EFFECT_ID)) {
             builder.rewardEffect(ResourceLocation.parse(
                     json.get(DatapackSchema.KEY_REWARD_EFFECT_ID).getAsString()));

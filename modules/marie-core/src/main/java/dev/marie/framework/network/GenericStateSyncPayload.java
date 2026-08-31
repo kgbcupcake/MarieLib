@@ -33,17 +33,38 @@ import net.neoforged.neoforge.network.PacketDistributor;
  * it — e.g. re-checking that the block at {@code pos} is still the expected type before trusting
  * it, the way Thermal Systems' {@code EnderIOIntegration} re-validates block type before trusting
  * a synced position.</p>
+ *
+ * <p>{@code oversized} is a decode-time-only signal, never written to the wire: the decoder sets
+ * it to {@code true} (pairing it with an empty placeholder tag) when the raw NBT byte count on
+ * the wire exceeds {@link MarieNetworking}'s size ceiling, so the tag is never actually decoded.
+ * Callers must never construct an instance with {@code oversized = true} themselves.</p>
  */
 @ApiStatus.Experimental
-public record GenericStateSyncPayload(BlockPos pos, CompoundTag data) implements CustomPacketPayload {
+public record GenericStateSyncPayload(BlockPos pos, CompoundTag data, boolean oversized)
+        implements CustomPacketPayload {
 
     public static final Type<GenericStateSyncPayload> TYPE =
             new Type<>(ResourceLocation.fromNamespaceAndPath(MarieCore.MOD_ID, "generic_state_sync"));
 
-    public static final StreamCodec<ByteBuf, GenericStateSyncPayload> STREAM_CODEC = StreamCodec.composite(
-            BlockPos.STREAM_CODEC, GenericStateSyncPayload::pos,
-            ByteBufCodecs.COMPOUND_TAG, GenericStateSyncPayload::data,
-            GenericStateSyncPayload::new);
+    public static final StreamCodec<ByteBuf, GenericStateSyncPayload> STREAM_CODEC = StreamCodec.of(
+            (buf, payload) -> {
+                BlockPos.STREAM_CODEC.encode(buf, payload.pos());
+                ByteBufCodecs.COMPOUND_TAG.encode(buf, payload.data());
+            },
+            buf -> {
+                BlockPos pos = BlockPos.STREAM_CODEC.decode(buf);
+                if (buf.readableBytes() > MarieNetworking.maxPayloadBytes()) {
+                    buf.skipBytes(buf.readableBytes());
+                    return new GenericStateSyncPayload(pos, new CompoundTag(), true);
+                }
+                CompoundTag data = ByteBufCodecs.COMPOUND_TAG.decode(buf);
+                return new GenericStateSyncPayload(pos, data, false);
+            });
+
+    public GenericStateSyncPayload {
+        assert oversized == (data instanceof CompoundTag t && t.isEmpty()) || !oversized
+                : "oversized=true must pair with an empty placeholder tag";
+    }
 
     @Override
     public Type<? extends CustomPacketPayload> type() {
@@ -57,6 +78,6 @@ public record GenericStateSyncPayload(BlockPos pos, CompoundTag data) implements
      * @param data the opaque state to sync — the receiving handler defines its meaning
      */
     public static void sendToServer(BlockPos pos, CompoundTag data) {
-        PacketDistributor.sendToServer(new GenericStateSyncPayload(pos, data));
+        PacketDistributor.sendToServer(new GenericStateSyncPayload(pos, data, false));
     }
 }

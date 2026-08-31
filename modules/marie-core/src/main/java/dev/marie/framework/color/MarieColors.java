@@ -24,12 +24,17 @@ public final class MarieColors {
      * Registers a color definition, providing its default ARGB value for {@link #resolveColor(ColorKey)}
      * to fall back on when no user/datapack override is present.
      *
-     * <p>Must be called during mod initialization or datapack reload.</p>
+     * <p>Must be called during mod initialization or datapack reload. Re-registering an
+     * already-registered key is safe and replaces the existing definition rather than throwing —
+     * every {@code /reload} wipes {@link ColorDefinitionRegistry}, so consumers that want their
+     * colors to survive a reload should call this again from
+     * {@code MarieContext.reloadBroadcastHook()} (see
+     * {@link dev.marie.framework.handler.ReloadGuardListener#reloadAndBroadcast}); nothing else
+     * re-invokes registration code automatically.</p>
      *
      * @param definition the color definition to register
      * @throws IllegalStateException    if called outside the registration window
-     * @throws IllegalArgumentException if {@code definition} is null or a color with the same
-     *                                   key already exists
+     * @throws IllegalArgumentException if {@code definition} is null
      */
     @ApiStatus.Stable
     public static void registerColor(ColorDefinition definition) {
@@ -98,5 +103,28 @@ public final class MarieColors {
     /** Canonical {@link ColorKey}↔{@link ColorRegistry} String-key mapping. */
     private static String colorRegistryKey(ColorKey key) {
         return key.id().toString();
+    }
+
+    /** Applies {@code opacity} (clamped to {@code [0.0, 1.0]}) as the alpha channel of {@code rgb}, discarding any existing alpha bits. */
+    @ApiStatus.Stable
+    public static int withOpacity(int rgb, double opacity) {
+        int alpha = (int) (Math.max(0.0, Math.min(1.0, opacity)) * 255.0);
+        return (alpha << 24) | (rgb & 0x00FFFFFF);
+    }
+
+    /** Blends each RGB channel of {@code rgb} toward black ({@code amount < 0}) or white ({@code amount > 0}) by {@code |amount|}, clamped to {@code [-1.0, 1.0]}; alpha bits are preserved. */
+    @ApiStatus.Stable
+    public static int shade(int rgb, double amount) {
+        double clamped = Math.max(-1.0, Math.min(1.0, amount));
+        int alpha = rgb & 0xFF000000;
+        int r = (rgb >> 16) & 0xFF;
+        int g = (rgb >> 8) & 0xFF;
+        int b = rgb & 0xFF;
+        int target = clamped < 0 ? 0 : 255;
+        double blend = Math.abs(clamped);
+        r = (int) (r + (target - r) * blend);
+        g = (int) (g + (target - g) * blend);
+        b = (int) (b + (target - b) * blend);
+        return alpha | (r << 16) | (g << 8) | b;
     }
 }

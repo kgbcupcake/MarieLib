@@ -18,6 +18,7 @@ import dev.marie.framework.scan.RuntimeCascadeStage;
 import dev.marie.framework.scan.RuntimeResolutionMerge;
 import dev.marie.framework.scan.StageContext;
 import dev.marie.framework.scan.StageMath;
+import dev.marie.framework.scanner.ExcludedItemsRegistry;
 import dev.marie.framework.scanner.RecipeInheritanceResolver;
 import dev.marie.framework.scanner.ScannerSpecRegistry;
 import dev.marie.framework.util.MarieRegistryUtils;
@@ -285,7 +286,8 @@ public final class RuntimeResolver {
                     Map.of(), Map.of(), List.of(), Map.of(), Map.of(),
                     false, 0f, RuntimeCascadeStage.HARD_FALLBACK, "context_not_registered");
         }
-        if (ScannerSpecRegistry.get().excludedItems().contains(itemId.toString())) {
+        if (ScannerSpecRegistry.get().excludedItems().contains(itemId.toString())
+                || ExcludedItemsRegistry.isExcluded(itemId.toString())) {
             return new ResolutionResult(
                     Map.of(), Map.of(), List.of(), Map.of(), Map.of(),
                     false, 0f, RuntimeCascadeStage.HARD_FALLBACK, "excluded_items");
@@ -414,7 +416,8 @@ public final class RuntimeResolver {
             }
         }
 
-        ResolutionResult result = RuntimeResolutionMerge.mergePrimaryWithRecipeSupplement(primary, recipeSupplement);
+        ResolutionResult result = RuntimeResolutionMerge.mergePrimaryWithRecipeSupplement(
+                primary, recipeSupplement, ScannerSpecRegistry.contestableValues());
 
         if (traceOut != null) {
             if (result != null) {

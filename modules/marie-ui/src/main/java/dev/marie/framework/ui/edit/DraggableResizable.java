@@ -2,6 +2,7 @@ package dev.marie.framework.ui.edit;
 
 import dev.marie.framework.api.ApiStatus;
 import dev.marie.framework.ui.PersistenceProvider;
+import dev.marie.framework.ui.api.SnapRegistry;
 import dev.marie.framework.ui.component.Constraint;
 import dev.marie.framework.ui.component.MarieComponent;
 import dev.marie.framework.ui.geometry.Bounds;
@@ -48,6 +49,7 @@ public final class DraggableResizable {
     private List<Integer> snapXLines = List.of();
     private List<Integer> snapYLines = List.of();
     private Bounds parentBounds;
+    private String snapRegistryId;
 
     private boolean dragging;
     private boolean resizing;
@@ -121,6 +123,18 @@ public final class DraggableResizable {
     /** Overrides {@link #DEFAULT_SNAP_THRESHOLD_PX} for this tracker. */
     public void setSnapThresholdPx(int snapThresholdPx) {
         this.snapThresholdPx = snapThresholdPx;
+    }
+
+    /**
+     * Registers this tracker's own id with {@link SnapRegistry}: every subsequent {@link
+     * #mouseDragged} call recomputes candidate snap lines from every other registered component
+     * (via {@link SnapRegistry#computeSnapLines}, excluding this id) and feeds them into {@link
+     * #setSnapTargets} before processing the drag, so this tracker's siblings don't need their own
+     * per-frame wiring. {@code null} (the default) disables registry-driven snapping; {@link
+     * #setSnapTargets} can still be called manually in that case.
+     */
+    public void setSnapRegistryId(String snapRegistryId) {
+        this.snapRegistryId = snapRegistryId;
     }
 
     public boolean isDragging() {
@@ -301,6 +315,10 @@ public final class DraggableResizable {
      * preview {@link Bounds} for the active gesture, or {@code null} if no gesture is active.
      */
     public Bounds mouseDragged(int mx, int my) {
+        if (snapRegistryId != null) {
+            SnapRegistry.SnapLines lines = SnapRegistry.computeSnapLines(snapRegistryId);
+            setSnapTargets(lines.xLines(), lines.yLines());
+        }
         if (dragging) {
             int rawX = mx - grabOffsetX;
             int rawY = my - grabOffsetY;

@@ -109,10 +109,40 @@ public final class RecipeInheritanceStage {
     }
 
     /**
-     * Merges {@code recipeContribs} into {@code scores}, skipping any key present in
-     * {@code authoritativeKeys} and only filling keys that aren't already positively scored.
+     * Merges the decayed, multiplier-scaled {@code recipeContribs} into {@code scores}.
      *
-     * @return the scaled contributions actually merged in (empty if none qualified)
+     * <p><b>Every</b> non-authoritative recipe category is applied, including categories the
+     * primary keyword/suffix/namespace signals have already scored: recipe mass for a colliding
+     * category is <i>added</i> to that category's existing weight ({@code value = raw * multiplier},
+     * summed in) rather than discarded. This is the corrected behaviour — the previous version
+     * gated on {@code scores.getOrDefault(key, 0f) <= 0f} and silently dropped any recipe
+     * contribution that landed on an already-scored category, so a recipe ingredient set that
+     * genuinely contested the keyword result left no trace in the score vector and the item
+     * could never be flagged multi-value or ambiguous downstream.</p>
+     *
+     * <p><b>{@code authoritativeKeys} are still fully protected.</b> Those are the value
+     * categories the item carries via its own community/datapack value tags (or, for
+     * {@link #mergeTagAndRecipeScores}, its authoritative tag scores). Tag classification is
+     * ground truth; recipe <i>inference</i> must never perturb it, so a recipe contribution for
+     * an authoritative key is skipped outright. That guard is orthogonal to the change above and
+     * is unchanged.</p>
+     *
+     * <p><b>Why this is unconditional here, unlike the runtime merge.</b>
+     * {@link dev.marie.framework.scan.RuntimeResolutionMerge} only lets a recipe-derived
+     * category outrank the keyword winner when the consuming mod opts that category into
+     * {@code contestable_values} — because the runtime path produces the single classification
+     * gameplay acts on and mods need deterministic control over when recipe data can flip a
+     * result. This stage feeds the offline scanner analysis / tag-recommendation path
+     * ({@link dev.marie.framework.scanner.analysis.MultiValueAnalysisPipeline}), whose job is to
+     * surface every genuinely contested category for human review. Gating that behind a
+     * consumer opt-in would hide exactly the signal the reviewer wants, so no
+     * {@code contestableValues()} check applies. This merge also only adjusts category
+     * magnitudes; it never picks a winner — dominant/secondary/uncertain selection happens
+     * afterwards in {@link dev.marie.framework.scanner.ItemClassifier} over the combined vector.</p>
+     *
+     * @return the scaled contributions actually merged in, keyed by category (empty if every
+     *         recipe category was authoritative); callers use this as the diagnostic
+     *         {@code RECIPE_INHERITANCE} signal payload
      */
     private static Map<String, Float> mergeQualifyingContributions(
             Map<String, Float> scores,
@@ -126,11 +156,9 @@ public final class RecipeInheritanceStage {
             if (authoritativeKeys.contains(key)) {
                 continue;
             }
-            if (scores.getOrDefault(key, 0f) <= 0f) {
-                float value = e.getValue() * multiplier;
-                scores.merge(key, value, Float::sum);
-                scaled.put(key, value);
-            }
+            float value = e.getValue() * multiplier;
+            scores.merge(key, value, Float::sum);
+            scaled.put(key, value);
         }
         return scaled;
     }

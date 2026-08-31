@@ -102,6 +102,11 @@ public final class GuiGraphicsRenderContext implements RenderContext {
     }
 
     @Override
+    public int textWidth(String text, float scale) {
+        return (int) Math.ceil(minecraft.font.width(text) * scale);
+    }
+
+    @Override
     public void drawItem(ItemStack stack, int x, int y, float scale) {
         PoseStack pose = graphics.pose();
         pose.pushPose();

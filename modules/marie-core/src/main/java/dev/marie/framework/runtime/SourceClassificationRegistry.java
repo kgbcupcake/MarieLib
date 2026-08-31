@@ -23,10 +23,12 @@ import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Loads per-source manual value assignments from config/&lt;modid&gt;/source_classifications.json.
@@ -38,7 +40,16 @@ public class SourceClassificationRegistry {
 
     private static final Logger LOGGER = LogUtils.getLogger();
 
-    public record SourceClassification(String sourceId, Map<String, Float> values, float total, boolean enabled) {}
+    /**
+     * @param total    the effective calorie/total override to apply, or 0 when the entry specifies
+     *                 none. Populated from an explicit {@code "calories"} field (following the same
+     *                 convention as food_overrides.json) when present, otherwise from the legacy
+     *                 {@code "total"} field.
+     * @param calories the raw explicit {@code "calories"} field as authored (0 = absent). Retained
+     *                 separately from {@code total} so the field round-trips through
+     *                 {@link #writeRegistry(Path)} under its own name.
+     */
+    public record SourceClassification(String sourceId, Map<String, Float> values, float total, int calories, boolean enabled) {}
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
@@ -49,6 +60,9 @@ public class SourceClassificationRegistry {
     }
 
     private static final Core INSTANCE = new Core();
+
+    // sourceIds pushed into SourceRegistry by the last pushToSourceRegistry() call, so the next call can drop stale ones first.
+    private static Set<ResourceLocation> bridgedSourceIds = Set.of();
 
     public static Optional<SourceClassification> getOverride(String sourceId) {
         SourceClassification entry = INSTANCE.get(sourceId);
@@ -122,12 +136,14 @@ public class SourceClassificationRegistry {
             LOGGER.error("[SourceClassificationRegistry] Failed to load source_classifications.json", e);
             INSTANCE.reset();
             INSTANCE.freeze();
+            pushToSourceRegistry();
         } catch (RuntimeException e) {
             // Per-entry parse failures are isolated in parseEntry()/parseFromReader(); this only
             // catches whole-file corruption (invalid JSON syntax, or top-level value isn't an array).
             LOGGER.error("[SourceClassificationRegistry] source_classifications.json is not valid JSON, ignoring file", e);
             INSTANCE.reset();
             INSTANCE.freeze();
+            pushToSourceRegistry();
         }
 
         try {
@@ -159,8 +175,19 @@ public class SourceClassificationRegistry {
     }
 
     private static void parseFromReader(Reader reader) {
+        // Tokenize/parse the whole document BEFORE touching INSTANCE. Gson (lenient or not) rejects
+        // trailing commas and other syntax errors with a RuntimeException; doing this first means a
+        // malformed datapack file leaves the previous good state (and its bridged SourceRegistry
+        // entries) intact instead of half-clearing it and silently serving stale data.
+        JsonArray arr;
+        try {
+            arr = GSON.fromJson(reader, JsonArray.class);
+        } catch (RuntimeException e) {
+            LOGGER.error("[SourceClassificationRegistry] source_classifications.json failed to parse "
+                    + "(check for trailing commas / invalid JSON); keeping previously loaded entries", e);
+            throw e;
+        }
         INSTANCE.reset();
-        JsonArray arr = GSON.fromJson(reader, JsonArray.class);
         if (arr != null) {
             for (int i = 0; i < arr.size(); i++) {
                 JsonElement el = arr.get(i);
@@ -172,6 +199,33 @@ public class SourceClassificationRegistry {
             }
         }
         INSTANCE.freeze();
+        pushToSourceRegistry();
+    }
+
+    // Bridges enabled INSTANCE entries into SourceRegistry so getScore()/getExternalClassification() see them.
+    private static void pushToSourceRegistry() {
+        for (ResourceLocation staleId : bridgedSourceIds) {
+            SourceRegistry.unregisterClassification(staleId);
+        }
+        Set<ResourceLocation> pushed = new HashSet<>();
+        for (SourceClassification entry : INSTANCE.entries().values()) {
+            if (!entry.enabled() || entry.values().isEmpty()) {
+                continue;
+            }
+            ResourceLocation loc = ResourceLocation.tryParse(entry.sourceId());
+            if (loc == null) {
+                LOGGER.warn("[SourceClassificationRegistry] Skipping entry with malformed source_id: {}", entry.sourceId());
+                continue;
+            }
+            // Isolated like parseEntry(): one bad entry must not abort the whole reload pass and skip every registry queued after this one.
+            try {
+                SourceRegistry.applyAuthoritativeOverride(loc, entry.values());
+                pushed.add(loc);
+            } catch (RuntimeException e) {
+                LOGGER.warn("[SourceClassificationRegistry] Failed to push override for {}: {}", entry.sourceId(), e.getMessage());
+            }
+        }
+        bridgedSourceIds = pushed;
     }
 
     private static void parse(Path file) throws IOException {
@@ -196,11 +250,18 @@ public class SourceClassificationRegistry {
                 }
             }
 
-            float total = obj.has("total") && !obj.get("total").isJsonNull()
+            float legacyTotal = obj.has("total") && !obj.get("total").isJsonNull()
                     ? obj.get("total").getAsFloat()
                     : 0f;
+            // Optional explicit calorie override, same convention as food_overrides.json
+            // (int, default 0 / absent = "no explicit override"). Takes precedence over the
+            // legacy "total" field when both are present.
+            int calories = obj.has("calories") && !obj.get("calories").isJsonNull()
+                    ? obj.get("calories").getAsInt()
+                    : 0;
+            float total = calories != 0 ? (float) calories : legacyTotal;
 
-            INSTANCE.register(sourceId, new SourceClassification(sourceId, values, total, enabled));
+            INSTANCE.register(sourceId, new SourceClassification(sourceId, values, total, calories, enabled));
         } catch (RuntimeException e) {
             JsonElement idEl = obj.get("source_id");
             String label = (idEl != null && idEl.isJsonPrimitive()) ? idEl.getAsString() : ("index " + index);
@@ -251,6 +312,7 @@ public class SourceClassificationRegistry {
             parseEntry(el.getAsJsonObject(), i);
         }
         INSTANCE.freeze();
+        pushToSourceRegistry();
         LOGGER.info("[SourceClassificationRegistry] Migration complete — {} entries written to source_classifications.json", INSTANCE.size());
     }
 
@@ -300,14 +362,25 @@ public class SourceClassificationRegistry {
     }
 
     public static void setOverride(String sourceId, Map<String, Float> values, boolean enabled) {
+        setOverride(sourceId, values, 0, enabled);
+    }
+
+    /**
+     * @param calories explicit calorie override for the entry, or 0 for "no explicit override".
+     *                 Same convention as food_overrides.json. When non-zero this is the value the
+     *                 classification pipeline falls back to if the resolver yields no calorie total.
+     */
+    public static void setOverride(String sourceId, Map<String, Float> values, int calories, boolean enabled) {
         Objects.requireNonNull(sourceId, "sourceId");
         LinkedHashMap<String, SourceClassification> next = new LinkedHashMap<>(INSTANCE.entries());
-        next.put(sourceId, new SourceClassification(sourceId, new HashMap<>(values), 0f, enabled));
+        next.put(sourceId, new SourceClassification(
+                sourceId, new HashMap<>(values), calories != 0 ? (float) calories : 0f, calories, enabled));
         INSTANCE.reset();
         for (Map.Entry<String, SourceClassification> e : next.entrySet()) {
             INSTANCE.register(e.getKey(), e.getValue());
         }
         INSTANCE.freeze();
+        pushToSourceRegistry();
     }
 
     public static void removeOverride(String sourceId) {
@@ -319,6 +392,7 @@ public class SourceClassificationRegistry {
             INSTANCE.register(e.getKey(), e.getValue());
         }
         INSTANCE.freeze();
+        pushToSourceRegistry();
     }
 
     private static void writeRegistry(Path file) throws IOException {
@@ -333,7 +407,13 @@ public class SourceClassificationRegistry {
             }
             obj.add("values", valuesObj);
 
-            obj.addProperty("total", entry.total());
+            // Emit the explicit calorie override under its own name when present; otherwise fall
+            // back to the legacy "total" field so pre-existing files still round-trip.
+            if (entry.calories() != 0) {
+                obj.addProperty("calories", entry.calories());
+            } else {
+                obj.addProperty("total", entry.total());
+            }
             obj.addProperty("enabled", entry.enabled());
             arr.add(obj);
         }

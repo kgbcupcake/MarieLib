@@ -35,12 +35,24 @@ public final class TrackerRegistry {
         INSTANCE.reset();
     }
 
+    /**
+     * Temporarily reopens the registry for re-registration during
+     * {@code MarieContext.reloadBroadcastHook()}. Must be paired with a subsequent
+     * {@link #freezeInternal()} in a {@code finally} block.
+     */
+    @ApiStatus.Internal
+    public static void unfreezeInternal() {
+        INSTANCE.unfreeze();
+    }
+
     public static boolean isFrozen() {
         return INSTANCE.isFrozen();
     }
 
     /**
-     * Registers a tracker definition, enforcing the configured retention cap.
+     * Registers a tracker definition, enforcing the configured retention cap. Re-registering an
+     * already-registered id replaces the existing definition rather than throwing — trackers are
+     * expected to be re-registered on every reload (see {@code MarieContext.reloadBroadcastHook()}).
      *
      * @throws IllegalArgumentException if {@code definition} is null, retention is less than 1,
      *                                   or retention exceeds {@code IMarieConfig#trackerMaxRetention()}
@@ -60,7 +72,7 @@ public final class TrackerRegistry {
                     "TrackerDefinition '" + definition.getId() + "': retention " + retention +
                     " exceeds trackerMaxRetention " + maxRetention);
         }
-        INSTANCE.register(definition.getId(), definition);
+        INSTANCE.upsert(definition.getId(), definition);
     }
 
     @Nullable
