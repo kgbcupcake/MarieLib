@@ -46,6 +46,16 @@ public class SourceRegistry {
     /** @GuardedBy("itself — ConcurrentHashMap") */
     private static final Map<ResourceLocation, Map<String, Float>> SCANNER_CLASSIFICATIONS = new ConcurrentHashMap<>();
 
+    /**
+     * @GuardedBy("itself — ConcurrentHashMap") Genuine {@link #registerClassification} entries that
+     * were already present for a sourceId at the moment an authoritative override was first applied
+     * on top of them. Held aside so {@link #unregisterClassification} (the override going away) can
+     * restore the real registration instead of destroying it. Only ever populated from an entry that
+     * came from a genuine API call — override-mirrored values are never copied in here, so a restored
+     * entry is always a real API registration and never a stale datapack/tag-derived one.
+     */
+    private static final Map<ResourceLocation, Map<String, Float>> PRE_OVERRIDE_API_CLASSIFICATIONS = new ConcurrentHashMap<>();
+
     // sourceIds exclusively owned by an enabled SourceClassificationRegistry override; non-override registerClassification calls for these are ignored.
     private static final Set<ResourceLocation> OVERRIDE_LOCKED_SOURCES = ConcurrentHashMap.newKeySet();
 
@@ -84,6 +94,18 @@ public class SourceRegistry {
                 sanitized.put(e.getKey(), e.getValue());
             }
         }
+        // The first time an override lands on this source, stash whatever genuine
+        // registerClassification() entry is sitting underneath it so unregisterClassification() can
+        // put it back later. Guarded on the override lock so the repeated override pushes that
+        // happen once per datapack reload don't overwrite that snapshot with the override's own
+        // mirrored values. While the lock is held, registerClassification() is refused for this
+        // source, so the snapshot taken here stays the correct genuine state to restore.
+        if (!OVERRIDE_LOCKED_SOURCES.contains(sourceId)) {
+            Map<String, Float> genuine = API_REGISTERED_CLASSIFICATIONS.get(sourceId);
+            if (genuine != null) {
+                PRE_OVERRIDE_API_CLASSIFICATIONS.put(sourceId, new ConcurrentHashMap<>(genuine));
+            }
+        }
         EXTERNAL_CLASSIFICATIONS.put(sourceId, sanitized);
         API_REGISTERED_CLASSIFICATIONS.put(sourceId, new ConcurrentHashMap<>(sanitized));
         OVERRIDE_LOCKED_SOURCES.add(sourceId);
@@ -91,9 +113,18 @@ public class SourceRegistry {
 
     // Removes one sourceId's entries from both maps and its override lock; used by SourceClassificationRegistry to drop stale entries before re-pushing a reload.
     static void unregisterClassification(ResourceLocation sourceId) {
-        EXTERNAL_CLASSIFICATIONS.remove(sourceId);
-        API_REGISTERED_CLASSIFICATIONS.remove(sourceId);
         OVERRIDE_LOCKED_SOURCES.remove(sourceId);
+        Map<String, Float> genuine = PRE_OVERRIDE_API_CLASSIFICATIONS.remove(sourceId);
+        if (genuine != null) {
+            // A real registerClassification() entry existed before the override was applied — restore
+            // it rather than dropping the source outright, so removing an override can't destroy a
+            // genuine mod-init/KubeJS registration that was underneath it.
+            EXTERNAL_CLASSIFICATIONS.put(sourceId, new ConcurrentHashMap<>(genuine));
+            API_REGISTERED_CLASSIFICATIONS.put(sourceId, new ConcurrentHashMap<>(genuine));
+        } else {
+            EXTERNAL_CLASSIFICATIONS.remove(sourceId);
+            API_REGISTERED_CLASSIFICATIONS.remove(sourceId);
+        }
     }
 
     public static void clearExternalClassifications() {

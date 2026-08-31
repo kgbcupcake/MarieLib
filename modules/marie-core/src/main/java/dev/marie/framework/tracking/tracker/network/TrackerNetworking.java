@@ -85,6 +85,10 @@ public final class TrackerNetworking {
                             .result()
                             .ifPresent(state -> ClientTrackerCache.setPeriodState(trackerId, state));
                 }
+                // The snapshot carries the live current-period accumulator alongside history/period
+                // so a freshly-logged-in client shows the right in-progress value without waiting
+                // for the first dirty-sweep live sync. Absent key -> getFloat returns 0f.
+                ClientTrackerCache.setCurrentValue(trackerId, entry.getFloat("current"));
             }
         });
     }
@@ -148,6 +152,7 @@ public final class TrackerNetworking {
                     .result()
                     .ifPresent(periodTag -> entry.put("period", periodTag));
         }
+        entry.putFloat("current", tracking.trackingAccumulators.getOrDefault(trackerId, 0f));
         return entry;
     }
 }
