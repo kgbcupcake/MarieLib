@@ -131,10 +131,12 @@ public final class TrackerNetworking {
         PacketDistributor.sendToPlayer(player, new TrackerHistorySyncPayload(outer));
     }
 
-    private static CompoundTag buildTrackerEntry(ResourceLocation trackerId, TrackingData tracking) {
+    // Package-private for direct unit coverage — see TrackerNetworkingBuildEntryTest.
+    static CompoundTag buildTrackerEntry(ResourceLocation trackerId, TrackingData tracking) {
         List<TrackerHistoryEntry> history = tracking.trackingHistory.get(trackerId);
         TrackingPeriodState period = tracking.trackerPeriodStates.get(trackerId);
-        if ((history == null || history.isEmpty()) && period == null) {
+        float current = tracking.trackingAccumulators.getOrDefault(trackerId, 0f);
+        if ((history == null || history.isEmpty()) && period == null && current == 0f) {
             return null;
         }
         CompoundTag entry = new CompoundTag();
@@ -152,7 +154,7 @@ public final class TrackerNetworking {
                     .result()
                     .ifPresent(periodTag -> entry.put("period", periodTag));
         }
-        entry.putFloat("current", tracking.trackingAccumulators.getOrDefault(trackerId, 0f));
+        entry.putFloat("current", current);
         return entry;
     }
 }
